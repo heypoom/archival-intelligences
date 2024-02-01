@@ -1,5 +1,7 @@
 import {useEffect, useRef} from 'react'
 
+import {DictationCaption, DictationTrigger, DictationLogs} from './dictation'
+
 function App() {
   const canvasRef = useRef<HTMLCanvasElement>()
 
@@ -20,6 +22,18 @@ function App() {
 
   return (
     <div>
+      <div className="fixed w-full flex left-0 justify-center pt-12">
+        <DictationCaption />
+      </div>
+
+      <div className="fixed right-3 bottom-3">
+        <DictationTrigger />
+      </div>
+
+      <div className="fixed left-3 bottom-3">
+        <DictationLogs />
+      </div>
+
       <canvas
         className="w-screen h-screen"
         ref={(element) => {
