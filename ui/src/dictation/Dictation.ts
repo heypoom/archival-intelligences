@@ -1,13 +1,19 @@
+import {nanoid} from 'nanoid'
+import {sentenceToImagePrompt} from '../prompt/prompt'
 import {
   $dictationState,
   $latestTranscript,
   $transcripts,
 } from '../store/dictation'
+import {$imagePrompts, $imageUrls} from '../store/images'
+import {generateImage} from '../prompt/dalle'
 
 const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition
 
 const MAX_TRANSCRIPT = 20
+const MAX_PROMPTS = 10
+const MAX_IMAGE_URLS = 10
 
 export class Dictation {
   get listening() {
@@ -43,7 +49,7 @@ export class Dictation {
     $dictationState.set('listening')
   }
 
-  onResult(event: SpeechRecognitionEvent) {
+  async onResult(event: SpeechRecognitionEvent) {
     const {results} = event
 
     const latest = results.item(results.length - 1)
@@ -51,14 +57,39 @@ export class Dictation {
     const first = latest.item(0)
     $latestTranscript.set({transcript: first.transcript, final: latest.isFinal})
 
-    if (latest.isFinal) {
-      const logs = [...$transcripts.get()]
-      if (logs.length > MAX_TRANSCRIPT) logs.splice(MAX_TRANSCRIPT)
+    if (latest.isFinal) await this.processFinalTranscript(first.transcript)
+  }
 
-      logs.unshift(first.transcript)
+  async processFinalTranscript(transcript: string) {
+    // Create an identifier to correlate transcript, image prompt and generated images.
+    const id = nanoid()
 
-      $transcripts.set(logs)
-    }
+    const logs = [...$transcripts.get()]
+    if (logs.length > MAX_TRANSCRIPT) logs.splice(MAX_TRANSCRIPT)
+
+    logs.unshift({id, transcript})
+    $transcripts.set(logs)
+
+    const imagePrompt = await sentenceToImagePrompt(transcript)
+    if (!imagePrompt) return
+
+    const prompts = [...$imagePrompts.get()]
+    if (prompts.length > MAX_PROMPTS) prompts.shift()
+
+    prompts.push({id, prompt: imagePrompt})
+    $imagePrompts.set(prompts)
+
+    // Generate images from the prompt.
+    const images = await generateImage(imagePrompt)
+    console.log('gen images', images)
+
+    const [image] = images ?? []
+    if (!image) return
+
+    const imageUrls = [{id, url: image.url}, ...$imageUrls.get()]
+    if (imageUrls.length > MAX_IMAGE_URLS) imageUrls.pop()
+
+    $imageUrls.set(imageUrls)
   }
 
   onError(event: SpeechRecognitionErrorEvent) {

@@ -7,15 +7,15 @@ import {atom, map} from 'nanostores'
 export type DictationState = 'stopped' | 'starting' | 'listening' | 'failed'
 
 export type Transcript = {
+  id?: string
   transcript: string
-  final: boolean
+  final?: boolean
 }
 
 export const $dictationState = atom<DictationState>('stopped')
 
 export const $latestTranscript = map<Transcript>({
   transcript: '',
-  final: false,
 })
 
-export const $transcripts = map<string[]>([])
+export const $transcripts = map<Transcript[]>([])
