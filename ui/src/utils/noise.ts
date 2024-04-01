@@ -1,6 +1,3 @@
-const BLOCK_SIZE = 2
-const SCALE_BY = 2
-
 const currentNoise: number[][] = []
 
 export function paintDenseNoise(canvas: HTMLCanvasElement) {
@@ -28,18 +25,28 @@ export function paintDenseNoise(canvas: HTMLCanvasElement) {
   ctx.putImageData(imageData, 0, 0)
 }
 
-export function paintNoiseGrid(canvas: HTMLCanvasElement) {
+interface NoiseGridConfig {
+  scaleBy?: number
+  blockSize?: number
+}
+
+export function paintNoiseGrid(
+  canvas: HTMLCanvasElement,
+  config: NoiseGridConfig = {},
+) {
+  const { scaleBy = 1.5, blockSize = 2 } = config
+
   const ctx = canvas.getContext('2d')
   if (!ctx) return
 
   const screenWidth = window.innerWidth
   const screenHeight = window.innerHeight
 
-  const gridWidth = Math.floor(screenWidth / SCALE_BY / BLOCK_SIZE)
-  const gridHeight = Math.floor(screenHeight / SCALE_BY / BLOCK_SIZE)
+  const gridWidth = Math.floor(screenWidth / scaleBy / blockSize)
+  const gridHeight = Math.floor(screenHeight / scaleBy / blockSize)
 
-  canvas.width = gridWidth * BLOCK_SIZE
-  canvas.height = gridHeight * BLOCK_SIZE
+  canvas.width = gridWidth * blockSize
+  canvas.height = gridHeight * blockSize
 
   for (let y = 0; y < gridHeight; y++) {
     for (let x = 0; x < gridWidth; x++) {
@@ -49,7 +56,7 @@ export function paintNoiseGrid(canvas: HTMLCanvasElement) {
       currentNoise[y][x] = v
 
       ctx.fillStyle = `rgb(${v}, ${v}, ${v})`
-      ctx.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
+      ctx.fillRect(x * blockSize, y * blockSize, blockSize, blockSize)
     }
   }
 }

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { paintDenseNoise } from '../utils/noise.ts'
+import { paintDenseNoise, paintNoiseGrid } from '../utils/noise.ts'
 
 export const AnimatedNoise = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -8,8 +8,8 @@ export const AnimatedNoise = () => {
     const canvas = canvasRef.current
     if (!canvas) return
 
-    // paintNoiseGrid(canvas)
-    paintDenseNoise(canvas)
+    paintNoiseGrid(canvas, { scaleBy: 1, blockSize: 7 })
+    // paintDenseNoise(canvas)
   }
 
   useEffect(() => {
