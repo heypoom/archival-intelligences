@@ -1,12 +1,12 @@
-type Image = { url: string; revised_prompt: string };
-type ResponseData = { created: number; data: Image[] };
+type Image = { url: string; revised_prompt: string }
+type ResponseData = { created: number; data: Image[] }
 
 export async function generateImage(prompt: string): Promise<Image[] | null> {
-  const endpoint = "https://api.openai.com/v1/images/generations";
-  const token = localStorage.getItem("OPENAI_KEY") ?? "";
+  const endpoint = "https://api.openai.com/v1/images/generations"
+  const token = localStorage.getItem("OPENAI_KEY") ?? ""
 
   if (!token) {
-    throw new Error("No OpenAI key found at OPENAI_KEY");
+    throw new Error("No OpenAI key found at OPENAI_KEY")
   }
 
   try {
@@ -31,13 +31,13 @@ export async function generateImage(prompt: string): Promise<Image[] | null> {
         // but when using DALL·E 3 you can set quality: "hd" for enhanced detail.
         quality: "standard",
       }),
-    });
+    })
 
-    const json: ResponseData = await res.json();
+    const json: ResponseData = await res.json()
 
-    return json.data;
+    return json.data
   } catch (err) {
-    console.warn("GPT error:", err);
-    return null;
+    console.warn("GPT error:", err)
+    return null
   }
 }

@@ -1,29 +1,29 @@
-import { useStore } from "@nanostores/react";
-import cn from "classnames";
+import { useStore } from "@nanostores/react"
+import cn from "classnames"
 
-import { dictation } from "..";
-import { $dictationState, DictationState } from "../../store/dictation";
+import { dictation } from ".."
+import { $dictationState, DictationState } from "../../store/dictation"
 
 const labelMap: Record<DictationState, string> = {
   stopped: "start",
   starting: "(starting...)",
   listening: "stop",
   failed: "restart",
-};
+}
 
 export const DictationTrigger = () => {
-  const status = useStore($dictationState);
+  const status = useStore($dictationState)
 
-  const label = labelMap[status];
-  const starting = status === "starting";
-  const listening = status === "listening";
-  const stopped = status === "stopped";
-  const failed = status === "failed";
+  const label = labelMap[status]
+  const starting = status === "starting"
+  const listening = status === "listening"
+  const stopped = status === "stopped"
+  const failed = status === "failed"
 
   return (
     <button
       onClick={dictation.toggle}
-      type="button"
+      type='button'
       className={cn(
         "flex px-2 text-xl",
         starting && "animate-pulse text-blue-500",
@@ -35,5 +35,5 @@ export const DictationTrigger = () => {
     >
       {label}
     </button>
-  );
-};
+  )
+}

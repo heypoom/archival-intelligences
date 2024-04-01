@@ -1,10 +1,10 @@
-import { useStore } from "@nanostores/react";
-import cn from "classnames";
+import { useStore } from "@nanostores/react"
+import cn from "classnames"
 
-import { $latestTranscript } from "../../store/dictation";
+import { $latestTranscript } from "../../store/dictation"
 
 export const DictationCaption = () => {
-  const { transcript, final } = useStore($latestTranscript);
+  const { transcript, final } = useStore($latestTranscript)
 
   return (
     <div
@@ -16,5 +16,5 @@ export const DictationCaption = () => {
     >
       {transcript}
     </div>
-  );
-};
+  )
+}
