@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@nanostores/react": "^0.7.1",
+    "@tanstack/react-router": "^1.26.1",
     "classnames": "^2.5.1",
     "nanoid": "^5.0.5",
     "nanostores": "^0.9.5",
@@ -19,6 +20,8 @@
   },
   "devDependencies": {
     "@biomejs/biome": "1.5.3",
+    "@tanstack/router-devtools": "^1.26.1",
+    "@tanstack/router-vite-plugin": "^1.25.0",
     "@types/dom-speech-recognition": "^0.0.4",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",

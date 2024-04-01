@@ -1,15 +1,15 @@
-import {useStore} from '@nanostores/react'
+import { useStore } from "@nanostores/react";
 
-import {$transcripts} from '../../store/dictation'
-import {$imagePrompts} from '../../store/images'
+import { $transcripts } from "../../store/dictation";
+import { $imagePrompts } from "../../store/images";
 
-const MAX_TRANSCRIPT_SHOWN = 5
+const MAX_TRANSCRIPT_SHOWN = 5;
 
 export const DictationLogs = () => {
-  const transcripts = useStore($transcripts)
-  const logs = transcripts.slice(0, MAX_TRANSCRIPT_SHOWN)
+  const transcripts = useStore($transcripts);
+  const logs = transcripts.slice(0, MAX_TRANSCRIPT_SHOWN);
 
-  const prompts = useStore($imagePrompts)
+  const prompts = useStore($imagePrompts);
 
   return (
     <div className="flex flex-col space-y-2">
@@ -25,5 +25,5 @@ export const DictationLogs = () => {
         ))}
       </div>
     </div>
-  )
-}
+  );
+};

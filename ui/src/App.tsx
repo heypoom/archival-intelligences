@@ -1,5 +1,5 @@
-import {DictationCaption, DictationTrigger} from './dictation'
-import {ImageDisplay} from './image/ImageDisplay'
+import { DictationCaption, DictationTrigger } from "./dictation";
+import { ImageDisplay } from "./image/ImageDisplay";
 
 function App() {
   return (
@@ -14,7 +14,7 @@ function App() {
 
       <ImageDisplay />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

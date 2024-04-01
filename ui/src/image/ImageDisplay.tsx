@@ -1,9 +1,10 @@
-import {useStore} from '@nanostores/react'
-import {$imageUrls} from '../store/images'
+import { useStore } from "@nanostores/react";
+
+import { $imageUrls } from "../store/images";
 
 export const ImageDisplay = () => {
-  const urls = useStore($imageUrls)
-  const first = urls[0]?.url
+  const urls = useStore($imageUrls);
+  const first = urls[0]?.url;
 
   return (
     <div
@@ -12,5 +13,5 @@ export const ImageDisplay = () => {
         backgroundImage: `url(${first})`,
       }}
     />
-  )
-}
+  );
+};
