@@ -1,12 +1,12 @@
-import { nanoid } from "nanoid"
-import { sentenceToImagePrompt } from "../prompt/prompt"
+import { nanoid } from 'nanoid'
+import { sentenceToImagePrompt } from '../prompt/prompt'
 import {
   $dictationState,
   $latestTranscript,
   $transcripts,
-} from "../store/dictation"
-import { $imagePrompts, $imageUrls } from "../store/images"
-import { generateImage } from "../prompt/dalle"
+} from '../store/dictation'
+import { $imagePrompts, $imageUrls } from '../store/images'
+import { generateImage } from '../prompt/dalle'
 
 const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition
@@ -17,7 +17,7 @@ const MAX_IMAGE_URLS = 10
 
 export class Dictation {
   get listening() {
-    return $dictationState.get() === "listening"
+    return $dictationState.get() === 'listening'
   }
 
   private recognition: SpeechRecognition | null = null
@@ -25,28 +25,28 @@ export class Dictation {
   start = () => {
     if (this.listening && this.recognition) return
 
-    $dictationState.set("starting")
+    $dictationState.set('starting')
 
     this.recognition = new SpeechRecognition()
     this.recognition.continuous = true
     this.recognition.interimResults = true
     this.recognition.maxAlternatives = 5
-    this.recognition.lang = "en-US"
+    this.recognition.lang = 'en-US'
 
     this.recognition.addEventListener(
-      "audiostart",
+      'audiostart',
       this.onAudioStart.bind(this),
     )
 
-    this.recognition.addEventListener("result", this.onResult.bind(this))
-    this.recognition.addEventListener("error", this.onError.bind(this))
-    this.recognition.addEventListener("end", this.onEnd.bind(this))
+    this.recognition.addEventListener('result', this.onResult.bind(this))
+    this.recognition.addEventListener('error', this.onError.bind(this))
+    this.recognition.addEventListener('end', this.onEnd.bind(this))
 
     this.recognition.start()
   }
 
   onAudioStart() {
-    $dictationState.set("listening")
+    $dictationState.set('listening')
   }
 
   async onResult(event: SpeechRecognitionEvent) {
@@ -84,7 +84,7 @@ export class Dictation {
 
     // Generate images from the prompt.
     const images = await generateImage(imagePrompt)
-    console.log("gen images", images)
+    console.log('gen images', images)
 
     const [image] = images ?? []
     if (!image) return
@@ -97,7 +97,7 @@ export class Dictation {
 
   onError(event: SpeechRecognitionErrorEvent) {
     // restart the recognition if speech is not detected
-    if (event.error === "no-speech") {
+    if (event.error === 'no-speech') {
       this.stop()
       this.start()
 
@@ -105,13 +105,13 @@ export class Dictation {
     }
 
     console.warn(`[speech] error of ${event.error}`, event.message)
-    $dictationState.set("failed")
+    $dictationState.set('failed')
   }
 
   onEnd() {}
 
   stop = () => {
-    $dictationState.set("stopped")
+    $dictationState.set('stopped')
     this.recognition?.stop()
     this.recognition = null
   }

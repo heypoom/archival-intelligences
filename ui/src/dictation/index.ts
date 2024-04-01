@@ -1,5 +1,5 @@
-export { dictation, Dictation } from "./Dictation"
+export { dictation, Dictation } from './Dictation'
 
-export { DictationTrigger } from "./components/DictationTrigger"
-export { DictationLogs } from "./components/DictationLogs"
-export { DictationCaption } from "./components/DictationCaption"
+export { DictationTrigger } from './components/DictationTrigger'
+export { DictationLogs } from './components/DictationLogs'
+export { DictationCaption } from './components/DictationCaption'

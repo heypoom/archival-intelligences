@@ -1,6 +1,6 @@
-import { useStore } from "@nanostores/react"
+import { useStore } from '@nanostores/react'
 
-import { $imageUrls } from "../store/images"
+import { $imageUrls } from '../store/images'
 
 export const ImageDisplay = () => {
   const urls = useStore($imageUrls)

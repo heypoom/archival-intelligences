@@ -1,7 +1,7 @@
-import { useStore } from "@nanostores/react"
+import { useStore } from '@nanostores/react'
 
-import { $transcripts } from "../../store/dictation"
-import { $imagePrompts } from "../../store/images"
+import { $transcripts } from '../../store/dictation'
+import { $imagePrompts } from '../../store/images'
 
 const MAX_TRANSCRIPT_SHOWN = 5
 

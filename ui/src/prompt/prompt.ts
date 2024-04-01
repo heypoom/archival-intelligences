@@ -6,26 +6,26 @@ export async function gpt(
   system: string,
   input: string,
 ): Promise<string | null> {
-  const endpoint = "https://api.openai.com/v1/chat/completions"
+  const endpoint = 'https://api.openai.com/v1/chat/completions'
 
-  const token = localStorage.getItem("OPENAI_KEY") ?? ""
+  const token = localStorage.getItem('OPENAI_KEY') ?? ''
 
   if (!token) {
-    throw new Error("No OpenAI key found at OPENAI_KEY")
+    throw new Error('No OpenAI key found at OPENAI_KEY')
   }
 
   try {
     const res = await fetch(endpoint, {
-      method: "POST",
+      method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: "gpt-3.5-turbo",
+        model: 'gpt-3.5-turbo',
         messages: [
-          { role: "system", content: system },
-          { role: "user", content: input },
+          { role: 'system', content: system },
+          { role: 'user', content: input },
         ],
         temperature: TEMPERATURE,
         max_tokens: 200,
@@ -41,7 +41,7 @@ export async function gpt(
 
     return body.image_prompt ?? null
   } catch (err) {
-    console.warn("GPT error:", err)
+    console.warn('GPT error:', err)
 
     return null
   }

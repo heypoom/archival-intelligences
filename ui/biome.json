@@ -33,7 +33,8 @@
       "bracketSpacing": true,
       "bracketSameLine": false,
       "indentStyle": "space",
-      "indentWidth": 2
+      "indentWidth": 2,
+      "quoteStyle": "single"
     }
   }
 }
