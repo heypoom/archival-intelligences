@@ -11,6 +11,9 @@ dependencies:
   '@tanstack/react-router':
     specifier: ^1.26.1
     version: 1.26.1(react-dom@18.2.0)(react@18.2.0)
+  alea:
+    specifier: ^1.0.1
+    version: 1.0.1
   classnames:
     specifier: ^2.5.1
     version: 2.5.1
@@ -26,6 +29,9 @@ dependencies:
   react-dom:
     specifier: ^18.2.0
     version: 18.2.0(react@18.2.0)
+  simplex-noise:
+    specifier: ^4.0.1
+    version: 4.0.1
 
 devDependencies:
   '@biomejs/biome':
@@ -1445,6 +1451,10 @@ packages:
       uri-js: 4.4.1
     dev: true
 
+  /alea@1.0.1:
+    resolution: {integrity: sha512-QU+wv+ziDXaMxRdsQg/aH7sVfWdhKps5YP97IIwFkHCsbDZA3k87JXoZ5/iuemf4ntytzIWeScrRpae8+lDrXA==}
+    dev: false
+
   /ansi-regex@5.0.1:
     resolution: {integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==}
     engines: {node: '>=8'}
@@ -2645,6 +2655,10 @@ packages:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
     engines: {node: '>=14'}
     dev: true
+
+  /simplex-noise@4.0.1:
+    resolution: {integrity: sha512-zl/+bdSqW7HJOQ0oDbxrNYaF4F5ik0i7M6YOYmEoIJNtg16NpvWaTTM1Y7oV/7T0jFljawLgYPS81Uu2rsfo1A==}
+    dev: false
 
   /slash@3.0.0:
     resolution: {integrity: sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q==}
