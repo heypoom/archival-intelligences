@@ -1,6 +1,7 @@
 import { createLazyFileRoute } from '@tanstack/react-router'
 
 import { AnimatedNoise } from '../components/AnimatedNoise'
+import { GuidanceSlider } from '../components/GuidanceSlider.tsx'
 import { PromptInput } from '../components/PromptInput.tsx'
 
 export const Route = createLazyFileRoute('/one')({
@@ -11,8 +12,12 @@ function Index() {
   return (
     <div className='flex'>
       <div className='fixed w-screen h-screen'>
-        <div className='flex items-center justify-center w-full h-full'>
+        <div className='flex flex-col items-center justify-center w-full h-full'>
           <PromptInput />
+
+          <div className='pt-4'>
+            <GuidanceSlider />
+          </div>
         </div>
       </div>
 

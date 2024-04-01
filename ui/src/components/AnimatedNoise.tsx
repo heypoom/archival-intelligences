@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useRef } from 'react'
 
 const BLOCK_SIZE = 2
-const SCALE_BY = 1.5
+const SCALE_BY = 2
 
 const currentNoise: number[][] = []
 
@@ -44,7 +44,7 @@ export const AnimatedNoise = (props: Props) => {
   useEffect(() => {
     const timer = setInterval(() => {
       paint()
-    }, 180)
+    }, 200)
 
     return () => {
       clearInterval(timer)
