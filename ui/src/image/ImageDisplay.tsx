@@ -6,14 +6,11 @@ export const ImageDisplay = () => {
   const first = urls[0]?.url
 
   return (
-    <div className="min-h-screen w-full bg-[#111]">
-      {first && (
-        <img
-          src={first}
-          alt="generated"
-          className="w-full object-fit object-center"
-        />
-      )}
-    </div>
+    <div
+      className="h-screen w-full bg-[#111] bg-cover bg-center"
+      style={{
+        backgroundImage: `url(${first})`,
+      }}
+    />
   )
 }

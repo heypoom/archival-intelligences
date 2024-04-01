@@ -93,6 +93,14 @@ export class Dictation {
   }
 
   onError(event: SpeechRecognitionErrorEvent) {
+    // restart the recognition if speech is not detected
+    if (event.error === 'no-speech') {
+      this.stop()
+      this.start()
+
+      return
+    }
+
     console.warn(`[speech] error of ${event.error}`, event.message)
     $dictationState.set('failed')
   }

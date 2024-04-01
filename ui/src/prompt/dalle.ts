@@ -20,10 +20,16 @@ export async function generateImage(prompt: string): Promise<Image[] | null> {
         prompt,
         model: 'dall-e-3',
         n: 1,
+
+        // 1024x1024, 1024x1792 or 1792x1024
+        // square, standard quality images are the fastest to generate.
         size: '1024x1024',
         style: 'vivid',
         response_format: 'url',
-        quality: 'hd',
+
+        // By default, images are generated at standard quality,
+        // but when using DALL·E 3 you can set quality: "hd" for enhanced detail.
+        quality: 'standard',
       }),
     })
 
