@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { $guidance } from '../store/guidance.ts'
 import { paintDenseNoise, paintNoiseGrid } from '../utils/noise.ts'
 
 export const AnimatedNoise = () => {
@@ -8,8 +9,13 @@ export const AnimatedNoise = () => {
     const canvas = canvasRef.current
     if (!canvas) return
 
-    paintNoiseGrid(canvas, { scaleBy: 1, blockSize: 7 })
-    // paintDenseNoise(canvas)
+    const size = $guidance.get()
+
+    if (size < 2) {
+      paintDenseNoise(canvas)
+    } else {
+      paintNoiseGrid(canvas, { scaleBy: 1, blockSize: size })
+    }
   }
 
   useEffect(() => {
