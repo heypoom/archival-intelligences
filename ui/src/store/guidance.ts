@@ -1,3 +1,3 @@
 import { atom } from 'nanostores'
 
-export const $guidance = atom(50)
+export const $guidance = atom(0)

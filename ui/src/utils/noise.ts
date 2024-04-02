@@ -50,7 +50,7 @@ export function paintNoiseGrid(
 
   for (let y = 0; y < gridHeight; y++) {
     for (let x = 0; x < gridWidth; x++) {
-      const v = Math.floor(Math.random() * 255)
+      const v = Math.floor(Math.random() * 256)
 
       if (!currentNoise[y]) currentNoise[y] = []
       currentNoise[y][x] = v
