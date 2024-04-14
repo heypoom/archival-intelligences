@@ -11,7 +11,23 @@ fastapi = "^0.109.1"
 uvicorn = {extras = ["standard"], version = "^0.27.0.post1"}
 diffusers = {extras = ["torch"], version = "^0.27.2"}
 torch = "^2.2.2"
+jupyter = "^1.0.0"
+matplotlib = "^3.8.3"
+datasets = "^2.18.0"
+torchvision = "^0.17.2"
+pillow = "^10.3.0"
+accelerate = "^0.28.0"
+transformers = "^4.39.3"
+ray = {extras = ["serve"], version = "^2.10.0"}
+bentoml = "^1.2.10"
+opencv-python = "^4.9.0.80"
+peft = "^0.10.0"
 
+
+[[tool.poetry.source]]
+name = "pytorch-gpu-src"
+url = "https://download.pytorch.org/whl/cu118"
+priority = "explicit"
 
 [build-system]
 requires = ["poetry-core"]
