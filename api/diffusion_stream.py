@@ -244,6 +244,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 await websocket.send_text(f"ready")
                 for image_bytes in denoise_program_2():
                     if image_bytes is None:
+                        print("- DONE -")
                         await websocket.send_text(f"done")
                         break
                     print(f"sending image of len {len(image_bytes)}")
@@ -252,6 +253,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 await websocket.send_text(f"ready")
                 for image_bytes in denoise_program_3():
                     if image_bytes is None:
+                        print("- DONE -")
                         await websocket.send_text(f"done")
                         break
                     print(f"sending image of len {len(image_bytes)}")
@@ -260,6 +262,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 await websocket.send_text(f"ready")
                 for image_bytes in denoise_program_4():
                     if image_bytes is None:
+                        print("- DONE -")
                         await websocket.send_text(f"done")
                         break
                     print(f"sending image of len {len(image_bytes)}")
