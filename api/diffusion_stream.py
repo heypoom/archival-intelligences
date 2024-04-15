@@ -256,15 +256,19 @@ def infer_program_zero(prompt: str) -> Generator[bytes]:
 
     def run_pipeline():
         result = p4_pipeline(
+            height=256,
+            width=256,
             prompt=prompt,
             num_inference_steps=30,
             guidance_scale=5.5,
         )
-        image = result.images[0]
+        image = result.images[0].resize((256, 256))
         print(f'final image, size={image.size}')
         with io.BytesIO() as buffer:
             image.save(buffer, format='JPEG')
-            signal.send(buffer.getvalue())
+            value = buffer.getvalue()
+            print(f'final image, size={image.size}, bv={len(value)}')
+            signal.send(value)
         time.sleep(10)
         signal.send(None)
 
