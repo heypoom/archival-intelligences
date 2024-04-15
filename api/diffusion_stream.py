@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 import io
 from typing import Generator, Optional
 
@@ -157,6 +158,7 @@ def denoise_program_2() -> Generator[bytes]:
         with io.BytesIO() as buffer:
             image.save(buffer, format='JPEG')
             signal.send(buffer.getvalue())
+        time.sleep(10)
         signal.send(None)
 
     thread = threading.Thread(target=run_pipeline)
@@ -190,6 +192,7 @@ def denoise_program_3() -> Generator[bytes]:
         with io.BytesIO() as buffer:
             image.save(buffer, format='JPEG')
             signal.send(buffer.getvalue())
+        time.sleep(10)
         signal.send(None)
 
     thread = threading.Thread(target=run_pipeline)
@@ -225,6 +228,7 @@ def denoise_program_4() -> Generator[bytes]:
         with io.BytesIO() as buffer:
             image.save(buffer, format='JPEG')
             signal.send(buffer.getvalue())
+        time.sleep(10)
         signal.send(None)
 
     thread = threading.Thread(target=run_pipeline)
