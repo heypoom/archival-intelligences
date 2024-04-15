@@ -251,6 +251,28 @@ def denoise_program_4(prompt: str) -> Generator[bytes]:
 
     return signal.block()
 
+def infer_program_zero(prompt: str) -> Generator[bytes]:
+    signal = Signal()
+
+    def run_pipeline():
+        result = p4_pipeline(
+            prompt=prompt,
+            num_inference_steps=30,
+            guidance_scale=5.5,
+        )
+        image = result.images[0]
+        print(f'final image, size={image.size}')
+        with io.BytesIO() as buffer:
+            image.save(buffer, format='JPEG')
+            signal.send(buffer.getvalue())
+        time.sleep(10)
+        signal.send(None)
+
+    thread = threading.Thread(target=run_pipeline)
+    thread.start()
+
+    return signal.block()
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
@@ -259,7 +281,17 @@ async def websocket_endpoint(websocket: WebSocket):
             command = await websocket.receive_text()
             command = command.strip()
             print(f"ws_command: {command}")
-            if command == "P2":
+            if command == "P0":
+                prompt = command.replace("P0:", "").strip()
+                await websocket.send_text(f"ready")
+                for image_bytes in infer_program_zero(prompt):
+                    if image_bytes is None:
+                        print("- DONE -")
+                        await websocket.send_text(f"done")
+                        break
+                    print(f"sending image of len {len(image_bytes)}")
+                    await websocket.send_bytes(image_bytes)
+            elif command == "P2":
                 await websocket.send_text(f"ready")
                 for image_bytes in denoise_program_2():
                     if image_bytes is None:
