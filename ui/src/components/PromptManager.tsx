@@ -80,7 +80,11 @@ export function PromptManager(props: Props) {
 
       {previewUrl && (
         <div className='flex items-center justify-center w-full h-full'>
-          <img src={previewUrl} alt='' className='h-screen' />
+          <img
+            src={previewUrl}
+            alt=''
+            className='h-screen object-contain object-center'
+          />
         </div>
       )}
 

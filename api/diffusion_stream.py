@@ -9,6 +9,7 @@ import starlette.websockets
 from diffusers import AutoPipelineForText2Image
 import torch
 from fastapi import FastAPI, WebSocket
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 import numpy as np
 
@@ -40,6 +41,18 @@ class Signal:
 
 
 app = FastAPI()
+
+origins = [
+    "*"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 from diffusers import StableDiffusionImg2ImgPipeline
 
@@ -148,7 +161,7 @@ def denoise_program_2() -> Generator[bytes]:
             image=malaya.resize((512, 512)).convert("RGB"),
             # TODO: depend on guidance scale input?
             strength=0.6,
-            num_inference_steps=50,
+            num_inference_steps=200,
             guidance_scale=5.5,
             callback_on_step_end=denoising_callback,
             callback_on_step_end_tensor_inputs=['latents'],
@@ -181,7 +194,7 @@ def denoise_program_3() -> Generator[bytes]:
 
     def run_pipeline():
         result = p3_pipeline(
-            "chua mia tee painting, tree",
+            "chua mia tee painting",
             num_inference_steps=50,
             guidance_scale=5.5,
             callback_on_step_end=denoising_callback,
