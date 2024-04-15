@@ -260,6 +260,7 @@ def infer_program_zero(prompt: str) -> Generator[bytes]:
             num_inference_steps=30,
             guidance_scale=5.5,
         )
+        signal.send(b'SENDING')
         image = result.images[0].resize((256, 256))
         print(f'final image, size={image.size}')
         with io.BytesIO() as buffer:
@@ -287,12 +288,16 @@ async def websocket_endpoint(websocket: WebSocket):
                 prompt = command.replace("P0:", "").strip()
                 await websocket.send_text(f"ready")
                 for image_bytes in infer_program_zero(prompt):
-                    if image_bytes is None:
+                    if image_bytes is b'SENDING':
+                        print("- SENDING -")
+                        await websocket.send_text(f"sending")
+                    elif image_bytes is None:
                         print("- DONE -")
                         await websocket.send_text(f"done")
                         break
-                    print(f"sending image of len {len(image_bytes)}")
-                    await websocket.send_bytes(image_bytes)
+                    else:
+                        print(f"sending image of len {len(image_bytes)}")
+                        await websocket.send_bytes(image_bytes)
             elif command == "P2":
                 await websocket.send_text(f"ready")
                 for image_bytes in denoise_program_2():

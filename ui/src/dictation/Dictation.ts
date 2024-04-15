@@ -57,12 +57,15 @@ export class Dictation {
     const latest = results.item(results.length - 1)
 
     const first = latest.item(0)
-    $latestTranscript.set({
-      transcript: first.transcript,
-      final: latest.isFinal,
-    })
 
-    if (latest.isFinal) await this.processFinalTranscript(first.transcript)
+    if (latest.isFinal) {
+      $latestTranscript.set({
+        transcript: first.transcript,
+        final: latest.isFinal,
+      })
+
+      await this.processFinalTranscript(first.transcript)
+    }
   }
 
   async processFinalTranscript(transcript: string) {
