@@ -3,6 +3,7 @@ import { dictation } from '../dictation'
 
 type SystemEvent =
   | { type: 'start' }
+  | { type: 'sending' }
   | { type: 'image'; blob: Blob; url: string }
   | { type: 'done' }
 
@@ -51,15 +52,20 @@ class SocketManager {
         const cmd = data.trim()
 
         if (cmd === 'ready') this.dispatch({ type: 'start' })
+
+        if (cmd === 'sending') {
+          $generating.set(false)
+          console.log(`sending received`)
+
+          // if (this.speech) {
+          //   // dictation.stop()
+          //   // dictation.start()
+          // }
+        }
+
         if (cmd === 'done') {
           this.dispatch({ type: 'done' })
-
           $generating.set(false)
-
-          if (this.speech) {
-            dictation.stop()
-            dictation.start()
-          }
         }
       }
     })

@@ -19,6 +19,7 @@ import threading
 DEVICE = os.environ.get("TORCH_DEVICE", "cuda")
 print(f"torch device is {DEVICE}")
 
+
 class Signal:
     def __init__(self):
         self.event = threading.Event()
@@ -86,6 +87,7 @@ p4_pipeline = AutoPipelineForText2Image.from_pretrained(
     torch_dtype=torch.float16
 ).to(DEVICE)
 
+
 # def latents_to_rgb(latents, target_image_size=(512, 512)):
 #     # Ensure latents are in the correct format
 #     if not isinstance(latents, torch.Tensor):
@@ -121,11 +123,13 @@ def latents_to_rgb(latents):
 
     weights_tensor = torch.t(torch.tensor(weights, dtype=latents.dtype).to(latents.device))
     biases_tensor = torch.tensor((150, 140, 130), dtype=latents.dtype).to(latents.device)
-    rgb_tensor = torch.einsum("...lxy,lr -> ...rxy", latents, weights_tensor) + biases_tensor.unsqueeze(-1).unsqueeze(-1)
+    rgb_tensor = torch.einsum("...lxy,lr -> ...rxy", latents, weights_tensor) + biases_tensor.unsqueeze(-1).unsqueeze(
+        -1)
     image_array = rgb_tensor.clamp(0, 255)[0].byte().cpu().numpy()
     image_array = image_array.transpose(1, 2, 0)
 
     return PILImage.fromarray(image_array)
+
 
 # def latents_to_rgb(latents, image_size=(512, 512)):
 #     # Ensure latents are in the correct format
@@ -142,7 +146,7 @@ def latents_to_rgb(latents):
 #
 #     return PILImage.fromarray(rgb_image)
 
-def denoise_program_2() -> Generator[bytes]:
+def denoise_program_2(strength: float) -> Generator[bytes]:
     signal = Signal()
 
     malaya = PILImage.open("./notebook/malaya.png")
@@ -162,7 +166,7 @@ def denoise_program_2() -> Generator[bytes]:
             prompt="a dream",
             image=malaya.resize((512, 512)).convert("RGB"),
             # TODO: depend on guidance scale input?
-            strength=0.6,
+            strength=strength,
             num_inference_steps=300,
             guidance_scale=5.5,
             callback_on_step_end=denoising_callback,
@@ -180,6 +184,7 @@ def denoise_program_2() -> Generator[bytes]:
     thread.start()
 
     return signal.block()
+
 
 def denoise_program_3() -> Generator[bytes]:
     signal = Signal()
@@ -251,6 +256,7 @@ def denoise_program_4(prompt: str) -> Generator[bytes]:
 
     return signal.block()
 
+
 def infer_program_zero(prompt: str) -> Generator[bytes]:
     signal = Signal()
 
@@ -276,6 +282,7 @@ def infer_program_zero(prompt: str) -> Generator[bytes]:
 
     return signal.block()
 
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
@@ -298,9 +305,10 @@ async def websocket_endpoint(websocket: WebSocket):
                     else:
                         print(f"sending image of len {len(image_bytes)}")
                         await websocket.send_bytes(image_bytes)
-            elif command == "P2":
+            elif command.startswith("P2:"):
+                strength = float(command.replace("P2:", "").strip())
                 await websocket.send_text(f"ready")
-                for image_bytes in denoise_program_2():
+                for image_bytes in denoise_program_2(strength):
                     if image_bytes is None:
                         print("- DONE -")
                         await websocket.send_text(f"done")

@@ -63,7 +63,7 @@ export function PromptManager(props: Props) {
 
   return (
     <div className='flex bg-black min-h-screen'>
-      <div className='fixed w-screen h-screen bg-transparent'>
+      <div className='fixed w-screen h-screen bg-transparent z-30'>
         <div className='flex flex-col items-center justify-center w-full h-full  bg-transparent'>
           <PromptInput
             input={{
@@ -98,16 +98,18 @@ export function PromptManager(props: Props) {
       </div>
 
       {previewUrl && (
-        <div className='flex items-center justify-center w-full h-full'>
+        <div className='fixed flex items-center justify-center w-full h-full z-20'>
           <img
             src={previewUrl}
             alt=''
-            className='h-screen object-contain object-center'
+            className='h-screen object-contain object-center fade-in-image'
           />
         </div>
       )}
 
-      {!previewUrl && <AnimatedNoise />}
+      <div className='z-0'>
+        <AnimatedNoise />
+      </div>
     </div>
   )
 }

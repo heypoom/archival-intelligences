@@ -21,15 +21,17 @@ export const AnimatedNoise = () => {
   useEffect(() => {
     const timer = setInterval(() => {
       paint()
-    }, 80)
+    }, 400)
 
     return () => {
       clearInterval(timer)
     }
   }, [])
 
+  //
+
   return (
-    <div>
+    <div style={{ filter: 'blur(8px) brightness(50%)' }} className='z-0'>
       <canvas ref={canvasRef} className='w-screen h-screen' />
     </div>
   )

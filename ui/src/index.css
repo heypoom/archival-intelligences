@@ -1,3 +1,20 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+@keyframes fade-in-image-anim {
+    0% {
+        opacity: 0;
+        filter: grayscale(1) blur(100px);
+    }
+
+    100% {
+        opacity: 1;
+        filter: grayscale(0) blur(0px);
+    }
+}
+
+.fade-in-image {
+    animation: fade-in-image-anim 5s ease-in;
+}

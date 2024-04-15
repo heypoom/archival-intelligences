@@ -59,12 +59,38 @@ export class Dictation {
     const first = latest.item(0)
 
     if (latest.isFinal) {
-      $latestTranscript.set({
-        transcript: first.transcript,
-        final: latest.isFinal,
-      })
+      // $latestTranscript.set({
+      //   transcript: first.transcript,
+      //   final: latest.isFinal,
+      // })
 
       await this.processFinalTranscript(first.transcript)
+
+      // $latestTranscript.set({
+      //   transcript: '',
+      //   final: false,
+      // })
+    }
+
+    if (!latest.isFinal) {
+      const prev = [...results].map(r => r.item(0).transcript).join(' ')
+      console.log(prev)
+
+      const len = prev.split(' ').length
+      if (len > 20) {
+        console.log('--- over 20 words. stopping.')
+
+        this.stop()
+
+        setTimeout(() => {
+          this.start()
+        }, 40)
+      } else {
+        $latestTranscript.set({
+          transcript: prev,
+          final: false,
+        })
+      }
     }
   }
 
@@ -113,13 +139,26 @@ export class Dictation {
     // restart the recognition if speech is not detected
     if (event.error === 'no-speech') {
       this.stop()
-      this.start()
+
+      setTimeout(() => {
+        this.start()
+      }, 40)
 
       return
     }
 
     console.warn(`[speech] error of ${event.error}`, event.message)
     $dictationState.set('failed')
+
+    if (event.error === 'aborted') {
+      this.stop()
+
+      setTimeout(() => {
+        this.start()
+      }, 40)
+
+      return
+    }
   }
 
   onEnd() {}
