@@ -281,7 +281,7 @@ async def websocket_endpoint(websocket: WebSocket):
             command = await websocket.receive_text()
             command = command.strip()
             print(f"ws_command: {command}")
-            if command == "P0":
+            if command.startswith("P0:"):
                 prompt = command.replace("P0:", "").strip()
                 await websocket.send_text(f"ready")
                 for image_bytes in infer_program_zero(prompt):

@@ -96,7 +96,7 @@ export class Dictation {
 
     if (!isGenerating) {
       console.log(`NOW GENERATING: ${transcript}`)
-      socket.sock.send(`P4:${transcript}`)
+      socket.sock.send(`P0:${transcript}`)
       $generating.set(true)
     }
 
