@@ -233,7 +233,7 @@ def denoise_program_4(prompt: str) -> Generator[bytes]:
         result = p4_pipeline(
             # use input from prompt,
             prompt=prompt,
-            num_inference_steps=100,
+            num_inference_steps=50,
             guidance_scale=5.5,
             callback_on_step_end=denoising_callback,
             callback_on_step_end_tensor_inputs=['latents'],

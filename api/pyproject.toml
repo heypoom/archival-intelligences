@@ -4,7 +4,6 @@ version = "0.1.0"
 description = ""
 authors = ["Phoomparin Mano <phoomparin@gmail.com>"]
 readme = "README.md"
-package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -23,12 +22,6 @@ bentoml = "^1.2.10"
 opencv-python = "^4.9.0.80"
 peft = "^0.10.0"
 websockets = "^12.0"
-
-
-[[tool.poetry.source]]
-name = "pytorch-gpu-src"
-url = "https://download.pytorch.org/whl/cu118"
-priority = "explicit"
 
 [build-system]
 requires = ["poetry-core"]
