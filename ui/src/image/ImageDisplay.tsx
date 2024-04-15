@@ -6,7 +6,7 @@ export const ImageDisplay = () => {
   const url = useStore($inferencePreview)
 
   return (
-    <div className='flex items-center justify-center h-screen w-full bg-[#111]'>
+    <div className='flex items-center justify-center h-screen w-full bg-[#111] object-contain object-center'>
       {url && <img src={url} alt='' className='h-screen' />}
     </div>
   )
