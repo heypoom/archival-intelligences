@@ -4,6 +4,7 @@ import io
 from typing import Generator, Optional
 
 import PIL.Image as PILImage
+import starlette.websockets
 from diffusers import AutoPipelineForText2Image
 import torch
 from fastapi import FastAPI, WebSocket
@@ -12,6 +13,7 @@ import numpy as np
 
 import threading
 
+DEVICE = "mps"
 
 class Signal:
     def __init__(self):
@@ -33,22 +35,40 @@ class Signal:
             if data is None:
                 break
             yield data
-        raise StopIteration
+        yield None
 
 
 app = FastAPI()
 
-# program 3 pipeline
+from diffusers import StableDiffusionImg2ImgPipeline
+
+print("P2 LOAD")
+
+# program 2 pipeline: malaya
+p2_pipeline = StableDiffusionImg2ImgPipeline.from_pretrained(
+    "runwayml/stable-diffusion-v1-5"
+).to(DEVICE)
+
+print("P3 LOAD")
+
+# program 3 pipeline: a chua mia tee painting
 p3_pipeline = AutoPipelineForText2Image.from_pretrained(
     "stabilityai/stable-diffusion-xl-base-1.0",
     torch_dtype=torch.float16
-).to("mps")
+).to(DEVICE)
 
 p3_pipeline.load_lora_weights(
     "heypoom/chuamiatee-1",
     weight_name="pytorch_lora_weights.safetensors"
 )
 
+print("P4 LOAD")
+
+# program 4 pipeline: regular stable diffusion
+p4_pipeline = AutoPipelineForText2Image.from_pretrained(
+    "stabilityai/stable-diffusion-xl-base-1.0",
+    torch_dtype=torch.float16
+).to(DEVICE)
 
 # def latents_to_rgb(latents, target_image_size=(512, 512)):
 #     # Ensure latents are in the correct format
@@ -106,63 +126,146 @@ def latents_to_rgb(latents):
 #
 #     return PILImage.fromarray(rgb_image)
 
+def denoise_program_2() -> Generator[bytes]:
+    signal = Signal()
+
+    malaya = PILImage.open("./notebook/malaya.png")
+
+    def denoising_callback(pipe, step, timestep, callback_kwargs):
+        print(f'denoising P2, step={step}, ts={timestep}')
+        latents = callback_kwargs["latents"]
+        image = latents_to_rgb(latents).convert("RGB").resize((512, 512))
+        with io.BytesIO() as buffer:
+            image.save(buffer, format='JPEG')
+            value = buffer.getvalue()
+            signal.send(value)
+        return callback_kwargs
+
+    def run_pipeline():
+        result = p2_pipeline(
+            prompt="a dream",
+            image=malaya.resize((512, 512)).convert("RGB"),
+            # TODO: depend on guidance scale input?
+            strength=0.6,
+            num_inference_steps=50,
+            guidance_scale=5.5,
+            callback_on_step_end=denoising_callback,
+            callback_on_step_end_tensor_inputs=['latents'],
+        )
+        image = result.images[0]
+        print(f'final image, size={image.size}')
+        with io.BytesIO() as buffer:
+            image.save(buffer, format='JPEG')
+            signal.send(buffer.getvalue())
+        signal.send(None)
+
+    thread = threading.Thread(target=run_pipeline)
+    thread.start()
+
+    return signal.block()
 
 def denoise_program_3() -> Generator[bytes]:
     signal = Signal()
 
     def denoising_callback(pipe, step, timestep, callback_kwargs):
-        print(f'denoising, step={step}, ts={timestep}')
+        print(f'denoising P3, step={step}, ts={timestep}')
         latents = callback_kwargs["latents"]
         image = latents_to_rgb(latents).convert("RGB").resize((512, 512))
-        print(f'denoised, size={image.size}')
         with io.BytesIO() as buffer:
             image.save(buffer, format='JPEG')
-            signal.send(buffer.getvalue())
+            value = buffer.getvalue()
+            signal.send(value)
         return callback_kwargs
 
     def run_pipeline():
-        p3_pipeline(
+        result = p3_pipeline(
             "chua mia tee painting, tree",
             num_inference_steps=50,
             guidance_scale=5.5,
             callback_on_step_end=denoising_callback,
             callback_on_step_end_tensor_inputs=['latents'],
         )
+        image = result.images[0]
+        print(f'final image, size={image.size}')
+        with io.BytesIO() as buffer:
+            image.save(buffer, format='JPEG')
+            signal.send(buffer.getvalue())
         signal.send(None)
 
     thread = threading.Thread(target=run_pipeline)
     thread.start()
 
-    try:
-        yield from signal.block()
-    except StopIteration:
-        pass
+    return signal.block()
 
 
-async def produce_gen():
-    try:
-        for image_bytes in denoise_program_3():
-            print(f"yield: {len(image_bytes)}")
-            yield (b"--frame\r\n"
-                   b"Content-Type: image/jpeg\r\n\r\n" + image_bytes + b"\r\n")
-    except StopIteration:
-        raise StopAsyncIteration
+def denoise_program_4() -> Generator[bytes]:
+    signal = Signal()
 
+    def denoising_callback(pipe, step, timestep, callback_kwargs):
+        print(f'denoising P4, step={step}, ts={timestep}')
+        latents = callback_kwargs["latents"]
+        image = latents_to_rgb(latents).convert("RGB").resize((512, 512))
+        with io.BytesIO() as buffer:
+            image.save(buffer, format='JPEG')
+            value = buffer.getvalue()
+            signal.send(value)
+        return callback_kwargs
+
+    def run_pipeline():
+        result = p4_pipeline(
+            # use input from prompt,
+            "a dream",
+            num_inference_steps=50,
+            guidance_scale=5.5,
+            callback_on_step_end=denoising_callback,
+            callback_on_step_end_tensor_inputs=['latents'],
+        )
+        image = result.images[0]
+        print(f'final image, size={image.size}')
+        with io.BytesIO() as buffer:
+            image.save(buffer, format='JPEG')
+            signal.send(buffer.getvalue())
+        signal.send(None)
+
+    thread = threading.Thread(target=run_pipeline)
+    thread.start()
+
+    return signal.block()
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     while True:
-        command = await websocket.receive_text()
-        command = command.strip()
-        print(f"ws_command: {command}")
-        if command == "P3":
-            await websocket.send_text(f"ready")
-            try:
-                for image_bytes in denoise_program_3():
+        try:
+            command = await websocket.receive_text()
+            command = command.strip()
+            print(f"ws_command: {command}")
+            if command == "P2":
+                await websocket.send_text(f"ready")
+                for image_bytes in denoise_program_2():
+                    if image_bytes is None:
+                        await websocket.send_text(f"done")
+                        break
+                    print(f"sending image of len {len(image_bytes)}")
                     await websocket.send_bytes(image_bytes)
-            except StopIteration:
-                await websocket.send_text(f"done")
-                continue
-        else:
-            await websocket.send_text(f"unknown command: {command}")
+            elif command == "P3":
+                await websocket.send_text(f"ready")
+                for image_bytes in denoise_program_3():
+                    if image_bytes is None:
+                        await websocket.send_text(f"done")
+                        break
+                    print(f"sending image of len {len(image_bytes)}")
+                    await websocket.send_bytes(image_bytes)
+            elif command == "P4":
+                await websocket.send_text(f"ready")
+                for image_bytes in denoise_program_4():
+                    if image_bytes is None:
+                        await websocket.send_text(f"done")
+                        break
+                    print(f"sending image of len {len(image_bytes)}")
+                    await websocket.send_bytes(image_bytes)
+            else:
+                await websocket.send_text(f"unknown command: {command}")
+        except starlette.websockets.WebSocketDisconnect:
+            print("client disconnected.")
+            break
