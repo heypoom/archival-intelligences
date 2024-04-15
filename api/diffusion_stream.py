@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import time
 import io
+import os
 from typing import Generator, Optional
 
 import PIL.Image as PILImage
@@ -15,7 +16,8 @@ import numpy as np
 
 import threading
 
-DEVICE = "cuda"
+DEVICE = os.environ.get("TORCH_DEVICE", "cuda")
+print(f"torch device is {DEVICE}")
 
 class Signal:
     def __init__(self):

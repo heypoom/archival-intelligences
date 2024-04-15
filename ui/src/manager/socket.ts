@@ -8,11 +8,12 @@ type SystemEvent =
 type Handler = (event: SystemEvent) => void
 
 const LOCAL_WS_URL = 'ws://localhost:8000/ws'
+const DEV_WS_URL = 'ws://209.51.170.72:8000/ws'
 
 class SocketManager {
   sock: WebSocket
   ready = false
-  url = LOCAL_WS_URL
+  url = DEV_WS_URL
 
   handlers: Handler[] = []
 
@@ -22,7 +23,7 @@ class SocketManager {
     this.sock.addEventListener('open', () => {
       this.ready = true
       $apiReady.set(true)
-      console.log('$ websocket connected')
+      console.log(`$ websocket connected to "${this.sock.url}"`)
     })
 
     this.sock.addEventListener('close', () => {
