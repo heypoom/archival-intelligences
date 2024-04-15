@@ -7,6 +7,8 @@ import {
 } from '../store/dictation'
 import { $imagePrompts, $imageUrls } from '../store/images'
 import { generateImage } from '../prompt/dalle'
+import { socket } from '../manager/socket.ts'
+import { $generating } from '../store/prompt.ts'
 
 const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition
@@ -73,26 +75,35 @@ export class Dictation {
     logs.unshift({ id, transcript })
     $transcripts.set(logs)
 
-    const imagePrompt = await sentenceToImagePrompt(transcript)
-    if (!imagePrompt) return
-
-    const prompts = [...$imagePrompts.get()]
-    if (prompts.length > MAX_PROMPTS) prompts.shift()
-
-    prompts.push({ id, prompt: imagePrompt })
-    $imagePrompts.set(prompts)
+    // const imagePrompt = await sentenceToImagePrompt(transcript)
+    // if (!imagePrompt) return
+    //
+    // const prompts = [...$imagePrompts.get()]
+    // if (prompts.length > MAX_PROMPTS) prompts.shift()
+    //
+    // prompts.push({ id, prompt: imagePrompt })
+    // $imagePrompts.set(prompts)
 
     // Generate images from the prompt.
-    const images = await generateImage(imagePrompt)
-    console.log('gen images', images)
+    // const images = await generateImage(imagePrompt)
+    // console.log('gen images', images)
+    //
+    // const [image] = images ?? []
+    // if (!image) return
 
-    const [image] = images ?? []
-    if (!image) return
+    const isGenerating = $generating.get()
+    socket.speech = true
 
-    const imageUrls = [{ id, url: image.url }, ...$imageUrls.get()]
-    if (imageUrls.length > MAX_IMAGE_URLS) imageUrls.pop()
+    if (!isGenerating) {
+      console.log(`NOW GENERATING: ${transcript}`)
+      socket.sock.send(`P4:${transcript}`)
+      $generating.set(true)
+    }
 
-    $imageUrls.set(imageUrls)
+    // const imageUrls = [{ id, url }, ...$imageUrls.get()]
+    // if (imageUrls.length > MAX_IMAGE_URLS) imageUrls.pop()
+    //
+    // $imageUrls.set(imageUrls)
   }
 
   onError(event: SpeechRecognitionErrorEvent) {

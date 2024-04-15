@@ -1,17 +1,13 @@
 import { useStore } from '@nanostores/react'
 
-import { $imageUrls } from '../store/images'
+import { $inferencePreview } from '../store/prompt.ts'
 
 export const ImageDisplay = () => {
-  const urls = useStore($imageUrls)
-  const first = urls[0]?.url
+  const url = useStore($inferencePreview)
 
   return (
-    <div
-      className='h-screen w-full bg-[#111] bg-cover bg-center'
-      style={{
-        backgroundImage: `url(${first})`,
-      }}
-    />
+    <div className='flex items-center justify-center h-screen w-full bg-[#111]'>
+      {url && <img src={url} alt='' className='h-screen' />}
+    </div>
   )
 }

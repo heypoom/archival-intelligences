@@ -1,4 +1,5 @@
-import { $apiReady, $inferencePreview } from '../store/prompt.ts'
+import { $apiReady, $generating, $inferencePreview } from '../store/prompt.ts'
+import { dictation } from '../dictation'
 
 type SystemEvent =
   | { type: 'start' }
@@ -14,6 +15,7 @@ class SocketManager {
   sock: WebSocket
   ready = false
   url = DEV_WS_URL
+  speech = false
 
   handlers: Handler[] = []
 
@@ -49,7 +51,16 @@ class SocketManager {
         const cmd = data.trim()
 
         if (cmd === 'ready') this.dispatch({ type: 'start' })
-        if (cmd === 'done') this.dispatch({ type: 'done' })
+        if (cmd === 'done') {
+          this.dispatch({ type: 'done' })
+
+          $generating.set(false)
+
+          if (this.speech) {
+            dictation.stop()
+            dictation.start()
+          }
+        }
       }
     })
   }

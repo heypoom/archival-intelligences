@@ -27,22 +27,24 @@ export function PromptManager(props: Props) {
   const previewUrl = useStore($inferencePreview)
   const apiReady = useStore($apiReady)
 
+  const useKeyword = typeof keyword === 'string' && keyword.length > 0
+
   function handleChange(input: string) {
     $prompt.set(input)
-
-    const useKeyword = typeof keyword === 'string' && keyword.length > 0
 
     if (useKeyword) {
       const isKeyword = input
         .trim()
         .toLowerCase()
         .endsWith(keyword.toLowerCase())
+
       const segments = input.split(' ')
 
       if (isKeyword && segments.length > 2) {
         console.log(
           `generating "${input}" with guidance ${guidance} -> ${command}`,
         )
+
         $generating.set(true)
 
         if (!socket.ready) {
@@ -68,6 +70,23 @@ export function PromptManager(props: Props) {
               disabled: isGenerating || !apiReady,
               onChange: e => handleChange(e.target.value),
               value: prompt,
+              onKeyDown: e => {
+                // freestyle inference
+                if (e.key === 'Enter' && !useKeyword) {
+                  console.log(`inferencing: ${prompt}`)
+
+                  $generating.set(true)
+
+                  if (!socket.ready) {
+                    console.log('[!!!!] socket not ready')
+                    return
+                  }
+
+                  const sys = `${command}:${prompt}`
+                  console.log(`> sent "${sys}"`)
+                  socket.sock.send(sys)
+                }
+              },
             }}
             className={cx(!apiReady && 'bg-slate-800')}
           />
