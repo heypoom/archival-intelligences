@@ -3,7 +3,13 @@ import { useStore } from '@nanostores/react'
 
 import { $guidance } from '../store/guidance'
 
-export const GuidanceSlider = () => {
+interface Props {
+  onChange?: (value: number) => void
+}
+
+export const GuidanceSlider = (props: Props) => {
+  const { onChange } = props
+
   const guidance = useStore($guidance)
 
   return (
@@ -13,6 +19,11 @@ export const GuidanceSlider = () => {
         onChange={(_, value) => {
           if (typeof value === 'number') {
             $guidance.set(value)
+          }
+        }}
+        onChangeCommitted={(_, value) => {
+          if (typeof value === 'number' && onChange) {
+            onChange(value)
           }
         }}
         min={0}
