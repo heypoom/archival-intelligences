@@ -15,7 +15,7 @@ import numpy as np
 
 import threading
 
-DEVICE = "mps"
+DEVICE = "cuda"
 
 class Signal:
     def __init__(self):
@@ -161,7 +161,7 @@ def denoise_program_2() -> Generator[bytes]:
             image=malaya.resize((512, 512)).convert("RGB"),
             # TODO: depend on guidance scale input?
             strength=0.6,
-            num_inference_steps=200,
+            num_inference_steps=300,
             guidance_scale=5.5,
             callback_on_step_end=denoising_callback,
             callback_on_step_end_tensor_inputs=['latents'],
