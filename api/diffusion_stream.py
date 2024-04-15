@@ -1,35 +1,82 @@
 from __future__ import annotations
-import bentoml
-import torch
-from typing import List, Optional, AsyncGenerator
-from PIL.Image import Image
+
+import io
+from typing import Generator, Optional
+
 import PIL.Image as PILImage
-from diffusers import DPMSolverMultistepScheduler, DiffusionPipeline
-from transformers import CLIPTextModel, CLIPTokenizer
-
-from fastapi import FastAPI
+from diffusers import AutoPipelineForText2Image
+import torch
+from fastapi import FastAPI, WebSocket
 from fastapi.responses import StreamingResponse
-import cv2
+import numpy as np
 
-model_id = "stabilityai/stable-diffusion-xl-base-1.0"
+import threading
+
+
+class Signal:
+    def __init__(self):
+        self.event = threading.Event()
+        self.data = None
+
+    def send(self, data: Optional[bytes]):
+        self.data = data
+        self.event.set()
+
+    def wait(self):
+        self.event.wait()
+        self.event.clear()
+        return self.data
+
+    def block(self) -> Generator[bytes]:
+        while True:
+            data = self.wait()
+            if data is None:
+                break
+            yield data
+        raise StopIteration
+
 
 app = FastAPI()
 
-tokenizer = CLIPTokenizer.from_pretrained(model_id, subfolder="tokenizer")
-text_encoder = CLIPTextModel.from_pretrained(model_id, subfolder="text_encoder")
-
-scheduler = DPMSolverMultistepScheduler.from_pretrained(model_id, subfolder="scheduler")
-
-pipeline = DiffusionPipeline.from_pretrained(
-    model_id,
-    scheduler=scheduler,
-    tokenizer=tokenizer,
-    text_encoder=text_encoder,
+# program 3 pipeline
+p3_pipeline = AutoPipelineForText2Image.from_pretrained(
+    "stabilityai/stable-diffusion-xl-base-1.0",
     torch_dtype=torch.float16
-).to(device="mps")
+).to("mps")
+
+p3_pipeline.load_lora_weights(
+    "heypoom/chuamiatee-1",
+    weight_name="pytorch_lora_weights.safetensors"
+)
 
 
+# def latents_to_rgb(latents, target_image_size=(512, 512)):
+#     # Ensure latents are in the correct format
+#     if not isinstance(latents, torch.Tensor):
+#         latents = torch.tensor(latents)
+#
+#     # Normalize latents to the range [0, 1]
+#     latents = (latents - latents.min()) / (latents.max() - latents.min())
+#
+#     # Upsample the latents to the target image size
+#     upsampled_latents = torch.nn.functional.interpolate(
+#         latents,
+#         size=target_image_size,
+#         mode='bilinear',
+#         align_corners=False
+#     )
+#
+#     # Convert latents to RGB format
+#     rgb_image = (upsampled_latents[0].permute(1, 2, 0).detach().cpu().numpy()[:, :, :3] * 255).astype(np.uint8)
+#
+#     return PILImage.fromarray(rgb_image)
+
+
+# https://huggingface.co/docs/diffusers/en/using-diffusers/callback#display-image-after-each-generation-step
+# https://huggingface.co/blog/TimothyAlexisVass/explaining-the-sdxl-latent-space
 def latents_to_rgb(latents):
+    print(f'latents={latents.shape}, dtype={latents.dtype}, device={latents.device}')
+
     weights = (
         (60, -60, 25, -70),
         (60, -5, 15, -50),
@@ -38,35 +85,84 @@ def latents_to_rgb(latents):
 
     weights_tensor = torch.t(torch.tensor(weights, dtype=latents.dtype).to(latents.device))
     biases_tensor = torch.tensor((150, 140, 130), dtype=latents.dtype).to(latents.device)
-    rgb_tensor = torch.einsum("...lxy,lr -> ...rxy", latents, weights_tensor) + biases_tensor.unsqueeze(-1).unsqueeze(
-        -1)
+    rgb_tensor = torch.einsum("...lxy,lr -> ...rxy", latents, weights_tensor) + biases_tensor.unsqueeze(-1).unsqueeze(-1)
     image_array = rgb_tensor.clamp(0, 255)[0].byte().cpu().numpy()
     image_array = image_array.transpose(1, 2, 0)
 
     return PILImage.fromarray(image_array)
 
+# def latents_to_rgb(latents, image_size=(512, 512)):
+#     # Ensure latents are in the correct format
+#     latents = np.array(latents)
+#
+#     # Normalize latents to the range [0, 1]
+#     latents = (latents - np.min(latents)) / (np.max(latents) - np.min(latents))
+#
+#     # Scale latents to the desired image size
+#     latents = np.array(PILImage.fromarray(latents).resize(image_size))
+#
+#     # Convert latents to RGB format
+#     rgb_image = np.uint8(latents * 255)
+#
+#     return PILImage.fromarray(rgb_image)
 
-async def generate_image():
+
+def denoise_program_3() -> Generator[bytes]:
+    signal = Signal()
+
     def denoising_callback(pipe, step, timestep, callback_kwargs):
+        print(f'denoising, step={step}, ts={timestep}')
         latents = callback_kwargs["latents"]
-        yield latents_to_rgb(latents)
+        image = latents_to_rgb(latents).convert("RGB").resize((512, 512))
+        print(f'denoised, size={image.size}')
+        with io.BytesIO() as buffer:
+            image.save(buffer, format='JPEG')
+            signal.send(buffer.getvalue())
         return callback_kwargs
 
-    pipeline_result = pipeline(
-        "A photo of a cat",
-        num_inference_steps=10,
-        guidance_scale=5.5,
-        callback_on_step_end=denoising_callback,
-        callback_on_step_end_tensor_inputs=['latents'],
-    )
+    def run_pipeline():
+        p3_pipeline(
+            "chua mia tee painting, tree",
+            num_inference_steps=50,
+            guidance_scale=5.5,
+            callback_on_step_end=denoising_callback,
+            callback_on_step_end_tensor_inputs=['latents'],
+        )
+        signal.send(None)
+
+    thread = threading.Thread(target=run_pipeline)
+    thread.start()
+
+    try:
+        yield from signal.block()
+    except StopIteration:
+        pass
 
 
-@app.get("/stream")
-async def stream_image():
-    async def produce():
-        image = await generate_image()
+async def produce_gen():
+    try:
+        for image_bytes in denoise_program_3():
+            print(f"yield: {len(image_bytes)}")
+            yield (b"--frame\r\n"
+                   b"Content-Type: image/jpeg\r\n\r\n" + image_bytes + b"\r\n")
+    except StopIteration:
+        raise StopAsyncIteration
 
-        yield (b"--frame\r\n"
-               b"Content-Type: image/jpeg\r\n\r\n" + buffer.tobytes() + b"\r\n")
 
-    return StreamingResponse(produce(), media_type="multipart/x-mixed-replace; boundary=frame")
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    while True:
+        command = await websocket.receive_text()
+        command = command.strip()
+        print(f"ws_command: {command}")
+        if command == "P3":
+            await websocket.send_text(f"ready")
+            try:
+                for image_bytes in denoise_program_3():
+                    await websocket.send_bytes(image_bytes)
+            except StopIteration:
+                await websocket.send_text(f"done")
+                continue
+        else:
+            await websocket.send_text(f"unknown command: {command}")

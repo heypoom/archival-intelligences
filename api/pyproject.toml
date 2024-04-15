@@ -22,6 +22,7 @@ ray = {extras = ["serve"], version = "^2.10.0"}
 bentoml = "^1.2.10"
 opencv-python = "^4.9.0.80"
 peft = "^0.10.0"
+websockets = "^12.0"
 
 
 [[tool.poetry.source]]
