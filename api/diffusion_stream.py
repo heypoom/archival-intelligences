@@ -216,7 +216,7 @@ def denoise_program_3() -> Generator[bytes]:
     return signal.block()
 
 
-def denoise_program_4() -> Generator[bytes]:
+def denoise_program_4(prompt: str) -> Generator[bytes]:
     signal = Signal()
 
     def denoising_callback(pipe, step, timestep, callback_kwargs):
@@ -232,8 +232,8 @@ def denoise_program_4() -> Generator[bytes]:
     def run_pipeline():
         result = p4_pipeline(
             # use input from prompt,
-            "a dream",
-            num_inference_steps=50,
+            prompt=prompt,
+            num_inference_steps=100,
             guidance_scale=5.5,
             callback_on_step_end=denoising_callback,
             callback_on_step_end_tensor_inputs=['latents'],
@@ -277,9 +277,10 @@ async def websocket_endpoint(websocket: WebSocket):
                         break
                     print(f"sending image of len {len(image_bytes)}")
                     await websocket.send_bytes(image_bytes)
-            elif command == "P4":
+            elif command.startswith("P4:"):
+                prompt = command.replace("P4:", "").strip()
                 await websocket.send_text(f"ready")
-                for image_bytes in denoise_program_4():
+                for image_bytes in denoise_program_4(prompt):
                     if image_bytes is None:
                         print("- DONE -")
                         await websocket.send_text(f"done")
