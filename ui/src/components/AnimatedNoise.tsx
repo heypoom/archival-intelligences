@@ -9,13 +9,13 @@ export const AnimatedNoise = () => {
     const canvas = canvasRef.current
     if (!canvas) return
 
-    const size = $guidance.get()
+    // const size = $guidance.get()
 
-    if (size < 2) {
-      paintDenseNoise(canvas)
-    } else {
-      paintNoiseGrid(canvas, { scaleBy: 1, blockSize: size })
-    }
+    // if (size < 2) {
+    paintDenseNoise(canvas)
+    // } else {
+    //   paintNoiseGrid(canvas, { scaleBy: 1, blockSize: size })
+    // }
   }
 
   useEffect(() => {

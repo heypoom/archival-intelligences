@@ -52,13 +52,21 @@ export function PromptManager(props: Props) {
           return
         }
 
-        socket.sock.send(command)
+        if (command === 'P2') {
+          socket.sock.send(`P2:${(guidance / 100).toFixed(2)}`)
+        } else {
+          socket.sock.send(command)
+        }
       }
     }
   }
 
   function handleGuidanceChange(value: number) {
     console.log(`regenerating with guidance ${value}`)
+
+    if (command === 'P2') {
+      socket.sock.send(`P2:${(guidance / 100).toFixed(2)}`)
+    }
   }
 
   return (
