@@ -11,14 +11,11 @@ from diffusers import AutoPipelineForText2Image
 import torch
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
-import numpy as np
 
 import threading
 
 DEVICE = os.environ.get("TORCH_DEVICE", "cuda")
 print(f"torch device is {DEVICE}")
-
 
 class Signal:
     def __init__(self):
@@ -163,11 +160,11 @@ def denoise_program_2(strength: float) -> Generator[bytes]:
 
     def run_pipeline():
         result = p2_pipeline(
-            prompt="a dream",
-            image=malaya.resize((512, 512)).convert("RGB"),
+            prompt="people gathering",
+            image=malaya.resize((768, 768)).convert("RGB"),
             # TODO: depend on guidance scale input?
             strength=strength,
-            num_inference_steps=300,
+            num_inference_steps=400,
             guidance_scale=5.5,
             callback_on_step_end=denoising_callback,
             callback_on_step_end_tensor_inputs=['latents'],
@@ -201,7 +198,7 @@ def denoise_program_3() -> Generator[bytes]:
 
     def run_pipeline():
         result = p3_pipeline(
-            "chua mia tee painting",
+            "tree",
             num_inference_steps=50,
             guidance_scale=5.5,
             callback_on_step_end=denoising_callback,
@@ -242,6 +239,10 @@ def denoise_program_4(prompt: str) -> Generator[bytes]:
             guidance_scale=5.5,
             callback_on_step_end=denoising_callback,
             callback_on_step_end_tensor_inputs=['latents'],
+
+            # 16:9 and divisible by 8.
+            width=960,
+            height=544,
         )
         image = result.images[0]
         print(f'final image, size={image.size}')
@@ -295,7 +296,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 prompt = command.replace("P0:", "").strip()
                 await websocket.send_text(f"ready")
                 for image_bytes in infer_program_zero(prompt):
-                    if image_bytes is b'SENDING':
+                    if image_bytes == b'SENDING':
                         print("- SENDING -")
                         await websocket.send_text(f"sending")
                     elif image_bytes is None:

@@ -1,21 +1,20 @@
-import { $apiReady, $generating, $inferencePreview } from '../store/prompt.ts'
-import { dictation } from '../dictation'
+import {$apiReady, $generating, $inferencePreview} from '../store/prompt.ts'
 
 type SystemEvent =
-  | { type: 'start' }
-  | { type: 'sending' }
-  | { type: 'image'; blob: Blob; url: string }
-  | { type: 'done' }
+  | {type: 'start'}
+  | {type: 'sending'}
+  | {type: 'image'; blob: Blob; url: string}
+  | {type: 'done'}
 
 type Handler = (event: SystemEvent) => void
 
 const LOCAL_WS_URL = 'ws://localhost:8000/ws'
-const DEV_WS_URL = 'ws://209.51.170.72:8000/ws'
+const REMOTE_WS_URL = 'ws://209.51.170.72:8000/ws'
 
 class SocketManager {
   sock: WebSocket
   ready = false
-  url = DEV_WS_URL
+  url = LOCAL_WS_URL
   speech = false
 
   handlers: Handler[] = []
@@ -35,23 +34,23 @@ class SocketManager {
       console.log('$ websocket closed')
     })
 
-    this.sock.addEventListener('message', event => {
+    this.sock.addEventListener('message', (event) => {
       const data = event.data
 
       // binary data received - assume JPEG-encoded image
       if (data instanceof Blob) {
-        const blob = new Blob([data], { type: 'image/jpeg' })
+        const blob = new Blob([data], {type: 'image/jpeg'})
         const url = URL.createObjectURL(blob)
 
         $inferencePreview.set(url)
 
-        this.dispatch({ type: 'image', blob, url })
+        this.dispatch({type: 'image', blob, url})
       }
 
       if (typeof data === 'string') {
         const cmd = data.trim()
 
-        if (cmd === 'ready') this.dispatch({ type: 'start' })
+        if (cmd === 'ready') this.dispatch({type: 'start'})
 
         if (cmd === 'sending') {
           $generating.set(false)
@@ -64,7 +63,7 @@ class SocketManager {
         }
 
         if (cmd === 'done') {
-          this.dispatch({ type: 'done' })
+          this.dispatch({type: 'done'})
           $generating.set(false)
         }
       }
