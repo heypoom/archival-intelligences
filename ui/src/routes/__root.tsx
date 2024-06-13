@@ -1,11 +1,12 @@
-import { Outlet, createRootRoute } from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/router-devtools'
+import {Outlet, createRootRoute} from '@tanstack/react-router'
+
+import {HeadlessController} from '../components/HeadlessController'
 
 export const Route = createRootRoute({
   component: () => (
     <>
       <Outlet />
-      {/*<TanStackRouterDevtools />*/}
+      <HeadlessController />
     </>
   ),
 })
