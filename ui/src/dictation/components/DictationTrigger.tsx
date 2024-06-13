@@ -4,6 +4,7 @@ import cn from 'classnames'
 import {dictation} from '..'
 import {$dictationState, DictationState} from '../../store/dictation'
 import {$apiReady} from '../../store/prompt.ts'
+import {isGoogleChrome} from '../../utils/is-google-chrome.ts'
 
 const labelMap: Record<DictationState, string> = {
   stopped: 'start',
@@ -11,6 +12,8 @@ const labelMap: Record<DictationState, string> = {
   listening: 'stop',
   failed: 'restart',
 }
+
+const isChrome = isGoogleChrome()
 
 export const DictationTrigger = () => {
   const status = useStore($dictationState)
@@ -23,7 +26,17 @@ export const DictationTrigger = () => {
   const failed = status === 'failed'
   const apiNotReady = !apiReady
 
-  console.log('status', {status, apiReady})
+  if (!isChrome) {
+    return (
+      <div className="text-red-400 text-3xl p-6 font-bold">
+        PLEASE USE GOOGLE CHROME.
+      </div>
+    )
+  }
+
+  if (apiNotReady) {
+    return <div className="text-gray-400">waiting for server</div>
+  }
 
   return (
     <button
@@ -34,10 +47,9 @@ export const DictationTrigger = () => {
         starting && 'animate-pulse text-blue-500',
         listening && 'text-red-500',
         stopped && 'text-green-500',
-        failed && 'text-red-500',
-        apiNotReady && 'text-red-400'
+        failed && 'text-red-500'
       )}
-      disabled={starting || apiNotReady}
+      disabled={starting}
     >
       {label}
     </button>

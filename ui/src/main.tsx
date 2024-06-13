@@ -1,14 +1,14 @@
 import '@fontsource/inter'
 
-import { RouterProvider, createRouter } from '@tanstack/react-router'
-import { StrictMode } from 'react'
+import {RouterProvider, createRouter} from '@tanstack/react-router'
+import {StrictMode} from 'react'
 import ReactDOM from 'react-dom/client'
 
-import { routeTree } from './routeTree.gen'
+import {routeTree} from './routeTree.gen'
 
 import './index.css'
 
-const router = createRouter({ routeTree })
+const router = createRouter({routeTree})
 
 declare module '@tanstack/react-router' {
   interface Register {
@@ -24,6 +24,6 @@ if (container && !container.innerHTML) {
   root.render(
     <StrictMode>
       <RouterProvider router={router} />
-    </StrictMode>,
+    </StrictMode>
   )
 }
