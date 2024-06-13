@@ -1,9 +1,9 @@
-import { useStore } from '@nanostores/react'
+import {useStore} from '@nanostores/react'
 import cn from 'classnames'
 
-import { dictation } from '..'
-import { $dictationState, DictationState } from '../../store/dictation'
-import { $apiReady } from '../../store/prompt.ts'
+import {dictation} from '..'
+import {$dictationState, DictationState} from '../../store/dictation'
+import {$apiReady} from '../../store/prompt.ts'
 
 const labelMap: Record<DictationState, string> = {
   stopped: 'start',
@@ -23,17 +23,19 @@ export const DictationTrigger = () => {
   const failed = status === 'failed'
   const apiNotReady = !apiReady
 
+  console.log('status', {status, apiReady})
+
   return (
     <button
       onClick={dictation.toggle}
-      type='button'
+      type="button"
       className={cn(
         'flex px-2 text-sm',
         starting && 'animate-pulse text-blue-500',
         listening && 'text-red-500',
         stopped && 'text-green-500',
         failed && 'text-red-500',
-        apiNotReady && 'text-red-400',
+        apiNotReady && 'text-red-400'
       )}
       disabled={starting || apiNotReady}
     >
