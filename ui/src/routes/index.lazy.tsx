@@ -12,10 +12,21 @@ export const Route = createLazyFileRoute('/')({
   component: Index,
 })
 
+const isFullscreen = () =>
+  document.fullscreenElement ||
+  // @ts-expect-error
+  document.webkitFullscreenElement ||
+  // @ts-expect-error
+  document.mozFullScreenElement
+
 function Index() {
   const apiReady = useStore($apiReady)
 
   useHotkeys('space', () => {
+    if (!isFullscreen()) {
+      document.documentElement.requestFullscreen().then()
+    }
+
     // Only allow dictation to start if the API is ready.
     if (apiReady) {
       dictation.restart()
