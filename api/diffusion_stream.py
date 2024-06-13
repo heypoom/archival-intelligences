@@ -3,10 +3,12 @@ from __future__ import annotations
 import time
 import io
 import os
+import sys
 from typing import Generator, Optional
 
 import PIL.Image as PILImage
 import starlette.websockets
+from accelerate import PartialState
 from diffusers import AutoPipelineForText2Image
 import torch
 from fastapi import FastAPI, WebSocket
@@ -14,8 +16,15 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import threading
 
-DEVICE = os.environ.get("TORCH_DEVICE", "cuda")
-print(f"torch device is {DEVICE}")
+CUDA_0 = "cuda:0"
+CUDA_1 = "cuda:1"
+# distributed_state = PartialState()
+
+if not torch.cuda.is_available():
+    print("PyTorch CUDA is not available.")
+    sys.exit(1)
+
+print("CUDA is available. Starting up.")
 
 class Signal:
     def __init__(self):
@@ -54,57 +63,40 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from diffusers import StableDiffusionImg2ImgPipeline
+print("LOADING PIPELINES")
 
-print("P2 LOAD")
+from diffusers import StableDiffusionImg2ImgPipeline
 
 # program 2 pipeline: malaya
 p2_pipeline = StableDiffusionImg2ImgPipeline.from_pretrained(
-    "runwayml/stable-diffusion-v1-5"
-).to(DEVICE)
+    "runwayml/stable-diffusion-v1-5",
+    # device_map="balanced"
+).to(CUDA_0)
 
-print("P3 LOAD")
+print("P2 LOADED")
 
-# program 3 pipeline: a chua mia tee painting
+# program 3 pipeline: a "chua mia tee" painting
 p3_pipeline = AutoPipelineForText2Image.from_pretrained(
     "stabilityai/stable-diffusion-xl-base-1.0",
-    torch_dtype=torch.float16
-).to(DEVICE)
+    torch_dtype=torch.float16,
+    # device_map="balanced"
+).to(CUDA_0)
 
 p3_pipeline.load_lora_weights(
     "heypoom/chuamiatee-1",
     weight_name="pytorch_lora_weights.safetensors"
 )
 
-print("P4 LOAD")
+print("P3 LOADED")
 
-# program 4 pipeline: regular stable diffusion
-p4_pipeline = AutoPipelineForText2Image.from_pretrained(
+# program 0 and 4 pipeline: regular stable diffusion
+p0_pipeline = AutoPipelineForText2Image.from_pretrained(
     "stabilityai/stable-diffusion-xl-base-1.0",
-    torch_dtype=torch.float16
-).to(DEVICE)
+    torch_dtype=torch.float16,
+    # device_map="balanced"
+).to(CUDA_1)
 
-
-# def latents_to_rgb(latents, target_image_size=(512, 512)):
-#     # Ensure latents are in the correct format
-#     if not isinstance(latents, torch.Tensor):
-#         latents = torch.tensor(latents)
-#
-#     # Normalize latents to the range [0, 1]
-#     latents = (latents - latents.min()) / (latents.max() - latents.min())
-#
-#     # Upsample the latents to the target image size
-#     upsampled_latents = torch.nn.functional.interpolate(
-#         latents,
-#         size=target_image_size,
-#         mode='bilinear',
-#         align_corners=False
-#     )
-#
-#     # Convert latents to RGB format
-#     rgb_image = (upsampled_latents[0].permute(1, 2, 0).detach().cpu().numpy()[:, :, :3] * 255).astype(np.uint8)
-#
-#     return PILImage.fromarray(rgb_image)
+print("P4 LOADED - READY")
 
 
 # https://huggingface.co/docs/diffusers/en/using-diffusers/callback#display-image-after-each-generation-step
@@ -127,22 +119,6 @@ def latents_to_rgb(latents):
 
     return PILImage.fromarray(image_array)
 
-
-# def latents_to_rgb(latents, image_size=(512, 512)):
-#     # Ensure latents are in the correct format
-#     latents = np.array(latents)
-#
-#     # Normalize latents to the range [0, 1]
-#     latents = (latents - np.min(latents)) / (np.max(latents) - np.min(latents))
-#
-#     # Scale latents to the desired image size
-#     latents = np.array(PILImage.fromarray(latents).resize(image_size))
-#
-#     # Convert latents to RGB format
-#     rgb_image = np.uint8(latents * 255)
-#
-#     return PILImage.fromarray(rgb_image)
-
 def denoise_program_2(strength: float) -> Generator[bytes]:
     signal = Signal()
 
@@ -151,7 +127,7 @@ def denoise_program_2(strength: float) -> Generator[bytes]:
     def denoising_callback(pipe, step, timestep, callback_kwargs):
         print(f'denoising P2, step={step}, ts={timestep}')
         latents = callback_kwargs["latents"]
-        image = latents_to_rgb(latents).convert("RGB").resize((512, 512))
+        image = latents_to_rgb(latents).convert("RGB")
         with io.BytesIO() as buffer:
             image.save(buffer, format='JPEG')
             value = buffer.getvalue()
@@ -189,7 +165,7 @@ def denoise_program_3() -> Generator[bytes]:
     def denoising_callback(pipe, step, timestep, callback_kwargs):
         print(f'denoising P3, step={step}, ts={timestep}')
         latents = callback_kwargs["latents"]
-        image = latents_to_rgb(latents).convert("RGB").resize((512, 512))
+        image = latents_to_rgb(latents).convert("RGB")
         with io.BytesIO() as buffer:
             image.save(buffer, format='JPEG')
             value = buffer.getvalue()
@@ -224,7 +200,7 @@ def denoise_program_4(prompt: str) -> Generator[bytes]:
     def denoising_callback(pipe, step, timestep, callback_kwargs):
         print(f'denoising P4, step={step}, ts={timestep}')
         latents = callback_kwargs["latents"]
-        image = latents_to_rgb(latents).convert("RGB").resize((512, 512))
+        image = latents_to_rgb(latents).convert("RGB")
         with io.BytesIO() as buffer:
             image.save(buffer, format='JPEG')
             value = buffer.getvalue()
@@ -232,7 +208,7 @@ def denoise_program_4(prompt: str) -> Generator[bytes]:
         return callback_kwargs
 
     def run_pipeline():
-        result = p4_pipeline(
+        result = p0_pipeline(
             # use input from prompt,
             prompt=prompt,
             num_inference_steps=50,
@@ -241,8 +217,8 @@ def denoise_program_4(prompt: str) -> Generator[bytes]:
             callback_on_step_end_tensor_inputs=['latents'],
 
             # 16:9 and divisible by 8.
-            width=960,
-            height=544,
+            width=1360,
+            height=768,
         )
         image = result.images[0]
         print(f'final image, size={image.size}')
@@ -262,13 +238,15 @@ def infer_program_zero(prompt: str) -> Generator[bytes]:
     signal = Signal()
 
     def run_pipeline():
-        result = p4_pipeline(
+        result = p0_pipeline(
             prompt=prompt,
             num_inference_steps=30,
             guidance_scale=5.5,
+            width=800,
+            height=800
         )
         signal.send(b'SENDING')
-        image = result.images[0].resize((256, 256))
+        image = result.images[0]
         print(f'final image, size={image.size}')
         with io.BytesIO() as buffer:
             image.save(buffer, format='JPEG')
