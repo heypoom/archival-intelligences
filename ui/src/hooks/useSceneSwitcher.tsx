@@ -1,5 +1,6 @@
 import {useMatchRoute, useNavigate} from '@tanstack/react-router'
 import {useHotkeys} from 'react-hotkeys-hook'
+import {$generating, $inferencePreview, $prompt} from '../store/prompt'
 
 const here = (a: false | object) => {
   if (a === false) return false
@@ -16,11 +17,19 @@ export function useSceneSwitcher() {
   const three = here(route({to: '/three'}))
   const four = here(route({to: '/four'}))
 
+  function clearInference() {
+    $prompt.set('')
+    $generating.set(false)
+    $inferencePreview.set('')
+  }
+
   useHotkeys('space', () => {
     console.log('SPACE pressed')
   })
 
   useHotkeys('LeftArrow', () => {
+    clearInference()
+
     if (zero) go({to: '/four'})
     if (one) go({to: '/'})
     if (two) go({to: '/one'})
