@@ -19,10 +19,12 @@ export const ImageDisplay = () => {
 
   return (
     <div
-      className="flex items-center justify-center h-screen w-full object-contain object-center"
+      className="flex items-center justify-center h-screen w-full"
       style={{background}}
     >
-      {url && <img src={url} alt="" className="h-screen" />}
+      {url && (
+        <img src={url} alt="" className="h-screen object-cover object-center" />
+      )}
     </div>
   )
 }
