@@ -11,8 +11,8 @@ import {dictation} from '../dictation/Dictation.ts'
 const isChrome = isGoogleChrome()
 
 export const StatusIndicator = () => {
-  const route = useMatchRoute()
-  const isSpeechRoute = route({to: '/'})
+  const mr = useMatchRoute()
+  const isSpeechRoute = mr({to: '/'})
 
   const status = useStore($dictationState)
   const apiReady = useStore($apiReady)
