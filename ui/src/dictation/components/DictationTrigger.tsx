@@ -43,7 +43,7 @@ export const DictationTrigger = () => {
       onClick={dictation.toggle}
       type="button"
       className={cn(
-        'flex px-2 text-sm',
+        'flex px-2 text-xs',
         starting && 'animate-pulse text-blue-500',
         listening && 'text-red-500',
         stopped && 'text-green-500',

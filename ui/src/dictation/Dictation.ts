@@ -1,14 +1,14 @@
-import { nanoid } from 'nanoid'
-import { sentenceToImagePrompt } from '../prompt/prompt'
+import {nanoid} from 'nanoid'
+import {sentenceToImagePrompt} from '../prompt/prompt'
 import {
   $dictationState,
   $latestTranscript,
   $transcripts,
 } from '../store/dictation'
-import { $imagePrompts, $imageUrls } from '../store/images'
-import { generateImage } from '../prompt/dalle'
-import { socket } from '../manager/socket.ts'
-import { $generating } from '../store/prompt.ts'
+import {$imagePrompts, $imageUrls} from '../store/images'
+import {generateImage} from '../prompt/dalle'
+import {socket} from '../manager/socket.ts'
+import {$generating} from '../store/prompt.ts'
 
 const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition
@@ -37,7 +37,7 @@ export class Dictation {
 
     this.recognition.addEventListener(
       'audiostart',
-      this.onAudioStart.bind(this),
+      this.onAudioStart.bind(this)
     )
 
     this.recognition.addEventListener('result', this.onResult.bind(this))
@@ -47,12 +47,24 @@ export class Dictation {
     this.recognition.start()
   }
 
+  restart() {
+    if (this.listening) {
+      this.stop()
+
+      setTimeout(() => {
+        this.start()
+      }, 40)
+    } else {
+      this.start()
+    }
+  }
+
   onAudioStart() {
     $dictationState.set('listening')
   }
 
   async onResult(event: SpeechRecognitionEvent) {
-    const { results } = event
+    const {results} = event
 
     const latest = results.item(results.length - 1)
 
@@ -73,7 +85,7 @@ export class Dictation {
     }
 
     if (!latest.isFinal) {
-      const prev = [...results].map(r => r.item(0).transcript).join(' ')
+      const prev = [...results].map((r) => r.item(0).transcript).join(' ')
       console.log(prev)
 
       const len = prev.split(' ').length
@@ -101,7 +113,7 @@ export class Dictation {
     const logs = [...$transcripts.get()]
     if (logs.length > MAX_TRANSCRIPT) logs.splice(MAX_TRANSCRIPT)
 
-    logs.unshift({ id, transcript })
+    logs.unshift({id, transcript})
     $transcripts.set(logs)
 
     // const imagePrompt = await sentenceToImagePrompt(transcript)
