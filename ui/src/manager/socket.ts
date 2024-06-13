@@ -8,19 +8,25 @@ type SystemEvent =
 
 type Handler = (event: SystemEvent) => void
 
-const LOCAL_WS_URL = 'ws://localhost:8000/ws'
-const REMOTE_WS_URL = 'ws://209.51.170.72:8000/ws'
+// ruian-sg-api.poom.dev
+const REMOTE_WS_URL = 'ws://35.247.139.252:8000/ws'
 
 class SocketManager {
   sock: WebSocket
   ready = false
-  url = LOCAL_WS_URL
+  url = REMOTE_WS_URL
   speech = false
 
   handlers: Handler[] = []
 
   constructor() {
     this.sock = new WebSocket(this.url)
+
+    console.log(`connection target: ${this.url}`)
+
+    this.sock.addEventListener('error', (event) => {
+      console.error('$ websocket error', event)
+    })
 
     this.sock.addEventListener('open', () => {
       this.ready = true
@@ -54,7 +60,7 @@ class SocketManager {
 
         if (cmd === 'sending') {
           $generating.set(false)
-          console.log(`sending received`)
+          console.log('sending received')
 
           // if (this.speech) {
           //   // dictation.stop()
