@@ -144,6 +144,8 @@ def denoise_program_2(strength: float) -> Generator[bytes]:
             guidance_scale=5.5,
             callback_on_step_end=denoising_callback,
             callback_on_step_end_tensor_inputs=['latents'],
+            width=1200,
+            height=1000
         )
         image = result.images[0]
         print(f'final image, size={image.size}')
@@ -179,6 +181,8 @@ def denoise_program_3() -> Generator[bytes]:
             guidance_scale=5.5,
             callback_on_step_end=denoising_callback,
             callback_on_step_end_tensor_inputs=['latents'],
+            width=1200,
+            height=1000
         )
         image = result.images[0]
         print(f'final image, size={image.size}')
