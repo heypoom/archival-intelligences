@@ -1,17 +1,9 @@
 import {useStore} from '@nanostores/react'
 import cn from 'classnames'
 
-import {dictation} from '..'
-import {$dictationState, DictationState} from '../../store/dictation'
+import {$dictationState} from '../../store/dictation'
 import {$apiReady, $generating} from '../../store/prompt.ts'
 import {isGoogleChrome} from '../../utils/is-google-chrome.ts'
-
-const labelMap: Record<DictationState, string> = {
-  stopped: 'start',
-  starting: '(starting...)',
-  listening: 'stop',
-  failed: 'restart',
-}
 
 const isChrome = isGoogleChrome()
 
@@ -20,12 +12,10 @@ export const StatusIndicator = () => {
   const apiReady = useStore($apiReady)
   const generating = useStore($generating)
 
-  const label = labelMap[status]
   const starting = status === 'starting'
   const listening = status === 'listening'
   const stopped = status === 'stopped'
   const failed = status === 'failed'
-  const apiNotReady = !apiReady
 
   if (!isChrome) {
     return (

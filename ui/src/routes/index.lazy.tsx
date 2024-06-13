@@ -1,21 +1,25 @@
-import {useStore} from '@nanostores/react'
 import {createLazyFileRoute} from '@tanstack/react-router'
-import cx from 'classnames'
 
 import {DictationCaption, DictationTrigger, dictation} from '../dictation'
 import {ImageDisplay} from '../image/ImageDisplay'
-import {$dictationState} from '../store/dictation'
-import {$apiReady} from '../store/prompt'
+
 import {useHotkeys} from 'react-hotkeys-hook'
 import {useEffect} from 'react'
+import {useStore} from '@nanostores/react'
+import {$apiReady} from '../store/prompt'
 
 export const Route = createLazyFileRoute('/')({
   component: Index,
 })
 
 function Index() {
+  const apiReady = useStore($apiReady)
+
   useHotkeys('space', () => {
-    dictation.restart()
+    // Only allow dictation to start if the API is ready.
+    if (apiReady) {
+      dictation.restart()
+    }
   })
 
   useEffect(() => {

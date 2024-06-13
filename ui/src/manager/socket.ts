@@ -21,12 +21,17 @@ class SocketManager {
 
   constructor() {
     this.sock = new WebSocket(this.url)
-
     console.log(`connection target: ${this.url}`)
 
+    this.configureWs()
+  }
+
+  configureWs() {
     this.sock.addEventListener('error', (event) => {
       console.error('$ websocket error', event)
       $apiReady.set(false)
+
+      this.reconnectSoon()
     })
 
     this.sock.addEventListener('open', () => {
@@ -39,10 +44,13 @@ class SocketManager {
       this.ready = false
       $apiReady.set(false)
       console.log('$ websocket closed')
+
+      this.reconnectSoon()
     })
 
     this.sock.addEventListener('message', (event) => {
       const data = event.data
+      $apiReady.set(true)
 
       // binary data received - assume JPEG-encoded image
       if (data instanceof Blob) {
@@ -75,6 +83,20 @@ class SocketManager {
         }
       }
     })
+  }
+
+  reconnectSoon() {
+    if (!this.sock) return
+
+    $apiReady.set(false)
+
+    // retry connection after 5 seconds
+    setTimeout(() => {
+      this.sock = new WebSocket(this.url)
+      console.log(`connection target: ${this.url}`)
+
+      this.configureWs()
+    }, 5000)
   }
 
   dispatch(event: SystemEvent) {

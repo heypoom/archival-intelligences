@@ -23,10 +23,6 @@ export function useSceneSwitcher() {
     $inferencePreview.set('')
   }
 
-  useHotkeys('space', () => {
-    console.log('SPACE pressed')
-  })
-
   useHotkeys('LeftArrow', () => {
     clearInference()
 
