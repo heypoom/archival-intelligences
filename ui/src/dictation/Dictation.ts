@@ -5,8 +5,7 @@ import {
   $latestTranscript,
   $transcripts,
 } from '../store/dictation'
-import {$imagePrompts, $imageUrls} from '../store/images'
-import {generateImage} from '../prompt/dalle'
+
 import {socket} from '../manager/socket.ts'
 import {$generating} from '../store/prompt.ts'
 
@@ -14,18 +13,34 @@ const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition
 
 const MAX_TRANSCRIPT = 20
-const MAX_PROMPTS = 10
-const MAX_IMAGE_URLS = 10
 
 export class Dictation {
+  // Dictation Watchdog Timer
+  silenceWatchdog = 0
+
   get listening() {
     return $dictationState.get() === 'listening'
   }
 
   private recognition: SpeechRecognition | null = null
 
+  restartWatchdog() {
+    if (this.silenceWatchdog) {
+      window.clearTimeout(this.silenceWatchdog)
+    }
+
+    // It's too quiet. Restart the recognition.
+    this.silenceWatchdog = window.setTimeout(() => {
+      console.log('--- it is too quiet. restarting watchdog.')
+
+      this.restart()
+    }, 1000 * 20)
+  }
+
   start = () => {
     if (this.listening && this.recognition) return
+
+    this.restartWatchdog()
 
     $dictationState.set('starting')
 
@@ -47,7 +62,13 @@ export class Dictation {
     this.recognition.start()
   }
 
-  restart() {
+  restart(reason?: string) {
+    if (reason) {
+      console.log(`[speech] restarting due to ${reason}`)
+    }
+
+    clearTimeout(this.silenceWatchdog)
+
     if (this.listening) {
       this.stop()
 
@@ -65,10 +86,10 @@ export class Dictation {
 
   async onResult(event: SpeechRecognitionEvent) {
     const {results} = event
-
     const latest = results.item(results.length - 1)
-
     const first = latest.item(0)
+
+    this.restartWatchdog()
 
     if (latest.isFinal) {
       // $latestTranscript.set({
@@ -92,11 +113,7 @@ export class Dictation {
       if (len > 20) {
         console.log('--- over 20 words. stopping.')
 
-        this.stop()
-
-        setTimeout(() => {
-          this.start()
-        }, 40)
+        this.restart('over 20 words')
       } else {
         $latestTranscript.set({
           transcript: prev,
@@ -150,24 +167,15 @@ export class Dictation {
   onError(event: SpeechRecognitionErrorEvent) {
     // restart the recognition if speech is not detected
     if (event.error === 'no-speech') {
-      this.stop()
-
-      setTimeout(() => {
-        this.start()
-      }, 40)
+      this.restart('error of no-speech')
 
       return
     }
 
-    console.warn(`[speech] error of ${event.error}`, event.message)
     $dictationState.set('failed')
 
     if (event.error === 'aborted') {
-      this.stop()
-
-      setTimeout(() => {
-        this.start()
-      }, 40)
+      this.restart('error of aborted')
 
       return
     }
