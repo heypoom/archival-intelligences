@@ -7,7 +7,7 @@ import {
 } from '../store/dictation'
 
 import {socket} from '../manager/socket.ts'
-import {$generating} from '../store/prompt.ts'
+import {$apiReady, $generating} from '../store/prompt.ts'
 
 const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition
@@ -154,8 +154,16 @@ export class Dictation {
 
     if (!isGenerating) {
       console.log(`NOW GENERATING: ${transcript}`)
-      socket.sock.send(`P0:${transcript}`)
-      $generating.set(true)
+
+      try {
+        socket.sock.send(`P0:${transcript}`)
+        $generating.set(true)
+      } catch (err) {
+        $apiReady.set(false)
+        $generating.set(false)
+
+        socket.reconnectSoon()
+      }
     }
 
     // const imageUrls = [{ id, url }, ...$imageUrls.get()]
