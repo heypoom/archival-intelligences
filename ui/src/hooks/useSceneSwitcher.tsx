@@ -14,6 +14,7 @@ export function useSceneSwitcher() {
   const zero = here(route({to: '/'}))
   const one = here(route({to: '/one'}))
   const two = here(route({to: '/two'}))
+  const twoB = here(route({to: '/two-b'}))
   const three = here(route({to: '/three'}))
   const four = here(route({to: '/four'}))
 
@@ -29,14 +30,18 @@ export function useSceneSwitcher() {
     if (zero) go({to: '/four'})
     if (one) go({to: '/'})
     if (two) go({to: '/one'})
-    if (three) go({to: '/two'})
+    if (twoB) go({to: '/two'})
+    if (three) go({to: '/two-b'})
     if (four) go({to: '/three'})
   })
 
   useHotkeys('RightArrow', () => {
+    clearInference()
+
     if (zero) go({to: '/one'})
     if (one) go({to: '/two'})
-    if (two) go({to: '/three'})
+    if (two) go({to: '/two-b'})
+    if (twoB) go({to: '/three'})
     if (three) go({to: '/four'})
     if (four) go({to: '/'})
   })

@@ -16,6 +16,7 @@ import { Route as rootRoute } from './routes/__root'
 
 // Create Virtual Routes
 
+const TwoBLazyImport = createFileRoute('/two-b')()
 const TwoLazyImport = createFileRoute('/two')()
 const ThreeLazyImport = createFileRoute('/three')()
 const OneLazyImport = createFileRoute('/one')()
@@ -23,6 +24,11 @@ const FourLazyImport = createFileRoute('/four')()
 const IndexLazyImport = createFileRoute('/')()
 
 // Create/Update Routes
+
+const TwoBLazyRoute = TwoBLazyImport.update({
+  path: '/two-b',
+  getParentRoute: () => rootRoute,
+} as any).lazy(() => import('./routes/two-b.lazy').then((d) => d.Route))
 
 const TwoLazyRoute = TwoLazyImport.update({
   path: '/two',
@@ -73,6 +79,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TwoLazyImport
       parentRoute: typeof rootRoute
     }
+    '/two-b': {
+      preLoaderRoute: typeof TwoBLazyImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -84,6 +94,7 @@ export const routeTree = rootRoute.addChildren([
   OneLazyRoute,
   ThreeLazyRoute,
   TwoLazyRoute,
+  TwoBLazyRoute,
 ])
 
 /* prettier-ignore-end */

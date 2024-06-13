@@ -54,6 +54,8 @@ export function PromptManager(props: Props) {
 
         if (command === 'P2') {
           socket.sock.send(`P2:${(guidance / 100).toFixed(2)}`)
+        } else if (command === 'P2B') {
+          socket.sock.send(`P2B:${(guidance / 100).toFixed(2)}`)
         } else {
           socket.sock.send(command)
         }
