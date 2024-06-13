@@ -5,12 +5,14 @@ import {$dictationState} from '../store/dictation.ts'
 import {$apiReady, $generating} from '../store/prompt.ts'
 import {isGoogleChrome} from '../utils/is-google-chrome.ts'
 import {useMatchRoute} from '@tanstack/react-router'
+import {useEffect} from 'react'
+import {dictation} from '../dictation/Dictation.ts'
 
 const isChrome = isGoogleChrome()
 
 export const StatusIndicator = () => {
   const route = useMatchRoute()
-  const isSpeechEnabled = route({to: '/'})
+  const isSpeechRoute = route({to: '/'})
 
   const status = useStore($dictationState)
   const apiReady = useStore($apiReady)
@@ -20,6 +22,12 @@ export const StatusIndicator = () => {
   const listening = status === 'listening'
   const stopped = status === 'stopped'
   const failed = status === 'failed'
+
+  useEffect(() => {
+    if (!isSpeechRoute) {
+      dictation.stop()
+    }
+  }, [isSpeechRoute])
 
   if (!isChrome) {
     return (
@@ -39,7 +47,7 @@ export const StatusIndicator = () => {
         )}
       />
 
-      {isSpeechEnabled && (
+      {isSpeechRoute && (
         <div
           className={cn(
             'w-3 h-3 rounded-full',

@@ -4,7 +4,6 @@ import {DictationCaption, dictation} from '../dictation'
 import {ImageDisplay} from '../image/ImageDisplay'
 
 import {useHotkeys} from 'react-hotkeys-hook'
-import {useEffect} from 'react'
 import {useStore} from '@nanostores/react'
 import {$apiReady} from '../store/prompt'
 
@@ -30,12 +29,6 @@ function Index() {
     // Only allow dictation to start if the API is ready.
     if (apiReady) {
       dictation.restart()
-    }
-  })
-
-  useEffect(() => {
-    return () => {
-      dictation.stop()
     }
   })
 
