@@ -141,7 +141,6 @@ def denoise_program_2(strength: float) -> Generator[bytes]:
             # TODO: depend on guidance scale input?
             strength=strength,
             num_inference_steps=400,
-            guidance_scale=5.5,
             callback_on_step_end=denoising_callback,
             callback_on_step_end_tensor_inputs=['latents'],
             width=1200,
@@ -178,7 +177,6 @@ def denoise_program_3() -> Generator[bytes]:
         result = p3_pipeline(
             "tree",
             num_inference_steps=50,
-            guidance_scale=5.5,
             callback_on_step_end=denoising_callback,
             callback_on_step_end_tensor_inputs=['latents'],
             width=1200,
@@ -216,7 +214,6 @@ def denoise_program_4(prompt: str) -> Generator[bytes]:
             # use input from prompt,
             prompt=prompt,
             num_inference_steps=50,
-            guidance_scale=5.5,
             callback_on_step_end=denoising_callback,
             callback_on_step_end_tensor_inputs=['latents'],
 
@@ -244,8 +241,7 @@ def infer_program_zero(prompt: str) -> Generator[bytes]:
     def run_pipeline():
         result = p0_pipeline(
             prompt=prompt,
-            num_inference_steps=50,
-            guidance_scale=5.5,
+            num_inference_steps=30,
 
             # 16:9 and divisible by 8.
             width=1360,
