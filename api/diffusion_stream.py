@@ -159,6 +159,45 @@ def denoise_program_2(strength: float) -> Generator[bytes]:
 
     return signal.block()
 
+def denoise_program_2_b(strength: float) -> Generator[bytes]:
+    signal = Signal()
+
+    malaya = PILImage.open("./notebook/malaya.png")
+
+    def denoising_callback(pipe, step, timestep, callback_kwargs):
+        print(f'denoising P2B, step={step}, ts={timestep}')
+        latents = callback_kwargs["latents"]
+        image = latents_to_rgb(latents).convert("RGB")
+        with io.BytesIO() as buffer:
+            image.save(buffer, format='JPEG')
+            value = buffer.getvalue()
+            signal.send(value)
+        return callback_kwargs
+
+    def run_pipeline():
+        result = p2_pipeline(
+            prompt="group of people walking",
+            image=malaya.resize((768, 768)).convert("RGB"),
+            # TODO: depend on guidance scale input?
+            strength=strength,
+            num_inference_steps=400,
+            callback_on_step_end=denoising_callback,
+            callback_on_step_end_tensor_inputs=['latents'],
+            width=1200,
+            height=1000
+        )
+        image = result.images[0]
+        print(f'final image, size={image.size}')
+        with io.BytesIO() as buffer:
+            image.save(buffer, format='JPEG')
+            signal.send(buffer.getvalue())
+        time.sleep(10)
+        signal.send(None)
+
+    thread = threading.Thread(target=run_pipeline)
+    thread.start()
+
+    return signal.block()
 
 def denoise_program_3() -> Generator[bytes]:
     signal = Signal()
@@ -296,6 +335,16 @@ async def websocket_endpoint(websocket: WebSocket):
                         break
                     print(f"sending image of len {len(image_bytes)}")
                     await websocket.send_bytes(image_bytes)
+            elif command.startswith("P2B:"):
+                strength = float(command.replace("P2B:", "").strip())
+                await websocket.send_text(f"ready")
+                for image_bytes in denoise_program_2_b(strength):
+                    if image_bytes is None:
+                        print("- DONE -")
+                        await websocket.send_text(f"done")
+                        break
+                    print(f"sending image of len {len(image_bytes)}")
+                    await websocket.send_bytes(image_bytes)
             elif command == "P3":
                 await websocket.send_text(f"ready")
                 for image_bytes in denoise_program_3():
@@ -318,5 +367,7 @@ async def websocket_endpoint(websocket: WebSocket):
             else:
                 await websocket.send_text(f"unknown command: {command}")
         except starlette.websockets.WebSocketDisconnect:
+            # ADD DISCONNECTION LOGIC + TASK MAPPING HERE
+            # MAKE SURE TO CANCEL INFERENCE TASK WHEN CLIENT IS DISCONNECTED.
             print("client disconnected.")
             break
