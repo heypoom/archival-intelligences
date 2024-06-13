@@ -24,6 +24,10 @@ export function useSceneSwitcher() {
     $inferencePreview.set('')
   }
 
+  useHotkeys('CTRL + F', () => {
+    document.documentElement.requestFullscreen().then()
+  })
+
   useHotkeys('LeftArrow', () => {
     clearInference()
 
@@ -44,9 +48,5 @@ export function useSceneSwitcher() {
     if (twoB) go({to: '/three'})
     if (three) go({to: '/four'})
     if (four) go({to: '/'})
-  })
-
-  useHotkeys('R', () => {
-    console.log('R key pressed')
   })
 }

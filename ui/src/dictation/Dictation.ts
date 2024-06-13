@@ -198,8 +198,6 @@ export class Dictation {
   }
 
   toggle = () => {
-    document.documentElement.requestFullscreen().then()
-
     if (this.listening) return this.stop()
 
     this.start()
