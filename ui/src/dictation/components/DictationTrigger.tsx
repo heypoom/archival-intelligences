@@ -41,7 +41,7 @@ export const StatusIndicator = () => {
           starting && 'animate-pulse bg-blue-500',
           listening && 'animate-pulse bg-green-500',
           stopped && 'bg-gray-600',
-          failed && 'bg-orange-500'
+          failed && 'animate-pulse bg-red-500'
         )}
       />
 
@@ -49,7 +49,7 @@ export const StatusIndicator = () => {
         className={cn(
           'w-3 h-3 rounded-full',
           generating ? 'bg-green-500 animate-pulse' : 'bg-gray-600',
-          !apiReady && 'bg-red-500'
+          !apiReady && 'animate-pulse bg-red-500'
         )}
       />
     </div>
