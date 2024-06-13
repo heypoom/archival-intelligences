@@ -34,7 +34,7 @@ export class Dictation {
       console.log('--- it is too quiet. restarting watchdog.')
 
       this.restart()
-    }, 1000 * 20)
+    }, 1000 * 7)
   }
 
   start = () => {
