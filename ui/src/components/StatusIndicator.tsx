@@ -1,13 +1,17 @@
 import {useStore} from '@nanostores/react'
 import cn from 'classnames'
 
-import {$dictationState} from '../../store/dictation'
-import {$apiReady, $generating} from '../../store/prompt.ts'
-import {isGoogleChrome} from '../../utils/is-google-chrome.ts'
+import {$dictationState} from '../store/dictation.ts'
+import {$apiReady, $generating} from '../store/prompt.ts'
+import {isGoogleChrome} from '../utils/is-google-chrome.ts'
+import {useMatchRoute} from '@tanstack/react-router'
 
 const isChrome = isGoogleChrome()
 
 export const StatusIndicator = () => {
+  const route = useMatchRoute()
+  const isSpeechEnabled = route({to: '/'})
+
   const status = useStore($dictationState)
   const apiReady = useStore($apiReady)
   const generating = useStore($generating)
@@ -35,15 +39,17 @@ export const StatusIndicator = () => {
         )}
       />
 
-      <div
-        className={cn(
-          'w-3 h-3 rounded-full',
-          starting && 'animate-pulse bg-blue-500',
-          listening && 'animate-pulse bg-green-500',
-          stopped && 'bg-gray-600',
-          failed && 'animate-pulse bg-red-500'
-        )}
-      />
+      {isSpeechEnabled && (
+        <div
+          className={cn(
+            'w-3 h-3 rounded-full',
+            starting && 'animate-pulse bg-blue-500',
+            listening && 'animate-pulse bg-green-500',
+            stopped && 'bg-gray-600',
+            failed && 'animate-pulse bg-red-500'
+          )}
+        />
+      )}
 
       <div
         className={cn(
