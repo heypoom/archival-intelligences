@@ -244,10 +244,12 @@ def infer_program_zero(prompt: str) -> Generator[bytes]:
     def run_pipeline():
         result = p0_pipeline(
             prompt=prompt,
-            num_inference_steps=30,
+            num_inference_steps=50,
             guidance_scale=5.5,
-            width=800,
-            height=800
+
+            # 16:9 and divisible by 8.
+            width=1360,
+            height=768,
         )
         signal.send(b'SENDING')
         image = result.images[0]
