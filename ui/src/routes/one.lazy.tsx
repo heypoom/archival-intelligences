@@ -10,7 +10,7 @@ export const Route = createLazyFileRoute('/one')({
 
 function Index() {
   return (
-    <div className="flex bg-black">
+    <div className="flex bg-[#424242]">
       <div className="fixed w-screen h-screen bg-transparent z-40">
         <div className="flex flex-col items-center justify-center w-full h-full">
           <PromptInput />

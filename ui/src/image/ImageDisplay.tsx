@@ -11,8 +11,8 @@ export const ImageDisplay = () => {
   const apiReady = useStore($apiReady)
 
   const background = useMemo(() => {
-    if (!apiReady) return '#333'
-    if (status === 'stopped' || status === 'failed') return '#222'
+    if (!apiReady) return '#222'
+    if (status === 'stopped' || status === 'failed') return '#111'
 
     return '#111'
   }, [status, apiReady])

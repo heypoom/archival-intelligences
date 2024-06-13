@@ -3,7 +3,7 @@ import cn from 'classnames'
 
 import {dictation} from '..'
 import {$dictationState, DictationState} from '../../store/dictation'
-import {$apiReady} from '../../store/prompt.ts'
+import {$apiReady, $generating} from '../../store/prompt.ts'
 import {isGoogleChrome} from '../../utils/is-google-chrome.ts'
 
 const labelMap: Record<DictationState, string> = {
@@ -15,9 +15,10 @@ const labelMap: Record<DictationState, string> = {
 
 const isChrome = isGoogleChrome()
 
-export const DictationTrigger = () => {
+export const StatusIndicator = () => {
   const status = useStore($dictationState)
   const apiReady = useStore($apiReady)
+  const generating = useStore($generating)
 
   const label = labelMap[status]
   const starting = status === 'starting'
@@ -34,24 +35,32 @@ export const DictationTrigger = () => {
     )
   }
 
-  if (apiNotReady) {
-    return <div className="text-gray-400">waiting for server</div>
-  }
-
   return (
-    <button
-      onClick={dictation.toggle}
-      type="button"
-      className={cn(
-        'flex px-2 text-xs',
-        starting && 'animate-pulse text-blue-500',
-        listening && 'text-red-500',
-        stopped && 'text-green-500',
-        failed && 'text-red-500'
-      )}
-      disabled={starting}
-    >
-      {label}
-    </button>
+    <div className="flex items-center justify-center gap-x-2">
+      <div
+        className={cn(
+          'w-3 h-3 rounded-full',
+          apiReady && 'bg-green-500',
+          !apiReady && 'animate-pulse bg-red-500'
+        )}
+      />
+
+      <div
+        className={cn(
+          'w-3 h-3 rounded-full',
+          starting && 'animate-pulse bg-blue-500',
+          listening && 'animate-pulse bg-red-500',
+          stopped && 'bg-gray-600',
+          failed && 'bg-orange-600'
+        )}
+      />
+
+      <div
+        className={cn(
+          'w-3 h-3 rounded-full',
+          generating ? 'bg-green-500 animate-pulse' : 'bg-gray-600'
+        )}
+      />
+    </div>
   )
 }

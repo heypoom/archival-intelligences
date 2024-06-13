@@ -26,6 +26,7 @@ class SocketManager {
 
     this.sock.addEventListener('error', (event) => {
       console.error('$ websocket error', event)
+      $apiReady.set(false)
     })
 
     this.sock.addEventListener('open', () => {
