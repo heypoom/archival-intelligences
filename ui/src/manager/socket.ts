@@ -26,25 +26,32 @@ class SocketManager {
     this.configureWs()
   }
 
+  markDisconnect() {
+    $apiReady.set(false)
+    $generating.set(false)
+  }
+
   configureWs() {
     this.sock.addEventListener('error', (event) => {
       console.error('$ websocket error', event)
-      $apiReady.set(false)
 
+      this.ready = false
+      this.markDisconnect()
       this.reconnectSoon()
     })
 
     this.sock.addEventListener('open', () => {
+      console.log(`$ websocket connected to "${this.sock.url}"`)
+
       this.ready = true
       $apiReady.set(true)
-      console.log(`$ websocket connected to "${this.sock.url}"`)
     })
 
     this.sock.addEventListener('close', () => {
-      this.ready = false
-      $apiReady.set(false)
       console.log('$ websocket closed')
 
+      this.ready = false
+      this.markDisconnect()
       this.reconnectSoon()
     })
 
@@ -107,6 +114,7 @@ class SocketManager {
 
   close() {
     this.sock.close()
+    this.markDisconnect()
   }
 }
 
