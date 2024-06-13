@@ -3,6 +3,7 @@ import {Outlet, createRootRoute} from '@tanstack/react-router'
 import {HeadlessController} from '../components/HeadlessController'
 import {StatusIndicator} from '../dictation'
 import {CurrentProgramBadge} from '../components/CurrentProgramBadge'
+import FadeToBlack from '../components/FadeToBlack'
 
 export const Route = createRootRoute({
   component: () => (
@@ -17,6 +18,8 @@ export const Route = createRootRoute({
       <div className="fixed right-3 bottom-3 z-10">
         <StatusIndicator />
       </div>
+
+      <FadeToBlack />
     </>
   ),
 })

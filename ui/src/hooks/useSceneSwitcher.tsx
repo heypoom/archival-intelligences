@@ -1,6 +1,7 @@
 import {useMatchRoute, useNavigate} from '@tanstack/react-router'
 import {useHotkeys} from 'react-hotkeys-hook'
 import {$generating, $inferencePreview, $prompt} from '../store/prompt'
+import {$fadeStatus} from '../store/fader'
 
 const here = (a: false | object) => {
   if (a === false) return false
@@ -26,6 +27,10 @@ export function useSceneSwitcher() {
 
   useHotkeys('CTRL + F', () => {
     document.documentElement.requestFullscreen().then()
+  })
+
+  useHotkeys('CTRL + B', () => {
+    $fadeStatus.set(!$fadeStatus.get())
   })
 
   useHotkeys('LeftArrow', () => {
