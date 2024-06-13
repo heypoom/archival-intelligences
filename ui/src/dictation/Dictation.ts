@@ -162,7 +162,7 @@ export class Dictation {
         $apiReady.set(false)
         $generating.set(false)
 
-        socket.reconnectSoon()
+        socket.reconnectSoon('P0 generation error')
       }
     }
 

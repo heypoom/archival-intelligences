@@ -37,7 +37,7 @@ class SocketManager {
 
       this.ready = false
       this.markDisconnect()
-      this.reconnectSoon()
+      this.reconnectSoon('websocket error')
     })
 
     this.sock.addEventListener('open', () => {
@@ -52,7 +52,7 @@ class SocketManager {
 
       this.ready = false
       this.markDisconnect()
-      this.reconnectSoon()
+      this.reconnectSoon('websocket closed', 500)
     })
 
     this.sock.addEventListener('message', (event) => {
@@ -92,7 +92,7 @@ class SocketManager {
     })
   }
 
-  reconnectSoon() {
+  reconnectSoon(reason?: string, delay = 5000) {
     if (!this.sock) return
 
     $apiReady.set(false)
@@ -103,7 +103,7 @@ class SocketManager {
       console.log(`connection target: ${this.url}`)
 
       this.configureWs()
-    }, 5000)
+    }, delay)
   }
 
   dispatch(event: SystemEvent) {
