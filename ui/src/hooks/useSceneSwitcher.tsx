@@ -1,6 +1,8 @@
 import {useMatchRoute, useNavigate} from '@tanstack/react-router'
 import {useHotkeys} from 'react-hotkeys-hook'
 import {$generating, $inferencePreview, $prompt} from '../store/prompt'
+import {$fadeStatus} from '../store/fader'
+import {useStore} from '@nanostores/react'
 
 const here = (a: false | object) => {
   if (a === false) return false
@@ -17,6 +19,7 @@ export function useSceneSwitcher() {
   const twoB = here(route({to: '/two-b'}))
   const three = here(route({to: '/three'}))
   const four = here(route({to: '/four'}))
+  const hasFadedBlack = useStore($fadeStatus)
 
   function clearInference() {
     $prompt.set('')
@@ -26,6 +29,10 @@ export function useSceneSwitcher() {
 
   useHotkeys('CTRL + F', () => {
     document.documentElement.requestFullscreen().then()
+  })
+
+  useHotkeys('CTRL + B', () => {
+    $fadeStatus.set(!$fadeStatus.get())
   })
 
   useHotkeys('LeftArrow', () => {
@@ -42,7 +49,18 @@ export function useSceneSwitcher() {
   useHotkeys('RightArrow', () => {
     clearInference()
 
-    if (zero) go({to: '/one'})
+    if (zero) {
+      if (hasFadedBlack) {
+        go({to: '/one'})
+
+        setTimeout(() => {
+          $fadeStatus.set(false)
+        }, 50)
+      } else {
+        $fadeStatus.set(true)
+      }
+    }
+
     if (one) go({to: '/two'})
     if (two) go({to: '/two-b'})
     if (twoB) go({to: '/three'})

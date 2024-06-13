@@ -26,26 +26,33 @@ class SocketManager {
     this.configureWs()
   }
 
+  markDisconnect() {
+    $apiReady.set(false)
+    $generating.set(false)
+  }
+
   configureWs() {
     this.sock.addEventListener('error', (event) => {
       console.error('$ websocket error', event)
-      $apiReady.set(false)
 
-      this.reconnectSoon()
+      this.ready = false
+      this.markDisconnect()
+      this.reconnectSoon('websocket error')
     })
 
     this.sock.addEventListener('open', () => {
+      console.log(`$ websocket connected to "${this.sock.url}"`)
+
       this.ready = true
       $apiReady.set(true)
-      console.log(`$ websocket connected to "${this.sock.url}"`)
     })
 
     this.sock.addEventListener('close', () => {
-      this.ready = false
-      $apiReady.set(false)
       console.log('$ websocket closed')
 
-      this.reconnectSoon()
+      this.ready = false
+      this.markDisconnect()
+      this.reconnectSoon('websocket closed', 500)
     })
 
     this.sock.addEventListener('message', (event) => {
@@ -85,7 +92,7 @@ class SocketManager {
     })
   }
 
-  reconnectSoon() {
+  reconnectSoon(reason?: string, delay = 5000) {
     if (!this.sock) return
 
     $apiReady.set(false)
@@ -96,7 +103,7 @@ class SocketManager {
       console.log(`connection target: ${this.url}`)
 
       this.configureWs()
-    }, 5000)
+    }, delay)
   }
 
   dispatch(event: SystemEvent) {
@@ -107,6 +114,7 @@ class SocketManager {
 
   close() {
     this.sock.close()
+    this.markDisconnect()
   }
 }
 

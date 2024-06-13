@@ -1,5 +1,5 @@
 export {dictation, Dictation} from './Dictation'
 
-export {StatusIndicator as DictationTrigger} from './components/DictationTrigger'
+export {StatusIndicator} from '../components/StatusIndicator'
 export {DictationLogs} from './components/DictationLogs'
 export {DictationCaption} from './components/DictationCaption'
