@@ -5,6 +5,7 @@ const programNameMap: Record<string, string> = {
   two: '2',
   'two-b': '2B',
   three: '3',
+  'three-b': '3B',
   four: '4',
 }
 

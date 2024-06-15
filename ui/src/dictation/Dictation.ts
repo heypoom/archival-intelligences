@@ -113,7 +113,7 @@ export class Dictation {
       if (len > 20) {
         console.log('--- over 20 words. stopping.')
 
-        this.restart('over 20 words')
+        //this.restart('over 20 words')
       } else {
         $latestTranscript.set({
           transcript: prev,
@@ -150,6 +150,7 @@ export class Dictation {
     // if (!image) return
 
     const isGenerating = $generating.get()
+    console.log(`is generating: ${isGenerating}`)
     socket.speech = true
 
     if (!isGenerating) {

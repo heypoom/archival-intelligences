@@ -18,13 +18,14 @@ export function useSceneSwitcher() {
   const two = here(route({to: '/two'}))
   const twoB = here(route({to: '/two-b'}))
   const three = here(route({to: '/three'}))
+  const threeB = here(route({to: '/three-b'}))
   const four = here(route({to: '/four'}))
   const hasFadedBlack = useStore($fadeStatus)
 
   function clearInference() {
-    $prompt.set('')
+    // $prompt.set('')
     $generating.set(false)
-    $inferencePreview.set('')
+    // $inferencePreview.set('')
   }
 
   useHotkeys('CTRL + F', () => {
@@ -43,7 +44,8 @@ export function useSceneSwitcher() {
     if (two) go({to: '/one'})
     if (twoB) go({to: '/two'})
     if (three) go({to: '/two-b'})
-    if (four) go({to: '/three'})
+    if (threeB) go({to: '/three'})
+    if (four) go({to: '/three-b'})
   })
 
   useHotkeys('RightArrow', () => {
@@ -64,7 +66,8 @@ export function useSceneSwitcher() {
     if (one) go({to: '/two'})
     if (two) go({to: '/two-b'})
     if (twoB) go({to: '/three'})
-    if (three) go({to: '/four'})
+    if (three) go({to: '/three-b'})
+    if (threeB) go({to: '/four'})
     if (four) go({to: '/'})
   })
 }

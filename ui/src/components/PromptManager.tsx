@@ -31,6 +31,7 @@ export function PromptManager(props: Props) {
 
   function handleChange(input: string) {
     $prompt.set(input)
+    $inferencePreview.set('')
 
     if (useKeyword) {
       const isKeyword = input
@@ -52,10 +53,14 @@ export function PromptManager(props: Props) {
           return
         }
 
+        console.log('Program:', command, guidance)
+
         if (command === 'P2') {
           socket.sock.send(`P2:${(guidance / 100).toFixed(2)}`)
         } else if (command === 'P2B') {
           socket.sock.send(`P2B:${(guidance / 100).toFixed(2)}`)
+        } else if (command === 'P3B') {
+          socket.sock.send(`P3B:${input}`)
         } else {
           socket.sock.send(command)
         }
@@ -66,8 +71,13 @@ export function PromptManager(props: Props) {
   function handleGuidanceChange(value: number) {
     console.log(`regenerating with guidance ${value}`)
 
+    $generating.set(true)
+    $inferencePreview.set('')
+
     if (command === 'P2') {
       socket.sock.send(`P2:${(guidance / 100).toFixed(2)}`)
+    } else if (command === 'P2B') {
+      socket.sock.send(`P2B:${(guidance / 100).toFixed(2)}`)
     }
   }
 
@@ -109,10 +119,12 @@ export function PromptManager(props: Props) {
 
       {previewUrl && (
         <div className="fixed flex items-center justify-center w-full h-full z-20">
+          {/* fade-in-image */}
+
           <img
             src={previewUrl}
             alt=""
-            className="h-screen object-contain object-center fade-in-image"
+            className="h-screen object-contain object-center"
           />
         </div>
       )}
