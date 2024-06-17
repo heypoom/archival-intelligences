@@ -5,10 +5,10 @@ import starlette.websockets
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.programs.p0 import infer_program_0, infer_program_4
-from api.programs.p2 import infer_program_2, infer_program_2_b
-from api.programs.p3 import infer_program_3
-from api.utils.ws import send, strip
+from programs.p0 import infer_program_0, infer_program_4
+from programs.p2 import infer_program_2, infer_program_2_b
+from programs.p3 import infer_program_3
+from utils.ws import send, strip
 
 app = FastAPI()
 

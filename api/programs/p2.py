@@ -1,8 +1,8 @@
 import PIL.Image as PILImage
 from diffusers import StableDiffusionImg2ImgPipeline
 
-from api.utils.chuamiatee_size import get_chuamiatee_size
-from api.utils.pipeline_manager import denoise
+from utils.chuamiatee_size import get_chuamiatee_size
+from utils.pipeline_manager import denoise
 
 STEPS = 50
 PROMPT_2 = "people gathering"

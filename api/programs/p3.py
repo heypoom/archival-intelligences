@@ -2,8 +2,8 @@ import torch
 
 from diffusers import AutoPipelineForText2Image
 
-from api.utils.chuamiatee_size import get_chuamiatee_size
-from api.utils.pipeline_manager import denoise
+from utils.chuamiatee_size import get_chuamiatee_size
+from utils.pipeline_manager import denoise
 
 # Program 3 pipeline: chua mia tee painting
 chuamiatee = AutoPipelineForText2Image.from_pretrained(

@@ -1,7 +1,7 @@
 import io
 import asyncio
 
-from api.utils.latents import latents_to_rgb
+from utils.latents import latents_to_rgb
 
 async def denoise(create_pipeline):
   event = asyncio.Event()

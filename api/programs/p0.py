@@ -3,7 +3,7 @@ import torch
 
 from diffusers import AutoPipelineForText2Image
 
-from api.utils.pipeline_manager import denoise, return_image
+from utils.pipeline_manager import denoise, return_image
 
 text2img = AutoPipelineForText2Image.from_pretrained(
     "stabilityai/stable-diffusion-xl-base-1.0",
