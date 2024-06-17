@@ -4,7 +4,7 @@ import asyncio
 from utils.latents import latents_to_rgb
 
 
-async def denoise(run, final_only: bool):
+async def denoise(run, final_only=False):
     queue = asyncio.Queue()
     loop = asyncio.get_event_loop()
 
