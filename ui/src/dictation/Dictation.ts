@@ -113,7 +113,8 @@ export class Dictation {
       if (len > 20) {
         console.log('--- over 20 words. stopping.')
 
-        this.restart('over 20 words')
+         this.restart('over 20 words')
+        
       } else {
         $latestTranscript.set({
           transcript: prev,

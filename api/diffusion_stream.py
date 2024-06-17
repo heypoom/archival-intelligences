@@ -136,15 +136,15 @@ def denoise_program_2(strength: float) -> Generator[bytes]:
 
     def run_pipeline():
         result = p2_pipeline(
-            prompt="people gathering",
+            prompt="painting like an epic poem of malaya",
             image=malaya.resize((768, 768)).convert("RGB"),
             # TODO: depend on guidance scale input?
             strength=strength,
-            num_inference_steps=400,
+            num_inference_steps=50,
             callback_on_step_end=denoising_callback,
             callback_on_step_end_tensor_inputs=['latents'],
-            width=1200,
-            height=1000
+            width=960,
+            height=800
         )
         image = result.images[0]
         print(f'final image, size={image.size}')
@@ -176,15 +176,15 @@ def denoise_program_2_b(strength: float) -> Generator[bytes]:
 
     def run_pipeline():
         result = p2_pipeline(
-            prompt="group of people walking",
+            prompt="crowd of people in a public space",
             image=malaya.resize((768, 768)).convert("RGB"),
-            # TODO: depend on guidance scale input?
             strength=strength,
-            num_inference_steps=400,
+            guidance_scale=8.5,
+            num_inference_steps=50,
             callback_on_step_end=denoising_callback,
             callback_on_step_end_tensor_inputs=['latents'],
-            width=1200,
-            height=1000
+            width=960,
+            height=800
         )
         image = result.images[0]
         print(f'final image, size={image.size}')
@@ -199,7 +199,7 @@ def denoise_program_2_b(strength: float) -> Generator[bytes]:
 
     return signal.block()
 
-def denoise_program_3() -> Generator[bytes]:
+def denoise_program_3(prompt) -> Generator[bytes]:
     signal = Signal()
 
     def denoising_callback(pipe, step, timestep, callback_kwargs):
@@ -214,12 +214,12 @@ def denoise_program_3() -> Generator[bytes]:
 
     def run_pipeline():
         result = p3_pipeline(
-            "tree",
+            prompt,
             num_inference_steps=50,
             callback_on_step_end=denoising_callback,
             callback_on_step_end_tensor_inputs=['latents'],
-            width=1200,
-            height=1000
+            width=960,
+            height=800
         )
         image = result.images[0]
         print(f'final image, size={image.size}')
@@ -233,7 +233,6 @@ def denoise_program_3() -> Generator[bytes]:
     thread.start()
 
     return signal.block()
-
 
 def denoise_program_4(prompt: str) -> Generator[bytes]:
     signal = Signal()
@@ -347,7 +346,17 @@ async def websocket_endpoint(websocket: WebSocket):
                     await websocket.send_bytes(image_bytes)
             elif command == "P3":
                 await websocket.send_text(f"ready")
-                for image_bytes in denoise_program_3():
+                for image_bytes in denoise_program_3(" "):
+                    if image_bytes is None:
+                        print("- DONE -")
+                        await websocket.send_text(f"done")
+                        break
+                    print(f"sending image of len {len(image_bytes)}")
+                    await websocket.send_bytes(image_bytes)
+            elif command.startswith("P3B:"):
+                await websocket.send_text(f"ready")
+                prompt = command.replace("P3B:", "").strip()
+                for image_bytes in denoise_program_3(prompt):
                     if image_bytes is None:
                         print("- DONE -")
                         await websocket.send_text(f"done")
