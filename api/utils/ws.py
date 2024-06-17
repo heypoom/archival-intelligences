@@ -9,7 +9,6 @@ def create_send(websocket: WebSocket):
             if image_bytes:
                 await websocket.send_bytes(image_bytes)
 
-        print("send > done")
         await websocket.send_text("done")
 
     return send
