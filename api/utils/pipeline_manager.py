@@ -23,6 +23,7 @@ async def denoise(create_pipeline):
     buffer = io.BytesIO()
     image.save(buffer, format="JPEG")
     yield buffer.getvalue()
+    return
 
 
 async def return_image(get_image):
@@ -39,3 +40,5 @@ async def return_image(get_image):
     buffer = io.BytesIO()
     image.save(buffer, format="JPEG")
     yield buffer.getvalue()
+    print("image returned!")
+    return

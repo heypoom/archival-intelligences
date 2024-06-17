@@ -17,13 +17,14 @@ async def infer_program_0(prompt: str):
     def get_image():
         return text2img(
             prompt=prompt,
-            num_inference_steps=50,
+            num_inference_steps=30,
             width=WIDTH,
             height=HEIGHT,
         )
 
     async for img_bytes in return_image(get_image):
         yield img_bytes
+    return
 
 
 async def infer_program_4(prompt: str):
@@ -39,3 +40,4 @@ async def infer_program_4(prompt: str):
 
     async for img_bytes in denoise(pipeline):
         yield img_bytes
+    return
