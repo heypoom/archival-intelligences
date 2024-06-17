@@ -8,9 +8,9 @@ def create_send(websocket: WebSocket):
         async for image_bytes in generator:
             if image_bytes:
                 await websocket.send_bytes(image_bytes)
-            else:
-                await websocket.send_text("done")
-                pass
+
+        print("send > done")
+        await websocket.send_text("done")
 
     return send
 

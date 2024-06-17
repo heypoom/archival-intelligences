@@ -4,41 +4,44 @@ import asyncio
 from utils.latents import latents_to_rgb
 
 
-async def denoise(create_pipeline):
-    event = asyncio.Event()
-    event_loop = asyncio.get_event_loop()
+async def denoise(run):
+    queue = asyncio.Queue()
+    loop = asyncio.get_event_loop()
 
-    def denoising_callback(pipe, step, timestep, callback_kwargs):
+    def on_step_end(pipe, step, timestep, callback_kwargs):
         latents = callback_kwargs["latents"]
         image = latents_to_rgb(latents).convert("RGB")
         buffer = io.BytesIO()
         image.save(buffer, format="JPEG")
         img_bytes = buffer.getvalue()
-        event_loop.call_soon_threadsafe(event.set)
-        return callback_kwargs, img_bytes
+        loop.call_soon_threadsafe(queue.put_nowait, img_bytes)
+        return callback_kwargs
 
-    pipeline = create_pipeline(denoising_callback)
-    result = await event_loop.run_in_executor(None, pipeline)
-    image = result.images[0]
-    buffer = io.BytesIO()
-    image.save(buffer, format="JPEG")
-    yield buffer.getvalue()
+    def start_denoise():
+        result = run(on_step_end)
+        image = result.images[0]
+        buffer = io.BytesIO()
+        image.save(buffer, format="JPEG")
+        loop.call_soon_threadsafe(queue.put_nowait, buffer.getvalue())
+        loop.call_soon_threadsafe(queue.put_nowait, None)
+
+    task = loop.run_in_executor(None, start_denoise)
+
+    while not task.done():
+        out = await queue.get()
+        yield out
+        queue.task_done()
+        if out is None:
+            break
+
     return
 
 
 async def return_image(get_image):
-    event = asyncio.Event()
     event_loop = asyncio.get_event_loop()
-
-    def run():
-        image = get_image()
-        event_loop.call_soon_threadsafe(event.set)
-        return image
-
-    result = await event_loop.run_in_executor(None, run)
+    result = await event_loop.run_in_executor(None, get_image)
     image = result.images[0]
     buffer = io.BytesIO()
     image.save(buffer, format="JPEG")
     yield buffer.getvalue()
-    print("image returned!")
     return

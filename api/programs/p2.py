@@ -32,8 +32,8 @@ async def infer_program_2(strength: float):
             height=height,
         )
 
-    async for img_bytes in denoise(pipeline):
-        yield img_bytes
+    async for out in denoise(pipeline):
+        yield out
 
 
 async def infer_program_2_b(strength: float):
@@ -52,5 +52,5 @@ async def infer_program_2_b(strength: float):
             height=height,
         )
 
-    async for img_bytes in denoise(pipeline):
-        yield img_bytes
+    async for out in denoise(pipeline):
+        yield out

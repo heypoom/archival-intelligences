@@ -22,9 +22,8 @@ async def infer_program_0(prompt: str):
             height=HEIGHT,
         )
 
-    async for img_bytes in return_image(get_image):
-        yield img_bytes
-    return
+    async for out in return_image(get_image):
+        yield out
 
 
 async def infer_program_4(prompt: str):
@@ -38,6 +37,5 @@ async def infer_program_4(prompt: str):
             height=HEIGHT,
         )
 
-    async for img_bytes in denoise(pipeline):
-        yield img_bytes
-    return
+    async for out in denoise(pipeline):
+        yield out

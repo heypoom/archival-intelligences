@@ -30,5 +30,5 @@ async def infer_program_3(prompt: str, strength: float):
             height=height,
         )
 
-    async for img_bytes in denoise(pipeline):
-        yield img_bytes
+    async for out in denoise(pipeline):
+        yield out
