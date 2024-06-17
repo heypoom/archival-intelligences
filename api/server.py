@@ -18,7 +18,6 @@ import threading
 
 CUDA_0 = "cuda:0"
 CUDA_1 = "cuda:1"
-# distributed_state = PartialState()
 
 if not torch.cuda.is_available():
     print("PyTorch CUDA is not available.")
