@@ -1,29 +1,16 @@
+import {$startTimestep, $timestep} from '../store/progress.ts'
 import {$apiReady, $generating, $inferencePreview} from '../store/prompt.ts'
-
-type SystemEvent =
-  | {type: 'start'}
-  | {type: 'sending'}
-  | {type: 'image'; blob: Blob; url: string}
-  | {type: 'done'}
-
-type Handler = (event: SystemEvent) => void
 
 // ruian-sg-api.poom.dev
 const REMOTE_WS_URL = 'ws://35.247.139.252:8000/ws'
 
 class SocketManager {
   sock: WebSocket
-  ready = false
   url = REMOTE_WS_URL
-  speech = false
   reconnecting = false
-
-  handlers: Handler[] = []
 
   constructor() {
     this.sock = new WebSocket(this.url)
-    console.log(`connection target: ${this.url}`)
-
     this.configureWs()
   }
 
@@ -36,7 +23,6 @@ class SocketManager {
     this.sock.addEventListener('error', (event) => {
       console.error('$ websocket error', event)
 
-      this.ready = false
       this.markDisconnect()
       this.reconnectSoon('websocket error')
     })
@@ -45,14 +31,12 @@ class SocketManager {
       console.log(`$ websocket connected to "${this.sock.url}"`)
 
       this.reconnecting = false
-      this.ready = true
       $apiReady.set(true)
     })
 
     this.sock.addEventListener('close', () => {
       console.log('$ websocket closed')
 
-      this.ready = false
       this.markDisconnect()
       this.reconnectSoon('websocket closed', 5000)
     })
@@ -68,28 +52,34 @@ class SocketManager {
 
         $inferencePreview.set(url)
 
-        this.dispatch({type: 'image', blob, url})
-      }
+        console.log(`[ws] blob:`, blob.size)
+      } else if (typeof data === 'string') {
+        const res = data.trim()
 
-      if (typeof data === 'string') {
-        const cmd = data.trim()
+        // progress indicator
+        if (res.startsWith('p:')) {
+          const m = res.match(/p:s=(\d+):t=(\d+)/)
 
-        if (cmd === 'ready') this.dispatch({type: 'start'})
+          if (m) {
+            const s = parseInt(m[1], 10)
+            const t = parseInt(m[2], 10)
 
-        if (cmd === 'sending') {
+            console.log(`[ws] s=${s}, t=${t}`)
+
+            $timestep.set(t)
+
+            if (s === 0) {
+              $startTimestep.set(t)
+            }
+          }
+        } else if (res === 'done') {
           $generating.set(false)
-          console.log('sending received')
-
-          // if (this.speech) {
-          //   // dictation.stop()
-          //   // dictation.start()
-          // }
+          console.log(`[ws] done!`)
+        } else {
+          console.log(`[ws] text: "${res.substring(0, 200)}"`)
         }
-
-        if (cmd === 'done') {
-          this.dispatch({type: 'done'})
-          $generating.set(false)
-        }
+      } else {
+        console.log(`[ws] unknown:`, event)
       }
     })
   }
@@ -103,17 +93,12 @@ class SocketManager {
 
     // retry connection after 5 seconds
     setTimeout(() => {
+      console.log(`$ reconnecting due to "${reason}"`)
+
       this.sock = new WebSocket(this.url)
-      console.log(`connection target: ${this.url}`)
 
       this.configureWs()
     }, delay)
-  }
-
-  dispatch(event: SystemEvent) {
-    for (const handler of this.handlers) {
-      handler(event)
-    }
   }
 
   close() {

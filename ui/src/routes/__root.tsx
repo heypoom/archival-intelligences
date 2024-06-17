@@ -4,6 +4,7 @@ import {HeadlessController} from '../components/HeadlessController'
 import {StatusIndicator} from '../dictation'
 import {CurrentProgramBadge} from '../components/CurrentProgramBadge'
 import FadeToBlack from '../components/FadeToBlack'
+import {ProgressBadge} from '../components/ProgressBadge'
 
 export const Route = createRootRoute({
   component: () => (
@@ -11,8 +12,9 @@ export const Route = createRootRoute({
       <Outlet />
       <HeadlessController />
 
-      <div className="fixed left-3 bottom-3 z-10">
+      <div className="fixed flex left-3 bottom-3 z-10 gap-x-1">
         <CurrentProgramBadge />
+        <ProgressBadge />
       </div>
 
       <div className="fixed right-3 bottom-3 z-10">
