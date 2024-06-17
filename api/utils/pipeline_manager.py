@@ -14,6 +14,7 @@ async def denoise(run):
         buffer = io.BytesIO()
         image.save(buffer, format="JPEG")
         img_bytes = buffer.getvalue()
+        loop.call_soon_threadsafe(queue.put_nowait, f"p:s={step}:t={timestep}")
         loop.call_soon_threadsafe(queue.put_nowait, img_bytes)
         return callback_kwargs
 
