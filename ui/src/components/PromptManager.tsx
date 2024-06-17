@@ -13,6 +13,8 @@ import {$guidance} from '../store/guidance'
 import {socket} from '../manager/socket.ts'
 import {AnimatedNoise} from './AnimatedNoise.tsx'
 
+const MIN_KEYWORD_TRIGGER = 2
+
 interface Props {
   keyword?: string
   command: string
@@ -41,7 +43,7 @@ export function PromptManager(props: Props) {
 
       const segments = input.split(' ')
 
-      if (isKeyword && segments.length > 2) {
+      if (isKeyword && segments.length > MIN_KEYWORD_TRIGGER) {
         console.log(
           `generating "${input}" with guidance ${guidance} -> ${command}`
         )
@@ -69,15 +71,33 @@ export function PromptManager(props: Props) {
   }
 
   function handleGuidanceChange(value: number) {
-    console.log(`regenerating with guidance ${value}`)
+    let valid = false
 
-    $generating.set(true)
-    $inferencePreview.set('')
+    if (useKeyword) {
+      const isKeyword = prompt
+        .trim()
+        .toLowerCase()
+        .endsWith(keyword.toLowerCase())
+
+      const segments = prompt.split(' ')
+
+      // if the keyword is not present or the prompt is too short
+      if (!isKeyword || segments.length <= MIN_KEYWORD_TRIGGER) {
+        return
+      }
+    }
 
     if (command === 'P2') {
-      socket.sock.send(`P2:${(guidance / 100).toFixed(2)}`)
+      socket.sock.send(`P2:${(value / 100).toFixed(2)}`)
+      valid = true
     } else if (command === 'P2B') {
-      socket.sock.send(`P2B:${(guidance / 100).toFixed(2)}`)
+      socket.sock.send(`P2B:${(value / 100).toFixed(2)}`)
+      valid = true
+    }
+
+    if (valid) {
+      $inferencePreview.set('')
+      $generating.set(true)
     }
   }
 

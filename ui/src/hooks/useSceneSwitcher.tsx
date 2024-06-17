@@ -3,6 +3,7 @@ import {useHotkeys} from 'react-hotkeys-hook'
 import {$generating, $inferencePreview, $prompt} from '../store/prompt'
 import {$fadeStatus} from '../store/fader'
 import {useStore} from '@nanostores/react'
+import {resetProgress} from '../store/progress'
 
 const here = (a: false | object) => {
   if (a === false) return false
@@ -24,6 +25,7 @@ export function useSceneSwitcher() {
 
   function clearInference() {
     $generating.set(false)
+    resetProgress()
   }
 
   useHotkeys('CTRL + F', () => {
