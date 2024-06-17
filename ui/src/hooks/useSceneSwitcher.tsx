@@ -23,9 +23,7 @@ export function useSceneSwitcher() {
   const hasFadedBlack = useStore($fadeStatus)
 
   function clearInference() {
-    // $prompt.set('')
     $generating.set(false)
-    // $inferencePreview.set('')
   }
 
   useHotkeys('CTRL + F', () => {

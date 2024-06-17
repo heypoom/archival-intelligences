@@ -33,7 +33,7 @@ export class Dictation {
     this.silenceWatchdog = window.setTimeout(() => {
       console.log('--- it is too quiet. restarting watchdog.')
 
-      this.restart()
+      this.restart('watchdog')
     }, 1000 * 7)
   }
 
@@ -62,9 +62,9 @@ export class Dictation {
     this.recognition.start()
   }
 
-  restart(reason?: string) {
+  restart(reason: string) {
     if (reason) {
-      console.log(`[speech] restarting due to ${reason}`)
+      console.log(`[speech] restarting due to "${reason}"`)
     }
 
     clearTimeout(this.silenceWatchdog)
@@ -92,17 +92,7 @@ export class Dictation {
     this.restartWatchdog()
 
     if (latest.isFinal) {
-      // $latestTranscript.set({
-      //   transcript: first.transcript,
-      //   final: latest.isFinal,
-      // })
-
       await this.processFinalTranscript(first.transcript)
-
-      // $latestTranscript.set({
-      //   transcript: '',
-      //   final: false,
-      // })
     }
 
     if (!latest.isFinal) {
@@ -113,7 +103,7 @@ export class Dictation {
       if (len > 20) {
         console.log('--- over 20 words. stopping.')
 
-         this.restart('over 20 words')
+        this.restart('over 20 words')
       } else {
         $latestTranscript.set({
           transcript: prev,
@@ -133,28 +123,10 @@ export class Dictation {
     logs.unshift({id, transcript})
     $transcripts.set(logs)
 
-    // const imagePrompt = await sentenceToImagePrompt(transcript)
-    // if (!imagePrompt) return
-    //
-    // const prompts = [...$imagePrompts.get()]
-    // if (prompts.length > MAX_PROMPTS) prompts.shift()
-    //
-    // prompts.push({ id, prompt: imagePrompt })
-    // $imagePrompts.set(prompts)
-
-    // Generate images from the prompt.
-    // const images = await generateImage(imagePrompt)
-    // console.log('gen images', images)
-    //
-    // const [image] = images ?? []
-    // if (!image) return
-
     const isGenerating = $generating.get()
-    console.log(`is generating: ${isGenerating}`)
-    socket.speech = true
 
     if (!isGenerating) {
-      console.log(`NOW GENERATING: ${transcript}`)
+      console.log(`[GENERATING] ${transcript}`)
 
       try {
         socket.sock.send(`P0:${transcript}`)
@@ -166,11 +138,6 @@ export class Dictation {
         socket.reconnectSoon('P0 generation error')
       }
     }
-
-    // const imageUrls = [{ id, url }, ...$imageUrls.get()]
-    // if (imageUrls.length > MAX_IMAGE_URLS) imageUrls.pop()
-    //
-    // $imageUrls.set(imageUrls)
   }
 
   onError(event: SpeechRecognitionErrorEvent) {

@@ -31,7 +31,7 @@ function Index() {
 
     // Only allow dictation to start if the API is ready.
     if (apiReady) {
-      dictation.restart()
+      dictation.restart('spacebar hotkey')
     }
   })
 

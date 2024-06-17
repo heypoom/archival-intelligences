@@ -15,7 +15,6 @@ class SocketManager {
   sock: WebSocket
   ready = false
   url = REMOTE_WS_URL
-  speech = false
   reconnecting = false
 
   handlers: Handler[] = []
@@ -74,16 +73,8 @@ class SocketManager {
       if (typeof data === 'string') {
         const cmd = data.trim()
 
-        if (cmd === 'ready') this.dispatch({type: 'start'})
-
-        if (cmd === 'sending') {
-          $generating.set(false)
-          console.log('sending received')
-
-          // if (this.speech) {
-          //   // dictation.stop()
-          //   // dictation.start()
-          // }
+        if (cmd === 'ready') {
+          this.dispatch({type: 'start'})
         }
 
         if (cmd === 'done') {
@@ -103,8 +94,9 @@ class SocketManager {
 
     // retry connection after 5 seconds
     setTimeout(() => {
+      console.log(`$ reconnecting due to "${reason}"`)
+
       this.sock = new WebSocket(this.url)
-      console.log(`connection target: ${this.url}`)
 
       this.configureWs()
     }, delay)
