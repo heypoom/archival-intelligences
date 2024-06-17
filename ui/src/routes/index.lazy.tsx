@@ -23,11 +23,11 @@ function Index() {
   const apiReady = useStore($apiReady)
 
   useHotkeys('space', () => {
-    if (!isFullscreen()) {
-      document.documentElement.requestFullscreen().then()
-    }
+    // if (!isFullscreen()) {
+    //   document.documentElement.requestFullscreen().then()
+    // }
 
-    socket.reconnectSoon('spacebar', 50)
+    // socket.reconnectSoon('spacebar', 50)
 
     // Only allow dictation to start if the API is ready.
     if (apiReady) {

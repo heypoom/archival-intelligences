@@ -48,12 +48,12 @@ export function PromptManager(props: Props) {
 
         $generating.set(true)
 
-        if (!socket.ready) {
+        if (!apiReady) {
           console.log('[!!!!] socket not ready')
           return
         }
 
-        console.log('Program:', command, guidance)
+        console.log('program:', command, guidance)
 
         if (command === 'P2') {
           socket.sock.send(`P2:${(guidance / 100).toFixed(2)}`)
@@ -93,17 +93,16 @@ export function PromptManager(props: Props) {
               onKeyDown: (e) => {
                 // freestyle inference
                 if (e.key === 'Enter' && !useKeyword) {
-                  console.log(`inferencing: ${prompt}`)
-
-                  $generating.set(true)
-
-                  if (!socket.ready) {
+                  if (!apiReady) {
                     console.log('[!!!!] socket not ready')
                     return
                   }
 
+                  $generating.set(true)
+
                   const sys = `${command}:${prompt}`
                   console.log(`> sent "${sys}"`)
+
                   socket.sock.send(sys)
                 }
               },
@@ -119,7 +118,7 @@ export function PromptManager(props: Props) {
 
       {previewUrl && (
         <div className="fixed flex items-center justify-center w-full h-full z-20">
-          {/* fade-in-image */}
+          {/* TODO: fade-in-image */}
 
           <img
             src={previewUrl}

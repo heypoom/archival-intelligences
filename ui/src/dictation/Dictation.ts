@@ -31,8 +31,6 @@ export class Dictation {
 
     // It's too quiet. Restart the recognition.
     this.silenceWatchdog = window.setTimeout(() => {
-      console.log('--- it is too quiet. restarting watchdog.')
-
       this.restart('watchdog')
     }, 1000 * 7)
   }
