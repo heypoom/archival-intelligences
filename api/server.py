@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from programs.p0 import infer_program_0, infer_program_4
 from programs.p2 import infer_program_2, infer_program_2_b
 from programs.p3 import infer_program_3
-from utils.ws import send, strip
+from utils.ws import create_send, strip
 
 app = FastAPI()
 
@@ -24,6 +24,8 @@ app.add_middleware(
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
+
+    send = create_send(websocket)
 
     while True:
         try:
