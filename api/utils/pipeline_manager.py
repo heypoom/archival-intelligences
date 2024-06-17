@@ -40,4 +40,5 @@ async def return_image(get_image):
     buffer = io.BytesIO()
     image.save(buffer, format="JPEG")
     yield buffer.getvalue()
+    print("image returned!")
     return
