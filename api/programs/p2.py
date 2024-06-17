@@ -2,7 +2,7 @@ import PIL.Image as PILImage
 from diffusers import StableDiffusionImg2ImgPipeline
 
 from api.utils.chuamiatee_size import get_chuamiatee_size
-from api.utils.pipeline_manager import run_pipeline
+from api.utils.pipeline_manager import denoise
 
 STEPS = 50
 PROMPT_2 = "people gathering"
@@ -31,7 +31,7 @@ async def infer_program_2(strength: float):
       height=height,
     )
   
-  async for img_bytes in run_pipeline(pipeline):
+  async for img_bytes in denoise(pipeline):
     yield img_bytes
 
 async def infer_program_2_b(strength: float):
@@ -50,5 +50,5 @@ async def infer_program_2_b(strength: float):
       height=height
     )
   
-  async for img_bytes in run_pipeline(pipeline):
+  async for img_bytes in denoise(pipeline):
     yield img_bytes

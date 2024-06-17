@@ -5,9 +5,10 @@ import starlette.websockets
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.programs.p0 import infer_program_0
+from api.programs.p0 import infer_program_0, infer_program_4
 from api.programs.p2 import infer_program_2, infer_program_2_b
 from api.programs.p3 import infer_program_3
+from api.utils.ws import send, strip
 
 app = FastAPI()
 
@@ -18,18 +19,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-async def send(websocket: WebSocket, generator):
-    await websocket.send_text("ready")
-
-    async for image_bytes in generator:
-        if image_bytes:
-            await websocket.send_bytes(image_bytes)
-        else:
-            await websocket.send_text("done")
-
-def strip(command: str, key: str):
-    return command.replace(key + ":", "").strip()
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -61,7 +50,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
             elif command.startswith("P4:"):
                 prompt = strip(command, "P4")
-                await send(infer_program_0(prompt))
+                await send(infer_program_4(prompt))
 
             else:
                 await websocket.send_text(f"unknown command: {command}")
