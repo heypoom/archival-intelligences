@@ -5,91 +5,64 @@ import starlette.websockets
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI()
+from api.programs.p0 import infer_program_0
+from api.programs.p2 import infer_program_2, infer_program_2_b
+from api.programs.p3 import infer_program_3
 
-origins = [
-    "*"
-]
+app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+async def send(websocket: WebSocket, generator):
+    await websocket.send_text("ready")
+
+    async for image_bytes in generator:
+        if image_bytes:
+            await websocket.send_bytes(image_bytes)
+        else:
+            await websocket.send_text("done")
+
+def strip(command: str, key: str):
+    return command.replace(key + ":", "").strip()
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
+
     while True:
         try:
             command = await websocket.receive_text()
             command = command.strip()
-            print(f"ws_command: {command}")
+
             if command.startswith("P0:"):
-                prompt = command.replace("P0:", "").strip()
-                await websocket.send_text(f"ready")
-                for img_bytes in infer_program_zero(prompt):
-                    if img_bytes == b'SENDING':
-                        print("- SENDING -")
-                        await websocket.send_text(f"sending")
-                    elif img_bytes is None:
-                        print("- DONE -")
-                        await websocket.send_text(f"done")
-                        break
-                    else:
-                        print(f"sending image of len {len(img_bytes)}")
-                        await websocket.send_bytes(img_bytes)
+                prompt = strip(command, "P0")
+                await send(infer_program_0(prompt))
+
             elif command.startswith("P2:"):
-                strength = float(command.replace("P2:", "").strip())
-                await websocket.send_text(f"ready")
-                for img_bytes in infer_P2(strength):
-                    if img_bytes is None:
-                        print("- DONE -")
-                        await websocket.send_text(f"done")
-                        break
-                    print(f"sending image of len {len(img_bytes)}")
-                    await websocket.send_bytes(img_bytes)
+                strength = float(strip(command, "P2"))
+                await send(infer_program_2(strength))
+
             elif command.startswith("P2B:"):
-                strength = float(command.replace("P2B:", "").strip())
-                await websocket.send_text(f"ready")
-                for img_bytes in denoise_program_2_b(strength):
-                    if img_bytes is None:
-                        print("- DONE -")
-                        await websocket.send_text(f"done")
-                        break
-                    print(f"sending image of len {len(img_bytes)}")
-                    await websocket.send_bytes(img_bytes)
+                strength = float(strip(command, "P2B"))
+                await send(infer_program_2_b(strength))
+
             elif command == "P3":
-                await websocket.send_text(f"ready")
-                for img_bytes in denoise_program_3(" "):
-                    if img_bytes is None:
-                        print("- DONE -")
-                        await websocket.send_text(f"done")
-                        break
-                    print(f"sending image of len {len(img_bytes)}")
-                    await websocket.send_bytes(img_bytes)
+                await send(infer_program_3(" ", 5.5))
+
             elif command.startswith("P3B:"):
-                await websocket.send_text(f"ready")
-                prompt = command.replace("P3B:", "").strip()
-                for img_bytes in denoise_program_3(prompt):
-                    if img_bytes is None:
-                        print("- DONE -")
-                        await websocket.send_text(f"done")
-                        break
-                    print(f"sending image of len {len(img_bytes)}")
-                    await websocket.send_bytes(img_bytes)
+                prompt = strip(command, "P3B")
+                await send(infer_program_3(prompt, 5.5))
+
             elif command.startswith("P4:"):
-                prompt = command.replace("P4:", "").strip()
-                await websocket.send_text(f"ready")
-                for img_bytes in denoise_program_4(prompt):
-                    if img_bytes is None:
-                        print("- DONE -")
-                        await websocket.send_text(f"done")
-                        break
-                    print(f"sending image of len {len(img_bytes)}")
-                    await websocket.send_bytes(img_bytes)
+                prompt = strip(command, "P4")
+                await send(infer_program_0(prompt))
+
             else:
                 await websocket.send_text(f"unknown command: {command}")
         except starlette.websockets.WebSocketDisconnect:

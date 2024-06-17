@@ -13,18 +13,6 @@ text2img = AutoPipelineForText2Image.from_pretrained(
 WIDTH, HEIGHT = 1360, 768
 
 async def infer_program_0(prompt: str):
-  def pipeline():
-    return text2img(
-      prompt=prompt,
-      num_inference_steps=30,
-      width=WIDTH,
-      height=HEIGHT,
-    )
-  
-  async for img_bytes in run_pipeline(pipeline):
-    yield img_bytes
-
-async def infer_program_4(prompt: str):
   def pipeline(on_step_end):
     return text2img(
       prompt=prompt,
