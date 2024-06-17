@@ -18,7 +18,7 @@ PROGRAM_4_STEPS = 50
 async def infer_program_0(prompt: str):
     def pipeline(on_step_end):
         return text2img(
-            prompt=prompt,
+            prompt=f"{prompt}, photorealistic",
             num_inference_steps=PROGRAM_0_STEPS,
             callback_on_step_end=on_step_end,
             width=WIDTH,
