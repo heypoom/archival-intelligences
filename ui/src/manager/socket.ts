@@ -16,6 +16,7 @@ class SocketManager {
   ready = false
   url = REMOTE_WS_URL
   speech = false
+  reconnecting = false
 
   handlers: Handler[] = []
 
@@ -43,6 +44,7 @@ class SocketManager {
     this.sock.addEventListener('open', () => {
       console.log(`$ websocket connected to "${this.sock.url}"`)
 
+      this.reconnecting = false
       this.ready = true
       $apiReady.set(true)
     })
@@ -52,7 +54,7 @@ class SocketManager {
 
       this.ready = false
       this.markDisconnect()
-      this.reconnectSoon('websocket closed', 500)
+      this.reconnectSoon('websocket closed', 5000)
     })
 
     this.sock.addEventListener('message', (event) => {
@@ -93,9 +95,11 @@ class SocketManager {
   }
 
   reconnectSoon(reason?: string, delay = 5000) {
+    if (this.reconnecting) return
     if (!this.sock) return
 
     $apiReady.set(false)
+    this.reconnecting = true
 
     // retry connection after 5 seconds
     setTimeout(() => {
