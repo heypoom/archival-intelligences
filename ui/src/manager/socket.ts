@@ -1,4 +1,4 @@
-import {$startTimestep, $timestep} from '../store/progress.ts'
+import {$startTimestep, $timestep, resetProgress} from '../store/progress.ts'
 import {$apiReady, $generating, $inferencePreview} from '../store/prompt.ts'
 
 // ruian-sg-api.poom.dev
@@ -17,6 +17,7 @@ class SocketManager {
   markDisconnect() {
     $apiReady.set(false)
     $generating.set(false)
+    resetProgress()
   }
 
   configureWs() {
@@ -74,6 +75,7 @@ class SocketManager {
           }
         } else if (res === 'done') {
           $generating.set(false)
+          resetProgress()
           console.log(`[ws] done!`)
         } else {
           console.log(`[ws] text: "${res.substring(0, 200)}"`)

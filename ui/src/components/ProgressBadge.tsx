@@ -1,18 +1,12 @@
 import {useStore} from '@nanostores/react'
 import {$generating} from '../store/prompt'
 import {$progress} from '../store/progress'
-import {useMatchRoute} from '@tanstack/react-router'
 
 export function ProgressBadge() {
   const generating = useStore($generating)
   const progress = useStore($progress)
 
-  const mr = useMatchRoute()
-
-  // Has no progress reporting...
-  const hasNoProgress = mr({to: '/'})
-
-  if (hasNoProgress || !generating) return null
+  if (!generating) return null
 
   let percent = Math.round(progress)
   if (!percent || isNaN(percent)) percent = 0
