@@ -107,7 +107,6 @@ export function PromptManager(props: Props) {
                 }
               },
             }}
-            className={cx(!apiReady && 'bg-slate-800')}
           />
 
           <div className="pt-4">

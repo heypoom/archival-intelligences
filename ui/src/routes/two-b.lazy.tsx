@@ -7,5 +7,5 @@ export const Route = createLazyFileRoute('/two-b')({
 })
 
 function Index() {
-  return <PromptManager keyword="with different composition" command="P2B" />
+  return <PromptManager keyword="different composition" command="P2B" />
 }

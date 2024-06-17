@@ -1,3 +1,4 @@
+import {$startTimestep, $timestep} from '../store/progress.ts'
 import {$apiReady, $generating, $inferencePreview} from '../store/prompt.ts'
 
 // ruian-sg-api.poom.dev
@@ -55,10 +56,27 @@ class SocketManager {
       } else if (typeof data === 'string') {
         const res = data.trim()
 
-        console.log(`[ws] text: "${res.substring(0, 200)}"`)
+        // progress indicator
+        if (res.startsWith('p:')) {
+          const m = res.match(/p:s=(\d+):t=(\d+)/)
 
-        if (res === 'done') {
+          if (m) {
+            const s = parseInt(m[1], 10)
+            const t = parseInt(m[2], 10)
+
+            console.log(`[ws] s=${s}, t=${t}`)
+
+            $timestep.set(t)
+
+            if (s === 0) {
+              $startTimestep.set(t)
+            }
+          }
+        } else if (res === 'done') {
           $generating.set(false)
+          console.log(`[ws] done!`)
+        } else {
+          console.log(`[ws] text: "${res.substring(0, 200)}"`)
         }
       } else {
         console.log(`[ws] unknown:`, event)
