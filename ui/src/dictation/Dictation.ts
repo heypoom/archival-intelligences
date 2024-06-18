@@ -1,5 +1,4 @@
 import {nanoid} from 'nanoid'
-import {sentenceToImagePrompt} from '../prompt/prompt'
 import {
   $dictationState,
   $latestTranscript,
@@ -13,6 +12,10 @@ const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition
 
 const MAX_TRANSCRIPT = 20
+const RESTART_LIMIT = 80
+
+const DELAY_BEFORE_START = 20
+const WATCHDOG_TIMEOUT = 1000 * 7
 
 export class Dictation {
   // Dictation Watchdog Timer
@@ -32,7 +35,7 @@ export class Dictation {
     // It's too quiet. Restart the recognition.
     this.silenceWatchdog = window.setTimeout(() => {
       this.restart('watchdog')
-    }, 1000 * 7)
+    }, WATCHDOG_TIMEOUT)
   }
 
   start = () => {
@@ -45,7 +48,6 @@ export class Dictation {
     this.recognition = new SpeechRecognition()
     this.recognition.continuous = true
     this.recognition.interimResults = true
-    this.recognition.maxAlternatives = 5
     this.recognition.lang = 'en-US'
 
     this.recognition.addEventListener(
@@ -72,7 +74,7 @@ export class Dictation {
 
       setTimeout(() => {
         this.start()
-      }, 40)
+      }, DELAY_BEFORE_START)
     } else {
       this.start()
     }
@@ -98,15 +100,16 @@ export class Dictation {
       console.log(prev)
 
       const len = prev.split(' ').length
-      if (len > 20) {
-        console.log('--- over 20 words. stopping.')
 
-        this.restart('over 20 words')
-      } else {
+      if (len <= MAX_TRANSCRIPT) {
         $latestTranscript.set({
           transcript: prev,
           final: false,
         })
+      }
+
+      if (len > RESTART_LIMIT) {
+        this.restart('too many words')
       }
     }
   }
@@ -133,7 +136,7 @@ export class Dictation {
         $apiReady.set(false)
         $generating.set(false)
 
-        socket.reconnectSoon('P0 generation error')
+        socket.reconnectSoon('P0 socket send error')
       }
     }
   }
@@ -155,18 +158,14 @@ export class Dictation {
     }
   }
 
-  onEnd() {}
+  onEnd() {
+    console.log('[speech] recognition end')
+  }
 
   stop = () => {
     $dictationState.set('stopped')
     this.recognition?.stop()
     this.recognition = null
-  }
-
-  toggle = () => {
-    if (this.listening) return this.stop()
-
-    this.start()
   }
 }
 

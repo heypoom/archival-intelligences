@@ -65,8 +65,6 @@ class SocketManager {
             const s = parseInt(m[1], 10)
             const t = parseInt(m[2], 10)
 
-            console.log(`[ws] s=${s}, t=${t}`)
-
             $timestep.set(t)
 
             if (s === 0) {
