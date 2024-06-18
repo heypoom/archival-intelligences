@@ -1,10 +1,10 @@
 import {useStore} from '@nanostores/react'
 import cn from 'classnames'
 
-import {$latestTranscript} from '../../store/dictation'
+import {$transcript} from '../../store/dictation'
 
 export const DictationCaption = () => {
-  const {transcript, final} = useStore($latestTranscript)
+  const {transcript, final} = useStore($transcript)
 
   if (!transcript) return null
 

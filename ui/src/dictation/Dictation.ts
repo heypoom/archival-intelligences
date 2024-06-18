@@ -1,9 +1,4 @@
-import {nanoid} from 'nanoid'
-import {
-  $dictationState,
-  $latestTranscript,
-  $transcripts,
-} from '../store/dictation'
+import {$dictationState, $transcript} from '../store/dictation'
 
 import {socket} from '../manager/socket.ts'
 import {$apiReady, $generating} from '../store/prompt.ts'
@@ -11,15 +6,28 @@ import {$apiReady, $generating} from '../store/prompt.ts'
 const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition
 
-const MAX_TRANSCRIPT = 20
-const RESTART_LIMIT = 80
+/** Show N backlogs in dictation caption */
+const MAX_TRANSCRIPT_BACKLOG = 1
 
+/** Hide the backlog after N interim words */
+const HIDE_BACKLOG_AFTER_N_INTERIM_WORDS = 10
+
+/** Truncate transcription after N words */
+const TRANSCRIPT_WORD_CUTOFF = 15
+
+/** Forcibly restart the recognizer after N words */
+const FORCE_RESTART_BACKLOG_LIMIT = 20
+
+/** Delay for N milliseconds before starting recognizer again */
 const DELAY_BEFORE_START = 20
+
+/** Wait for N milliseconds of total silence before restarting */
 const WATCHDOG_TIMEOUT = 1000 * 7
 
 export class Dictation {
   // Dictation Watchdog Timer
   silenceWatchdog = 0
+  restarting = false
 
   get listening() {
     return $dictationState.get() === 'listening'
@@ -43,6 +51,7 @@ export class Dictation {
 
     this.restartWatchdog()
 
+    this.restarting = false
     $dictationState.set('starting')
 
     this.recognition = new SpeechRecognition()
@@ -63,6 +72,15 @@ export class Dictation {
   }
 
   restart(reason: string) {
+    if (this.restarting) {
+      console.log(
+        `[speech] tried to restart due to "${reason}" but we are already restarting`
+      )
+      return
+    }
+
+    this.restarting = true
+
     if (reason) {
       console.log(`[speech] restarting due to "${reason}"`)
     }
@@ -93,37 +111,51 @@ export class Dictation {
 
     if (latest.isFinal) {
       await this.processFinalTranscript(first.transcript)
+      return
     }
 
-    if (!latest.isFinal) {
-      const prev = [...results].map((r) => r.item(0).transcript).join(' ')
-      console.log(prev)
+    await this.processInterimTranscript(results)
+  }
 
-      const len = prev.split(' ').length
+  async processInterimTranscript(results: SpeechRecognitionResultList) {
+    const backlogs: string[] = []
+    const interims: string[] = []
 
-      if (len <= MAX_TRANSCRIPT) {
-        $latestTranscript.set({
-          transcript: prev,
-          final: false,
-        })
+    for (const result of results) {
+      const transcript = result.item(0).transcript
+
+      if (result.isFinal) {
+        backlogs.push(transcript)
+      } else {
+        interims.push(transcript)
       }
+    }
 
-      if (len > RESTART_LIMIT) {
-        this.restart('too many words')
-      }
+    const backlogLimit = Math.max(backlogs.length - MAX_TRANSCRIPT_BACKLOG, 0)
+    let wordBacklogs = backlogs.slice(backlogLimit).filter((x) => x)
+
+    // If we have too many words in the interim, do not show the backlog.
+    const interimWords = interims.flatMap((x) => x.split(' ')).filter((x) => x)
+    if (interimWords.length > HIDE_BACKLOG_AFTER_N_INTERIM_WORDS)
+      wordBacklogs = []
+
+    const words = [...wordBacklogs, ...interimWords]
+      .filter((x) => x)
+      .flatMap((x) => x.split(' '))
+      .filter((x) => x)
+
+    const wordLimit = Math.max(words.length - TRANSCRIPT_WORD_CUTOFF, 0)
+    const transcript = words.slice(wordLimit).join(' ')
+
+    $transcript.set({transcript, final: false})
+
+    if (backlogs.length > FORCE_RESTART_BACKLOG_LIMIT) {
+      this.restart('too many backlogs')
     }
   }
 
   async processFinalTranscript(transcript: string) {
     // Create an identifier to correlate transcript, image prompt and generated images.
-    const id = nanoid()
-
-    const logs = [...$transcripts.get()]
-    if (logs.length > MAX_TRANSCRIPT) logs.splice(MAX_TRANSCRIPT)
-
-    logs.unshift({id, transcript})
-    $transcripts.set(logs)
-
     const isGenerating = $generating.get()
 
     if (!isGenerating) {

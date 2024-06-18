@@ -6,6 +6,7 @@ import {ImageDisplay} from '../image/ImageDisplay'
 import {useHotkeys} from 'react-hotkeys-hook'
 import {useStore} from '@nanostores/react'
 import {$apiReady} from '../store/prompt'
+
 import {socket} from '../manager/socket'
 
 export const Route = createLazyFileRoute('/')({
@@ -37,7 +38,7 @@ function Index() {
 
   return (
     <main>
-      <div className="fixed font-mono w-full min-h-screen flex left-0 justify-center items-center pt-12 pointer-events-none">
+      <div className="fixed font-mono w-full min-h-screen flex left-0 justify-center items-center pt-12 pointer-events-none z-[50]">
         <DictationCaption />
       </div>
 

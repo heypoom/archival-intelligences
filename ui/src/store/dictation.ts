@@ -1,4 +1,4 @@
-import { atom, map } from 'nanostores'
+import {atom, map} from 'nanostores'
 
 /**
  * As we asynchronously and continuously process the audio stream,
@@ -14,8 +14,4 @@ export type Transcript = {
 
 export const $dictationState = atom<DictationState>('stopped')
 
-export const $latestTranscript = map<Transcript>({
-  transcript: '',
-})
-
-export const $transcripts = map<Transcript[]>([])
+export const $transcript = map<Transcript>({transcript: ''})
