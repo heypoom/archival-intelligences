@@ -13,7 +13,7 @@ function Index() {
     <div className="flex bg-[#424242]">
       <div className="fixed w-screen h-screen bg-transparent z-40">
         <div className="flex flex-col items-center justify-center w-full h-full">
-          <PromptInput />
+          <PromptInput className="min-w-[400px]" />
 
           <div className="pt-4">
             <GuidanceSlider />

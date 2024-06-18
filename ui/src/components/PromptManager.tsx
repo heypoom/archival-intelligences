@@ -104,7 +104,7 @@ export function PromptManager(props: Props) {
   return (
     <div className="flex bg-[#424242] min-h-screen">
       <div className="fixed w-screen h-screen bg-transparent z-30">
-        <div className="flex flex-col items-center justify-center w-full h-full  bg-transparent">
+        <div className="flex flex-col items-center justify-center w-full h-full bg-transparent">
           <PromptInput
             input={{
               disabled: isGenerating || !apiReady,
