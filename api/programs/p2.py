@@ -15,10 +15,11 @@ img2img = StableDiffusionImg2ImgPipeline.from_pretrained(
 ).to("cuda:1")
 
 MALAYA = PILImage.open("./malaya.png").resize((768, 768)).convert("RGB")
+POEM_OF_MALAYA_SIZE = (960, 800)
 
 
 async def infer_program_2(strength: float):
-    width, height = get_chuamiatee_size()
+    width, height = POEM_OF_MALAYA_SIZE
 
     def pipeline(on_step_end):
         return img2img(
@@ -37,7 +38,7 @@ async def infer_program_2(strength: float):
 
 
 async def infer_program_2_b(strength: float):
-    width, height = get_chuamiatee_size()
+    width, height = POEM_OF_MALAYA_SIZE
 
     def pipeline(on_step_end):
         return img2img(

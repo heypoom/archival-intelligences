@@ -12,7 +12,7 @@ text2img = AutoPipelineForText2Image.from_pretrained(
 
 WIDTH, HEIGHT = 1360, 768
 PROGRAM_0_STEPS = 30
-PROGRAM_4_STEPS = 50
+PROGRAM_4_STEPS = 30
 
 
 async def infer_program_0(prompt: str):
@@ -31,8 +31,13 @@ async def infer_program_0(prompt: str):
 
 async def infer_program_4(prompt: str):
     def pipeline(on_step_end):
+        p4_prompt = prompt
+
+        if prompt in ["data researcher", "crowdworker", "big tech ceo"]:
+            p4_prompt = f"{prompt}, photorealistic"
+
         return text2img(
-            prompt=prompt,
+            prompt=p4_prompt,
             num_inference_steps=PROGRAM_4_STEPS,
             callback_on_step_end=on_step_end,
             callback_on_step_end_tensor_inputs=["latents"],
