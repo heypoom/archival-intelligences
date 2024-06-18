@@ -13,6 +13,7 @@ import {$guidance} from '../store/guidance'
 import {socket} from '../manager/socket.ts'
 import {AnimatedNoise} from './AnimatedNoise.tsx'
 import {useCrossFade} from '../hooks/useCrossFade.tsx'
+import {useState} from 'react'
 
 const MIN_KEYWORD_TRIGGER = 2
 
@@ -30,13 +31,22 @@ export function PromptManager(props: Props) {
   const previewUrl = useStore($inferencePreview)
   const apiReady = useStore($apiReady)
 
-  const {crossfading, prevUrl} = useCrossFade(previewUrl, false)
+  const [isErasing, setErasing] = useState(false)
+  const {crossfading, prevUrl} = useCrossFade(previewUrl, true)
 
   const useKeyword = typeof keyword === 'string' && keyword.length > 0
 
   function handleChange(input: string) {
     $prompt.set(input)
-    $inferencePreview.set('')
+
+    if (previewUrl) {
+      setErasing(true)
+
+      setTimeout(() => {
+        setErasing(false)
+        $inferencePreview.set('')
+      }, 3000)
+    }
 
     if (useKeyword) {
       const isKeyword = input
@@ -104,6 +114,9 @@ export function PromptManager(props: Props) {
     }
   }
 
+  const mainImage = crossfading ? prevUrl : previewUrl
+  const fadeImage = crossfading ? previewUrl : ''
+
   return (
     <div className="flex bg-[#424242] min-h-screen">
       <div className="fixed w-screen h-screen bg-transparent z-30">
@@ -141,20 +154,22 @@ export function PromptManager(props: Props) {
       <div className="fixed flex items-center justify-center w-full h-full z-[1]">
         <div className="relative flex items-center justify-center w-full h-full">
           <img
-            src={crossfading ? prevUrl : previewUrl}
+            src={mainImage}
             alt=""
             className={cx(
               'absolute h-screen object-cover object-center transition-opacity duration-[3s] ease-in-out pointer-events-none select-none z-[1]',
-              previewUrl ? 'opacity-100' : 'opacity-0'
+              mainImage && !isErasing && 'opacity-100',
+              (!mainImage || isErasing) && 'opacity-0'
             )}
           />
 
           <img
-            src={previewUrl}
+            src={fadeImage}
             alt=""
             className={cx(
               'absolute h-screen object-cover object-center transition-opacity duration-[3s] ease-in-out pointer-events-none select-none z-[10]',
-              crossfading ? 'opacity-100' : 'opacity-0'
+              crossfading && 'opacity-100',
+              !crossfading && 'opacity-0'
             )}
           />
         </div>
