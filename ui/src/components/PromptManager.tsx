@@ -22,6 +22,10 @@ interface Props {
   command: string
 }
 
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+const FADE_OUT_DURATION = 2000
+
 export function PromptManager(props: Props) {
   const {keyword, command} = props
 
@@ -31,25 +35,26 @@ export function PromptManager(props: Props) {
   const previewUrl = useStore($inferencePreview)
   const apiReady = useStore($apiReady)
 
-  const [isErasing, setErasing] = useState(false)
+  const [isFadingOut, setFadingOut] = useState(false)
   const {crossfading, prevUrl} = useCrossFade(previewUrl, true)
 
   const useKeyword = typeof keyword === 'string' && keyword.length > 0
 
-  function erase() {
-    setErasing(true)
+  async function fadeOutOldImage() {
+    setFadingOut(true)
 
-    setTimeout(() => {
-      setErasing(false)
-      $inferencePreview.set('')
-    }, 3000)
+    // wait for the old image to fully fade out
+    await delay(FADE_OUT_DURATION)
+
+    setFadingOut(false)
+    $inferencePreview.set('')
   }
 
-  function handleChange(input: string) {
+  async function handleChange(input: string) {
     $prompt.set(input)
 
     if (previewUrl) {
-      erase()
+      await fadeOutOldImage()
     }
 
     if (useKeyword) {
@@ -87,9 +92,7 @@ export function PromptManager(props: Props) {
     }
   }
 
-  function handleGuidanceChange(value: number) {
-    let valid = false
-
+  async function handleGuidanceChange(value: number) {
     if (useKeyword) {
       const isKeyword = prompt
         .trim()
@@ -104,22 +107,29 @@ export function PromptManager(props: Props) {
       }
     }
 
-    if (command === 'P2') {
-      socket.sock.send(`P2:${(value / 100).toFixed(2)}`)
-      valid = true
-    } else if (command === 'P2B') {
-      socket.sock.send(`P2B:${(value / 100).toFixed(2)}`)
-      valid = true
+    const validCommands = ['P2', 'P2B']
+
+    if (!validCommands.includes(command)) {
+      return
     }
 
-    if (valid) {
-      erase()
-      $generating.set(true)
+    if (previewUrl) {
+      await fadeOutOldImage()
+    }
+
+    $generating.set(true)
+
+    if (command === 'P2') {
+      socket.sock.send(`P2:${(value / 100).toFixed(2)}`)
+    } else if (command === 'P2B') {
+      socket.sock.send(`P2B:${(value / 100).toFixed(2)}`)
     }
   }
 
-  const mainImage = crossfading ? prevUrl : previewUrl
-  const fadeImage = crossfading ? previewUrl : ''
+  const fading = crossfading && !isGenerating
+
+  const mainImage = fading ? prevUrl : previewUrl
+  const fadeImage = fading ? previewUrl : ''
 
   return (
     <div className="flex min-h-screen">
@@ -161,9 +171,10 @@ export function PromptManager(props: Props) {
             src={mainImage}
             alt=""
             className={cx(
-              'absolute h-screen object-cover object-center transition-opacity duration-[3s] ease-in-out pointer-events-none select-none z-[1]',
-              mainImage && !isErasing && 'opacity-100',
-              (!mainImage || isErasing) && 'opacity-0'
+              'absolute h-screen object-cover object-center transition-opacity ease-in-out pointer-events-none select-none z-[1]',
+              isFadingOut ? 'duration-[2s]' : 'duration-[3s]',
+              mainImage && !isFadingOut && 'opacity-100',
+              (!mainImage || isFadingOut) && 'opacity-0'
             )}
           />
 
@@ -171,9 +182,10 @@ export function PromptManager(props: Props) {
             src={fadeImage}
             alt=""
             className={cx(
-              'absolute h-screen object-cover object-center transition-opacity duration-[3s] ease-in-out pointer-events-none select-none z-[10]',
-              crossfading && 'opacity-100',
-              !crossfading && 'opacity-0'
+              'absolute h-screen object-cover object-center transition-opacity ease-in-out pointer-events-none select-none z-[10]',
+              isFadingOut ? 'duration-[2s]' : 'duration-[3s]',
+              fadeImage && !isFadingOut && 'opacity-100',
+              (!fadeImage || isFadingOut) && 'opacity-0'
             )}
           />
         </div>
