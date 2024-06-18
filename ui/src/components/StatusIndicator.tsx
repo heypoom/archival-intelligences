@@ -5,8 +5,6 @@ import {$dictationState} from '../store/dictation.ts'
 import {$apiReady, $generating} from '../store/prompt.ts'
 import {isGoogleChrome} from '../utils/is-google-chrome.ts'
 import {useMatchRoute} from '@tanstack/react-router'
-import {useEffect} from 'react'
-import {dictation} from '../dictation/Dictation.ts'
 
 const isChrome = isGoogleChrome()
 
@@ -22,12 +20,6 @@ export const StatusIndicator = () => {
   const listening = status === 'listening'
   const stopped = status === 'stopped'
   const failed = status === 'failed'
-
-  useEffect(() => {
-    if (!isSpeechRoute) {
-      dictation.stop()
-    }
-  }, [isSpeechRoute])
 
   if (!isChrome) {
     return (

@@ -4,6 +4,7 @@ import {$generating, $inferencePreview, $prompt} from '../store/prompt'
 import {$fadeStatus} from '../store/fader'
 import {useStore} from '@nanostores/react'
 import {resetProgress} from '../store/progress'
+import {dictation} from '../dictation'
 
 const here = (a: false | object) => {
   if (a === false) return false
@@ -40,7 +41,10 @@ export function useSceneSwitcher() {
     clearInference()
 
     if (zero) go({to: '/four'})
-    if (one) go({to: '/'})
+    if (one) {
+      dictation.start()
+      go({to: '/'})
+    }
     if (two) go({to: '/one'})
     if (twoB) go({to: '/two'})
     if (three) go({to: '/two-b'})
@@ -52,6 +56,8 @@ export function useSceneSwitcher() {
     clearInference()
 
     if (zero) {
+      dictation.stop()
+
       if (hasFadedBlack) {
         go({to: '/one'})
 
@@ -59,6 +65,10 @@ export function useSceneSwitcher() {
           // remove the inference preview image
           $inferencePreview.set('')
           $fadeStatus.set(false)
+
+          setTimeout(() => {
+            window.location.reload()
+          }, 1000)
         }, 50)
       } else {
         $fadeStatus.set(true)
@@ -70,6 +80,6 @@ export function useSceneSwitcher() {
     if (twoB) go({to: '/three'})
     if (three) go({to: '/three-b'})
     if (threeB) go({to: '/four'})
-    if (four) go({to: '/'})
+    // if (four) go({to: '/'})
   })
 }

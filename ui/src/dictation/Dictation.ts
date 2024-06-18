@@ -10,7 +10,7 @@ const SpeechRecognition =
 const MAX_TRANSCRIPT_BACKLOG = 1
 
 /** Hide the backlog after N interim words */
-const HIDE_BACKLOG_AFTER_N_INTERIM_WORDS = 10
+const HIDE_BACKLOG_AFTER_N_INTERIM_WORDS = 6
 
 /** Truncate transcription after N words */
 const TRANSCRIPT_WORD_CUTOFF = 15
@@ -19,7 +19,7 @@ const TRANSCRIPT_WORD_CUTOFF = 15
 const FORCE_RESTART_BACKLOG_LIMIT = 20
 
 /** Delay for N milliseconds before starting recognizer again */
-const DELAY_BEFORE_START = 20
+const DELAY_BEFORE_START = 10
 
 /** Wait for N milliseconds of total silence before restarting */
 const WATCHDOG_TIMEOUT = 1000 * 7
@@ -49,15 +49,15 @@ export class Dictation {
   start = () => {
     if (this.listening && this.recognition) return
 
+    this.restarting = false
     this.restartWatchdog()
 
-    this.restarting = false
     $dictationState.set('starting')
 
     this.recognition = new SpeechRecognition()
     this.recognition.continuous = true
     this.recognition.interimResults = true
-    this.recognition.lang = 'en-US'
+    this.recognition.lang = 'en-SG'
 
     this.recognition.addEventListener(
       'audiostart',
@@ -73,17 +73,14 @@ export class Dictation {
 
   restart(reason: string) {
     if (this.restarting) {
-      console.log(
-        `[speech] tried to restart due to "${reason}" but we are already restarting`
-      )
       return
     }
-
-    this.restarting = true
 
     if (reason) {
       console.log(`[speech] restarting due to "${reason}"`)
     }
+
+    this.restarting = true
 
     clearTimeout(this.silenceWatchdog)
 
@@ -103,6 +100,8 @@ export class Dictation {
   }
 
   async onResult(event: SpeechRecognitionEvent) {
+    console.log(`i hear`)
+
     const {results} = event
     const latest = results.item(results.length - 1)
     const first = latest.item(0)
