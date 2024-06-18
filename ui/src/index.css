@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+body {
+    background: #424242;
+}
 
 @keyframes fade-in-image-anim {
     0% {

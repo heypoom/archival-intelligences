@@ -5,6 +5,7 @@ import {StatusIndicator} from '../dictation'
 import {CurrentProgramBadge} from '../components/CurrentProgramBadge'
 import FadeToBlack from '../components/FadeToBlack'
 import {ProgressBadge} from '../components/ProgressBadge'
+import {AnimatedNoise} from '../components/AnimatedNoise'
 
 export const Route = createRootRoute({
   component: () => (
@@ -22,6 +23,7 @@ export const Route = createRootRoute({
       </div>
 
       <FadeToBlack />
+      <AnimatedNoise />
     </>
   ),
 })

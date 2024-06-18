@@ -36,16 +36,20 @@ export function PromptManager(props: Props) {
 
   const useKeyword = typeof keyword === 'string' && keyword.length > 0
 
+  function erase() {
+    setErasing(true)
+
+    setTimeout(() => {
+      setErasing(false)
+      $inferencePreview.set('')
+    }, 3000)
+  }
+
   function handleChange(input: string) {
     $prompt.set(input)
 
     if (previewUrl) {
-      setErasing(true)
-
-      setTimeout(() => {
-        setErasing(false)
-        $inferencePreview.set('')
-      }, 3000)
+      erase()
     }
 
     if (useKeyword) {
@@ -109,7 +113,7 @@ export function PromptManager(props: Props) {
     }
 
     if (valid) {
-      $inferencePreview.set('')
+      erase()
       $generating.set(true)
     }
   }
@@ -118,8 +122,8 @@ export function PromptManager(props: Props) {
   const fadeImage = crossfading ? previewUrl : ''
 
   return (
-    <div className="flex bg-[#424242] min-h-screen">
-      <div className="fixed w-screen h-screen bg-transparent z-30">
+    <div className="flex min-h-screen">
+      <div className="fixed w-screen h-screen bg-transparent z-30 top-0 left-0">
         <div className="flex flex-col items-center justify-center w-full h-full bg-transparent">
           <PromptInput
             input={{
@@ -173,10 +177,6 @@ export function PromptManager(props: Props) {
             )}
           />
         </div>
-      </div>
-
-      <div className="z-0">
-        <AnimatedNoise />
       </div>
     </div>
   )

@@ -17,6 +17,7 @@ export function CurrentProgramBadge() {
   const currentProgramKey = routeState.location.href.replace('/', '')
   const currentProgram = programNameMap[currentProgramKey]
 
+  // hide program badge when on the speech route
   if (isSpeechRoute) return null
 
   return (

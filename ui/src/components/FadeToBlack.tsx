@@ -7,7 +7,7 @@ export const FadeToBlack = () => {
 
   return (
     <div
-      className={`fixed z-[100] inset-0 bg-black transition-opacity duration-[5s] ease-in-out ${
+      className={`fixed z-[100] top-0 left-0 inset-0 bg-black transition-opacity duration-[5s] ease-in-out ${
         visible ? 'opacity-100' : 'opacity-0'
       }`}
       style={{pointerEvents: visible ? 'auto' : 'none'}}
