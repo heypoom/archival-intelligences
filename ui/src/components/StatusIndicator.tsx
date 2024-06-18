@@ -52,7 +52,7 @@ export const StatusIndicator = () => {
           className={cn(
             'w-3 h-3 rounded-full',
             starting && 'animate-pulse bg-yellow-400',
-            listening && 'animate-pulse bg-green-400',
+            listening && 'bg-green-400',
             stopped && 'bg-gray-600',
             failed && 'animate-pulse bg-red-400'
           )}

@@ -12,6 +12,7 @@ import {
 import {$guidance} from '../store/guidance'
 import {socket} from '../manager/socket.ts'
 import {AnimatedNoise} from './AnimatedNoise.tsx'
+import {useCrossFade} from '../hooks/useCrossFade.tsx'
 
 const MIN_KEYWORD_TRIGGER = 2
 
@@ -28,6 +29,8 @@ export function PromptManager(props: Props) {
   const guidance = useStore($guidance)
   const previewUrl = useStore($inferencePreview)
   const apiReady = useStore($apiReady)
+
+  const {crossfading, prevUrl} = useCrossFade(previewUrl, false)
 
   const useKeyword = typeof keyword === 'string' && keyword.length > 0
 
@@ -135,17 +138,27 @@ export function PromptManager(props: Props) {
         </div>
       </div>
 
-      {previewUrl && (
-        <div className="fixed flex items-center justify-center w-full h-full z-20">
-          {/* TODO: fade-in-image */}
+      <div className="fixed flex items-center justify-center w-full h-full z-[1]">
+        <div className="relative flex items-center justify-center w-full h-full">
+          <img
+            src={crossfading ? prevUrl : previewUrl}
+            alt=""
+            className={cx(
+              'absolute h-screen object-cover object-center transition-opacity duration-[3s] ease-in-out pointer-events-none select-none z-[1]',
+              previewUrl ? 'opacity-100' : 'opacity-0'
+            )}
+          />
 
           <img
             src={previewUrl}
             alt=""
-            className="h-screen object-contain object-center"
+            className={cx(
+              'absolute h-screen object-cover object-center transition-opacity duration-[3s] ease-in-out pointer-events-none select-none z-[10]',
+              crossfading ? 'opacity-100' : 'opacity-0'
+            )}
           />
         </div>
-      )}
+      </div>
 
       <div className="z-0">
         <AnimatedNoise />

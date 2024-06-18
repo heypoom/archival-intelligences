@@ -66,30 +66,51 @@ const IndexLazyRoute = IndexLazyImport.update({
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
     '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
       preLoaderRoute: typeof IndexLazyImport
       parentRoute: typeof rootRoute
     }
     '/four': {
+      id: '/four'
+      path: '/four'
+      fullPath: '/four'
       preLoaderRoute: typeof FourLazyImport
       parentRoute: typeof rootRoute
     }
     '/one': {
+      id: '/one'
+      path: '/one'
+      fullPath: '/one'
       preLoaderRoute: typeof OneLazyImport
       parentRoute: typeof rootRoute
     }
     '/three': {
+      id: '/three'
+      path: '/three'
+      fullPath: '/three'
       preLoaderRoute: typeof ThreeLazyImport
       parentRoute: typeof rootRoute
     }
     '/three-b': {
+      id: '/three-b'
+      path: '/three-b'
+      fullPath: '/three-b'
       preLoaderRoute: typeof ThreeBLazyImport
       parentRoute: typeof rootRoute
     }
     '/two': {
+      id: '/two'
+      path: '/two'
+      fullPath: '/two'
       preLoaderRoute: typeof TwoLazyImport
       parentRoute: typeof rootRoute
     }
     '/two-b': {
+      id: '/two-b'
+      path: '/two-b'
+      fullPath: '/two-b'
       preLoaderRoute: typeof TwoBLazyImport
       parentRoute: typeof rootRoute
     }
@@ -98,7 +119,7 @@ declare module '@tanstack/react-router' {
 
 // Create and export the route tree
 
-export const routeTree = rootRoute.addChildren([
+export const routeTree = rootRoute.addChildren({
   IndexLazyRoute,
   FourLazyRoute,
   OneLazyRoute,
@@ -106,6 +127,46 @@ export const routeTree = rootRoute.addChildren([
   ThreeBLazyRoute,
   TwoLazyRoute,
   TwoBLazyRoute,
-])
+})
 
 /* prettier-ignore-end */
+
+/* ROUTE_MANIFEST_START
+{
+  "routes": {
+    "__root__": {
+      "filePath": "__root.tsx",
+      "children": [
+        "/",
+        "/four",
+        "/one",
+        "/three",
+        "/three-b",
+        "/two",
+        "/two-b"
+      ]
+    },
+    "/": {
+      "filePath": "index.lazy.tsx"
+    },
+    "/four": {
+      "filePath": "four.lazy.tsx"
+    },
+    "/one": {
+      "filePath": "one.lazy.tsx"
+    },
+    "/three": {
+      "filePath": "three.lazy.tsx"
+    },
+    "/three-b": {
+      "filePath": "three-b.lazy.tsx"
+    },
+    "/two": {
+      "filePath": "two.lazy.tsx"
+    },
+    "/two-b": {
+      "filePath": "two-b.lazy.tsx"
+    }
+  }
+}
+ROUTE_MANIFEST_END */

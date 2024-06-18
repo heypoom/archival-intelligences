@@ -56,6 +56,8 @@ export function useSceneSwitcher() {
         go({to: '/one'})
 
         setTimeout(() => {
+          // remove the inference preview image
+          $inferencePreview.set('')
           $fadeStatus.set(false)
         }, 50)
       } else {

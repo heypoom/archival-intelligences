@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react'
-import { $guidance } from '../store/guidance.ts'
-import { paintDenseNoise, paintNoiseGrid } from '../utils/noise.ts'
+import {useEffect, useRef} from 'react'
+import {$guidance} from '../store/guidance.ts'
+import {paintDenseNoise, paintNoiseGrid} from '../utils/noise.ts'
 
 export const AnimatedNoise = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -31,8 +31,8 @@ export const AnimatedNoise = () => {
   //
 
   return (
-    <div style={{ filter: 'blur(8px) brightness(50%)' }} className='z-0'>
-      <canvas ref={canvasRef} className='w-screen h-screen' />
+    <div style={{filter: 'blur(8px) brightness(50%)'}} className="z-0">
+      <canvas ref={canvasRef} className="w-screen h-screen" />
     </div>
   )
 }
