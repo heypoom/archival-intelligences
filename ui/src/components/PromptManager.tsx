@@ -17,7 +17,7 @@ import {socket} from '../manager/socket.ts'
 
 import {useCrossFade} from '../hooks/useCrossFade.tsx'
 
-import {regen, cleanupRegenerate, disableRegen} from '../store/regen.ts'
+import {regen, disableRegen} from '../store/regen.ts'
 
 const MIN_KEYWORD_TRIGGER = 2
 const FADE_OUT_DURATION = 2000
