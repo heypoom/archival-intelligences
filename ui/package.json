@@ -29,6 +29,7 @@
     "react-use": "^17.5.0",
     "simplex-noise": "^4.0.1"
   },
+  "packageManager": "pnpm@9.1.4",
   "devDependencies": {
     "@biomejs/biome": "1.5.3",
     "@tanstack/router-devtools": "^1.26.1",
