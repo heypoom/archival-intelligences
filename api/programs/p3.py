@@ -23,7 +23,7 @@ async def infer_program_3(prompt: str, strength: float):
         return chuamiatee(
             prompt=prompt,
             strength=strength,
-            num_inference_steps=50,
+            num_inference_steps=40,
             callback_on_step_end=on_step_end,
             callback_on_step_end_tensor_inputs=["latents"],
             width=width,

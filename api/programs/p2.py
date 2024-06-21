@@ -14,8 +14,9 @@ img2img = StableDiffusionImg2ImgPipeline.from_pretrained(
     "runwayml/stable-diffusion-v1-5",
 ).to("cuda:1")
 
-MALAYA = PILImage.open("./malaya.png").resize((768, 768)).convert("RGB")
+# 1200x1000 = 960x800
 POEM_OF_MALAYA_SIZE = (960, 800)
+MALAYA = PILImage.open("./malaya.png").resize(POEM_OF_MALAYA_SIZE).convert("RGB")
 
 
 async def infer_program_2(strength: float):
