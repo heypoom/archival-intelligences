@@ -4,7 +4,7 @@ import {$generating} from './prompt'
 
 let regenerateTimer = 0
 
-const BASE_DELAY = 15 * 1000
+const BASE_DELAY = 30 * 1000
 const INCREMENTAL_DELAY = BASE_DELAY
 const BASE_GENERATION = 6
 
