@@ -1,24 +1,26 @@
-import time
+import torch
+
+from diffusers import AutoPipelineForText2Image
 
 from utils.chuamiatee_size import get_chuamiatee_size
 from utils.pipeline_manager import denoise
 
-from utils.pipelines import text2img
+# Program 3 pipeline: chua mia tee painting
+chuamiatee = AutoPipelineForText2Image.from_pretrained(
+    "stabilityai/stable-diffusion-xl-base-1.0",
+    torch_dtype=torch.float16,
+).to("cuda:1")
+
+chuamiatee.load_lora_weights(
+    "heypoom/chuamiatee-1", weight_name="pytorch_lora_weights.safetensors"
+)
 
 
 async def infer_program_3(prompt: str, strength: float):
     width, height = get_chuamiatee_size()
 
-    lora_start = time.time()
-
-    text2img.load_lora_weights(
-        "heypoom/chuamiatee-1", weight_name="pytorch_lora_weights.safetensors"
-    )
-
-    print(f"LoRA weights loaded in {time.time() - lora_start}s")
-
     def pipeline(on_step_end):
-        return text2img(
+        return chuamiatee(
             prompt=prompt,
             strength=strength,
             num_inference_steps=50,
@@ -30,6 +32,3 @@ async def infer_program_3(prompt: str, strength: float):
 
     async for out in denoise(pipeline):
         yield out
-
-    text2img.unload_lora_weights()
-    print("LoRA unloaded")
