@@ -23,6 +23,7 @@ export function useSceneSwitcher() {
   const three = here(route({to: '/three'}))
   const threeB = here(route({to: '/three-b'}))
   const four = here(route({to: '/four'}))
+  const fourB = here(route({to: '/four-b'}))
   const hasFadedBlack = useStore($fadeStatus)
 
   function clearInference() {
@@ -41,16 +42,17 @@ export function useSceneSwitcher() {
   useHotkeys('LeftArrow', () => {
     clearInference()
 
-    // if (zero) go({to: '/four'})
     if (one) {
       dictation.start()
       go({to: '/'})
     }
+
     if (two) go({to: '/one'})
     if (twoB) go({to: '/two'})
     if (three) go({to: '/two-b'})
     if (threeB) go({to: '/three'})
     if (four) go({to: '/three-b'})
+    if (fourB) go({to: '/four'})
   })
 
   useHotkeys('RightArrow', () => {
@@ -83,6 +85,6 @@ export function useSceneSwitcher() {
     if (twoB) go({to: '/three'})
     if (three) go({to: '/three-b'})
     if (threeB) go({to: '/four'})
-    // if (four) go({to: '/'})
+    if (four) go({to: '/four-b'})
   })
 }
