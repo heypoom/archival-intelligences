@@ -21,6 +21,7 @@ const TwoLazyImport = createFileRoute('/two')()
 const ThreeBLazyImport = createFileRoute('/three-b')()
 const ThreeLazyImport = createFileRoute('/three')()
 const OneLazyImport = createFileRoute('/one')()
+const FourBLazyImport = createFileRoute('/four-b')()
 const FourLazyImport = createFileRoute('/four')()
 const IndexLazyImport = createFileRoute('/')()
 
@@ -51,6 +52,11 @@ const OneLazyRoute = OneLazyImport.update({
   getParentRoute: () => rootRoute,
 } as any).lazy(() => import('./routes/one.lazy').then((d) => d.Route))
 
+const FourBLazyRoute = FourBLazyImport.update({
+  path: '/four-b',
+  getParentRoute: () => rootRoute,
+} as any).lazy(() => import('./routes/four-b.lazy').then((d) => d.Route))
+
 const FourLazyRoute = FourLazyImport.update({
   path: '/four',
   getParentRoute: () => rootRoute,
@@ -77,6 +83,13 @@ declare module '@tanstack/react-router' {
       path: '/four'
       fullPath: '/four'
       preLoaderRoute: typeof FourLazyImport
+      parentRoute: typeof rootRoute
+    }
+    '/four-b': {
+      id: '/four-b'
+      path: '/four-b'
+      fullPath: '/four-b'
+      preLoaderRoute: typeof FourBLazyImport
       parentRoute: typeof rootRoute
     }
     '/one': {
@@ -122,6 +135,7 @@ declare module '@tanstack/react-router' {
 export const routeTree = rootRoute.addChildren({
   IndexLazyRoute,
   FourLazyRoute,
+  FourBLazyRoute,
   OneLazyRoute,
   ThreeLazyRoute,
   ThreeBLazyRoute,
@@ -139,6 +153,7 @@ export const routeTree = rootRoute.addChildren({
       "children": [
         "/",
         "/four",
+        "/four-b",
         "/one",
         "/three",
         "/three-b",
@@ -151,6 +166,9 @@ export const routeTree = rootRoute.addChildren({
     },
     "/four": {
       "filePath": "four.lazy.tsx"
+    },
+    "/four-b": {
+      "filePath": "four-b.lazy.tsx"
     },
     "/one": {
       "filePath": "one.lazy.tsx"

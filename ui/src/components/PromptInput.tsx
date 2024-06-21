@@ -1,5 +1,5 @@
 import cx from 'classnames'
-import {ComponentProps, useRef, useState} from 'react'
+import {ComponentProps} from 'react'
 
 interface Props {
   input?: ComponentProps<'input'>

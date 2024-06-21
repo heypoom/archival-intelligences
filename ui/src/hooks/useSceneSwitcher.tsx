@@ -1,10 +1,12 @@
 import {useMatchRoute, useNavigate} from '@tanstack/react-router'
 import {useHotkeys} from 'react-hotkeys-hook'
-import {$generating, $inferencePreview, $prompt} from '../store/prompt'
+import {$generating, $inferencePreview} from '../store/prompt'
 import {$fadeStatus} from '../store/fader'
 import {useStore} from '@nanostores/react'
 import {resetProgress} from '../store/progress'
 import {dictation} from '../dictation'
+import {socket} from '../manager/socket'
+import {disableRegen} from '../store/regen'
 
 const here = (a: false | object) => {
   if (a === false) return false
@@ -22,11 +24,13 @@ export function useSceneSwitcher() {
   const three = here(route({to: '/three'}))
   const threeB = here(route({to: '/three-b'}))
   const four = here(route({to: '/four'}))
+  const fourB = here(route({to: '/four-b'}))
   const hasFadedBlack = useStore($fadeStatus)
 
   function clearInference() {
     $generating.set(false)
     resetProgress()
+    disableRegen('scene switch')
   }
 
   useHotkeys('CTRL + F', () => {
@@ -40,16 +44,17 @@ export function useSceneSwitcher() {
   useHotkeys('LeftArrow', () => {
     clearInference()
 
-    if (zero) go({to: '/four'})
     if (one) {
       dictation.start()
       go({to: '/'})
     }
+
     if (two) go({to: '/one'})
     if (twoB) go({to: '/two'})
     if (three) go({to: '/two-b'})
     if (threeB) go({to: '/three'})
     if (four) go({to: '/three-b'})
+    if (fourB) go({to: '/four'})
   })
 
   useHotkeys('RightArrow', () => {
@@ -58,17 +63,19 @@ export function useSceneSwitcher() {
     if (zero) {
       dictation.stop()
 
+      // TODO: send a message to the server to stop the inference!
+      socket.reconnectSoon('program zero fade out', 1000, {shutup: true})
+
       if (hasFadedBlack) {
+        // remove the inference preview image from Program 0
+        $inferencePreview.set('')
+
+        // go to the next scene
         go({to: '/one'})
 
+        // fade out the black screen
         setTimeout(() => {
-          // remove the inference preview image
-          $inferencePreview.set('')
           $fadeStatus.set(false)
-
-          setTimeout(() => {
-            window.location.reload()
-          }, 1000)
         }, 50)
       } else {
         $fadeStatus.set(true)
@@ -76,10 +83,16 @@ export function useSceneSwitcher() {
     }
 
     if (one) go({to: '/two'})
-    if (two) go({to: '/two-b'})
+    if (two) {
+      go({to: '/two-b'})
+    }
     if (twoB) go({to: '/three'})
-    if (three) go({to: '/three-b'})
+    if (three) {
+      go({to: '/three-b'})
+    }
     if (threeB) go({to: '/four'})
-    // if (four) go({to: '/'})
+    if (four) {
+      go({to: '/four-b'})
+    }
   })
 }

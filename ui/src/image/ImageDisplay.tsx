@@ -1,33 +1,18 @@
-import {useMemo} from 'react'
 import {useStore} from '@nanostores/react'
 import cx from 'classnames'
 
-import {$apiReady, $inferencePreview} from '../store/prompt'
-import {$dictationState} from '../store/dictation'
+import {$inferencePreview} from '../store/prompt'
 import {useCrossFade} from '../hooks/useCrossFade'
 
 export const ImageDisplay = () => {
   const url = useStore($inferencePreview)
 
-  const status = useStore($dictationState)
-  const apiReady = useStore($apiReady)
-
   const {crossfading, prevUrl} = useCrossFade(url, true)
-
-  const background = useMemo(() => {
-    if (!apiReady) return '#222'
-    if (status === 'stopped' || status === 'failed') return '#111'
-
-    return '#111'
-  }, [status, apiReady])
 
   const visible = !!url
 
   return (
-    <div
-      className="relative flex items-center justify-center h-screen w-full z-[1]"
-      style={{background}}
-    >
+    <div className="relative flex items-center justify-center h-screen w-full z-[1] bg-[#111]">
       <img
         src={crossfading ? prevUrl : url}
         alt=""

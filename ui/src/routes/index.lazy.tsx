@@ -4,36 +4,18 @@ import {DictationCaption, dictation} from '../dictation'
 import {ImageDisplay} from '../image/ImageDisplay'
 
 import {useHotkeys} from 'react-hotkeys-hook'
-import {useStore} from '@nanostores/react'
-import {$apiReady} from '../store/prompt'
-
-import {socket} from '../manager/socket'
 
 export const Route = createLazyFileRoute('/')({
   component: Index,
 })
 
-const isFullscreen = () =>
-  document.fullscreenElement ||
-  // @ts-expect-error
-  document.webkitFullscreenElement ||
-  // @ts-expect-error
-  document.mozFullScreenElement
-
 function Index() {
-  const apiReady = useStore($apiReady)
-
   useHotkeys('space', () => {
-    // if (!isFullscreen()) {
-    //   document.documentElement.requestFullscreen().then()
-    // }
+    // socket.reconnectSoon('spacebar hotkey', 1)
 
-    // socket.reconnectSoon('spacebar', 50)
-
-    // Only allow dictation to start if the API is ready.
-    if (apiReady) {
+    setTimeout(() => {
       dictation.restart('spacebar hotkey')
-    }
+    }, 50)
   })
 
   return (

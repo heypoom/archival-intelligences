@@ -1,30 +1,34 @@
 import cx from 'classnames'
+import {useState} from 'react'
+import {useStore} from '@nanostores/react'
 
 import {GuidanceSlider} from './GuidanceSlider'
 import {PromptInput} from './PromptInput'
-import {useStore} from '@nanostores/react'
+
 import {
   $apiReady,
   $generating,
   $inferencePreview,
   $prompt,
 } from '../store/prompt'
+
 import {$guidance} from '../store/guidance'
 import {socket} from '../manager/socket.ts'
-import {AnimatedNoise} from './AnimatedNoise.tsx'
+
 import {useCrossFade} from '../hooks/useCrossFade.tsx'
-import {useState} from 'react'
+
+import {regen, disableRegen} from '../store/regen.ts'
 
 const MIN_KEYWORD_TRIGGER = 2
+const FADE_OUT_DURATION = 2000
 
 interface Props {
   keyword?: string
   command: string
+  regenerate?: true | string
 }
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-
-const FADE_OUT_DURATION = 2000
 
 export function PromptManager(props: Props) {
   const {keyword, command} = props
@@ -53,16 +57,17 @@ export function PromptManager(props: Props) {
   async function handleChange(input: string) {
     $prompt.set(input)
 
+    // reset generation count if we're regenerating
+    disableRegen('prompt change')
+
     if (previewUrl) {
       await fadeOutOldImage()
     }
 
-    if (useKeyword) {
-      const isKeyword = input
-        .trim()
-        .toLowerCase()
-        .endsWith(keyword.toLowerCase())
+    const trimmedInput = input.trim().toLowerCase()
 
+    if (useKeyword) {
+      const isKeyword = trimmedInput.endsWith(keyword.toLowerCase())
       const segments = input.split(' ')
 
       if (isKeyword && segments.length > MIN_KEYWORD_TRIGGER) {
@@ -77,7 +82,7 @@ export function PromptManager(props: Props) {
           return
         }
 
-        console.log('program:', command, guidance)
+        console.log(`[program] c=${command}, g=${guidance}`)
 
         if (command === 'P2') {
           socket.sock.send(`P2:${(guidance / 100).toFixed(2)}`)
@@ -137,7 +142,7 @@ export function PromptManager(props: Props) {
         <div className="flex flex-col items-center justify-center w-full h-full bg-transparent">
           <PromptInput
             input={{
-              disabled: isGenerating || !apiReady,
+              disabled: isGenerating,
               onChange: (e) => handleChange(e.target.value),
               value: prompt,
               onKeyDown: (e) => {
@@ -154,6 +159,15 @@ export function PromptManager(props: Props) {
                   console.log(`> sent "${sys}"`)
 
                   socket.sock.send(sys)
+
+                  const shouldRegenerate =
+                    props.regenerate === true ||
+                    (typeof props.regenerate === 'string' &&
+                      prompt.endsWith(props.regenerate.toLowerCase()))
+
+                  if (shouldRegenerate) {
+                    regen(command, prompt)
+                  }
                 }
               },
             }}

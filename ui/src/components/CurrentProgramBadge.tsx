@@ -7,6 +7,7 @@ const programNameMap: Record<string, string> = {
   three: '3',
   'three-b': '3B',
   four: '4',
+  'four-b': '4B',
 }
 
 export function CurrentProgramBadge() {
