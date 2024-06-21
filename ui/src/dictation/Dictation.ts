@@ -42,6 +42,12 @@ export class Dictation {
 
     // It's too quiet. Restart the recognition.
     this.silenceWatchdog = window.setTimeout(() => {
+      // alternative logic: check if path is not ROOT
+      if (!this.recognition) {
+        console.log('[speech] recognition gone - not restarting watchdog.')
+        return
+      }
+
       this.restart('watchdog')
     }, WATCHDOG_TIMEOUT)
   }

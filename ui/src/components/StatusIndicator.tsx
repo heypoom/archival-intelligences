@@ -6,7 +6,7 @@ import {$apiReady, $generating} from '../store/prompt.ts'
 import {isGoogleChrome} from '../utils/is-google-chrome.ts'
 import {useMatchRoute} from '@tanstack/react-router'
 
-const isChrome = isGoogleChrome()
+// const isChrome = isGoogleChrome()
 
 export const StatusIndicator = () => {
   const mr = useMatchRoute()
@@ -21,13 +21,13 @@ export const StatusIndicator = () => {
   const stopped = status === 'stopped'
   const failed = status === 'failed'
 
-  if (!isChrome) {
-    return (
-      <div className="text-red-400 text-3xl p-6 font-bold">
-        PLEASE USE GOOGLE CHROME.
-      </div>
-    )
-  }
+  // if (!isChrome) {
+  //   return (
+  //     <div className="text-red-400 text-3xl p-6 font-bold">
+  //       PLEASE USE GOOGLE CHROME.
+  //     </div>
+  //   )
+  // }
 
   return (
     <div className="flex items-center justify-center gap-x-2">

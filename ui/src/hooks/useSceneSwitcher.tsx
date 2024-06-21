@@ -5,6 +5,7 @@ import {$fadeStatus} from '../store/fader'
 import {useStore} from '@nanostores/react'
 import {resetProgress} from '../store/progress'
 import {dictation} from '../dictation'
+import {socket} from '../manager/socket'
 
 const here = (a: false | object) => {
   if (a === false) return false
@@ -40,7 +41,7 @@ export function useSceneSwitcher() {
   useHotkeys('LeftArrow', () => {
     clearInference()
 
-    if (zero) go({to: '/four'})
+    // if (zero) go({to: '/four'})
     if (one) {
       dictation.start()
       go({to: '/'})
@@ -58,17 +59,19 @@ export function useSceneSwitcher() {
     if (zero) {
       dictation.stop()
 
+      // TODO: send a message to the server to stop the inference!
+      socket.reconnectSoon('detach from running inference', 5)
+
       if (hasFadedBlack) {
+        // remove the inference preview image from Program 0
+        $inferencePreview.set('')
+
+        // go to the next scene
         go({to: '/one'})
 
+        // fade out the black screen
         setTimeout(() => {
-          // remove the inference preview image
-          $inferencePreview.set('')
           $fadeStatus.set(false)
-
-          setTimeout(() => {
-            window.location.reload()
-          }, 1000)
         }, 50)
       } else {
         $fadeStatus.set(true)
