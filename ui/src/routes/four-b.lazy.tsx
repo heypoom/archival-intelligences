@@ -7,5 +7,5 @@ export const Route = createLazyFileRoute('/four-b')({
 })
 
 function Index() {
-  return <PromptManager command="P4B" regenerate />
+  return <PromptManager command="P4" regenerate />
 }
