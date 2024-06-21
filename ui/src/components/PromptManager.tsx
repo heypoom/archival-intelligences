@@ -1,5 +1,5 @@
 import cx from 'classnames'
-import {useEffect, useState} from 'react'
+import {useState} from 'react'
 import {useStore} from '@nanostores/react'
 
 import {GuidanceSlider} from './GuidanceSlider'
@@ -17,7 +17,7 @@ import {socket} from '../manager/socket.ts'
 
 import {useCrossFade} from '../hooks/useCrossFade.tsx'
 
-import {regenerate, cleanupRegenerate, disableRegen} from '../store/regen.ts'
+import {regen, cleanupRegenerate, disableRegen} from '../store/regen.ts'
 
 const MIN_KEYWORD_TRIGGER = 2
 const FADE_OUT_DURATION = 2000
@@ -65,15 +65,6 @@ export function PromptManager(props: Props) {
     }
 
     const trimmedInput = input.trim().toLowerCase()
-
-    const shouldEnableRegeneration =
-      typeof props.regenerate === 'string' &&
-      trimmedInput.endsWith(props.regenerate.toLowerCase())
-
-    // enable regeneration if the input ends with the regeneration keyword
-    if (shouldEnableRegeneration) {
-      regenerate(command, prompt, true)
-    }
 
     if (useKeyword) {
       const isKeyword = trimmedInput.endsWith(keyword.toLowerCase())
@@ -169,10 +160,13 @@ export function PromptManager(props: Props) {
 
                   socket.sock.send(sys)
 
-                  if (props.regenerate === true) {
-                    regenerate(command, prompt, true)
+                  const shouldRegenerate =
+                    props.regenerate === true ||
+                    (typeof props.regenerate === 'string' &&
+                      prompt.endsWith(props.regenerate.toLowerCase()))
 
-                    console.log('[gen] freeform regeneration enabled')
+                  if (shouldRegenerate) {
+                    regen(command, prompt)
                   }
                 }
               },

@@ -13,17 +13,15 @@ export const $regenCount = atom(0)
 export const $regenEnabled = atom(false)
 export const $regenActive = atom(false)
 
-export function regenerate(command: string, prompt: string, origin: boolean) {
+export function regen(command: string, prompt: string, origin = true) {
   if (origin) {
     $regenEnabled.set(true)
     $regenActive.set(true)
+
+    console.log('[gen] regen active')
   }
 
   const gen = $regenCount.get()
-
-  if (!origin && gen < 1) {
-    console.warn(`[gen] invariant! not origin but gen is still ${gen}`)
-  }
 
   let delay = BASE_DELAY
 
@@ -44,7 +42,7 @@ export function regenerate(command: string, prompt: string, origin: boolean) {
     $regenCount.set(gen + 1)
 
     setTimeout(() => {
-      regenerate(command, prompt, false)
+      regen(command, prompt, false)
     }, 5)
   }, delay)
 }
