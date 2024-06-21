@@ -20,6 +20,7 @@ const MIN_KEYWORD_TRIGGER = 2
 interface Props {
   keyword?: string
   command: string
+  regenerate?: true | string
 }
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))

@@ -2,10 +2,10 @@ import {createLazyFileRoute} from '@tanstack/react-router'
 
 import {PromptManager} from '../components/PromptManager'
 
-export const Route = createLazyFileRoute('/three-b')({
+export const Route = createLazyFileRoute('/four-b')({
   component: Index,
 })
 
 function Index() {
-  return <PromptManager command="P3B" regenerate="chua mia tee painting" />
+  return <PromptManager command="P4B" regenerate />
 }
