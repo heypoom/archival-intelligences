@@ -21,14 +21,6 @@ export const StatusIndicator = () => {
   const stopped = status === 'stopped'
   const failed = status === 'failed'
 
-  // if (!isChrome) {
-  //   return (
-  //     <div className="text-red-400 text-3xl p-6 font-bold">
-  //       PLEASE USE GOOGLE CHROME.
-  //     </div>
-  //   )
-  // }
-
   return (
     <div className="flex items-center justify-center gap-x-2">
       <div

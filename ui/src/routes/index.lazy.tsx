@@ -5,15 +5,13 @@ import {ImageDisplay} from '../image/ImageDisplay'
 
 import {useHotkeys} from 'react-hotkeys-hook'
 
-import {socket} from '../manager/socket'
-
 export const Route = createLazyFileRoute('/')({
   component: Index,
 })
 
 function Index() {
   useHotkeys('space', () => {
-    socket.reconnectSoon('spacebar hotkey', 1)
+    // socket.reconnectSoon('spacebar hotkey', 1)
 
     setTimeout(() => {
       dictation.restart('spacebar hotkey')

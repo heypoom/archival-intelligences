@@ -6,6 +6,7 @@ import {CurrentProgramBadge} from '../components/CurrentProgramBadge'
 import FadeToBlack from '../components/FadeToBlack'
 import {ProgressBadge} from '../components/ProgressBadge'
 import {AnimatedNoise} from '../components/AnimatedNoise'
+import {RegenCountBadge} from '../components/RegenCountBadge'
 
 export const Route = createRootRoute({
   component: () => (
@@ -15,6 +16,7 @@ export const Route = createRootRoute({
 
       <div className="fixed flex left-3 bottom-3 z-10 gap-x-1">
         <CurrentProgramBadge />
+        <RegenCountBadge />
         <ProgressBadge />
       </div>
 

@@ -1,11 +1,12 @@
 import {useMatchRoute, useNavigate} from '@tanstack/react-router'
 import {useHotkeys} from 'react-hotkeys-hook'
-import {$generating, $inferencePreview, $prompt} from '../store/prompt'
+import {$generating, $inferencePreview} from '../store/prompt'
 import {$fadeStatus} from '../store/fader'
 import {useStore} from '@nanostores/react'
 import {resetProgress} from '../store/progress'
 import {dictation} from '../dictation'
 import {socket} from '../manager/socket'
+import {disableRegen} from '../store/regen'
 
 const here = (a: false | object) => {
   if (a === false) return false
@@ -29,6 +30,7 @@ export function useSceneSwitcher() {
   function clearInference() {
     $generating.set(false)
     resetProgress()
+    disableRegen('scene switch')
   }
 
   useHotkeys('CTRL + F', () => {
@@ -62,7 +64,7 @@ export function useSceneSwitcher() {
       dictation.stop()
 
       // TODO: send a message to the server to stop the inference!
-      socket.reconnectSoon('detach from running inference', 5)
+      socket.reconnectSoon('program zero fade out', 1000, {shutup: true})
 
       if (hasFadedBlack) {
         // remove the inference preview image from Program 0
@@ -81,10 +83,16 @@ export function useSceneSwitcher() {
     }
 
     if (one) go({to: '/two'})
-    if (two) go({to: '/two-b'})
+    if (two) {
+      go({to: '/two-b'})
+    }
     if (twoB) go({to: '/three'})
-    if (three) go({to: '/three-b'})
+    if (three) {
+      go({to: '/three-b'})
+    }
     if (threeB) go({to: '/four'})
-    if (four) go({to: '/four-b'})
+    if (four) {
+      go({to: '/four-b'})
+    }
   })
 }
