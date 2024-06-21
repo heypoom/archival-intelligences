@@ -49,7 +49,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
             elif command.startswith("P3B:"):
                 prompt = strip(command, "P3B")
-                await send(infer_program_3(prompt, 5.5))
+                await send(infer_program_3(f"{prompt}, photorealistic", 5.5))
 
             elif command.startswith("P4:"):
                 prompt = strip(command, "P4")
