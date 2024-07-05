@@ -1,14 +1,5 @@
-# Program 0 and 4 pipeline: regular stable diffusion
-import torch
-
-from diffusers import AutoPipelineForText2Image
-
 from utils.pipeline_manager import denoise
-
-text2img = AutoPipelineForText2Image.from_pretrained(
-    "stabilityai/stable-diffusion-xl-base-1.0",
-    torch_dtype=torch.float16,
-).to("cuda:0")
+from utils.pipelines import text2img
 
 WIDTH, HEIGHT = 1360, 768
 PROGRAM_0_STEPS = 30

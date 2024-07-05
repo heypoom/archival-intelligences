@@ -1,18 +1,12 @@
 import PIL.Image as PILImage
-from diffusers import StableDiffusionImg2ImgPipeline
 
-from utils.chuamiatee_size import get_chuamiatee_size
+from utils.pipelines import img2img
 from utils.pipeline_manager import denoise
 
 STEPS = 50
 PROMPT_2 = "painting like an epic poem of malaya"
 PROMPT_2B = "crowd of people in a public space"
 GUIDANCE_SCALE_2B = 8.5
-
-# Program 2 pipeline: Epic Poem of Malaya, Image to Image
-img2img = StableDiffusionImg2ImgPipeline.from_pretrained(
-    "runwayml/stable-diffusion-v1-5",
-).to("cuda:1")
 
 # 1200x1000 = 960x800
 POEM_OF_MALAYA_SIZE = (960, 800)

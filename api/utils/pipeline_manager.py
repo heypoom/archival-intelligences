@@ -2,11 +2,14 @@ import io
 import asyncio
 
 from utils.latents import latents_to_rgb
+from api.utils.lora import init_chuamiatee
 
 
-async def denoise(run, final_only=False):
+async def denoise(run, final_only=False, is_chuamiatee=False):
     queue = asyncio.Queue()
     loop = asyncio.get_event_loop()
+
+    init_chuamiatee(is_chuamiatee)
 
     def on_step_end(pipe, step, timestep, callback_kwargs):
         loop.call_soon_threadsafe(queue.put_nowait, f"p:s={step}:t={timestep}")
