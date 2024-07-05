@@ -1,11 +1,12 @@
 from utils.pipelines import text2img
 
-global lora_state
 
 lora_applied = False
 
 
 def load_chuamiatee_lora():
+    global lora_applied
+
     if lora_applied:
         return
 
@@ -17,6 +18,8 @@ def load_chuamiatee_lora():
 
 
 def unload_chuamiatee_lora():
+    global lora_applied
+
     if not lora_applied:
         return
 
