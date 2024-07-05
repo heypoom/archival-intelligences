@@ -2,7 +2,7 @@ import io
 import asyncio
 
 from utils.latents import latents_to_rgb
-from api.utils.lora import init_chuamiatee
+from utils.lora import init_chuamiatee
 
 
 async def denoise(run, final_only=False, is_chuamiatee=False):
