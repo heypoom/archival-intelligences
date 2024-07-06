@@ -7,10 +7,11 @@ import {secOf} from './timecode'
 
 export class ExhibitionAutomator {
   /** Current time in seconds */
-  currentTime = 0
+  seconds = 0
   currentCue = -1
   cues: AutomationCue[] = []
   actionContext: AutomatorContext = {navigate: () => {}, next: () => {}}
+  timer = 0
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -19,6 +20,18 @@ export class ExhibitionAutomator {
     }
 
     this.load()
+  }
+
+  startClock() {
+    this.tick()
+
+    this.timer = setInterval(() => {
+      this.tick()
+    }, 1000)
+  }
+
+  stopClock() {
+    clearInterval(this.timer)
   }
 
   load = async () => {
@@ -31,7 +44,11 @@ export class ExhibitionAutomator {
     ]
   }
 
-  now = () => new Date()
+  tick() {
+    this.seconds++
+
+    if (this.shouldGo()) this.go()
+  }
 
   go() {
     this.currentCue++
@@ -41,11 +58,10 @@ export class ExhibitionAutomator {
     runAutomationAction(action, this.actionContext)
   }
 
-  shouldGo(_currentTime: string) {
-    const currentTime = secOf(_currentTime)
+  shouldGo() {
     const nextCue = this.cues[this.currentCue + 1]
 
-    return nextCue && currentTime >= secOf(nextCue.time)
+    return nextCue && this.seconds >= secOf(nextCue.time)
   }
 
   seek(time: string) {
