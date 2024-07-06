@@ -18,6 +18,7 @@
     "@mui/joy": "5.0.0-beta.32",
     "@nanostores/react": "^0.7.1",
     "@tanstack/react-router": "^1.26.1",
+    "@tweenjs/tween.js": "^23.1.2",
     "@uidotdev/usehooks": "^2.4.1",
     "alea": "^1.0.1",
     "animate.css": "^4.1.1",
@@ -29,7 +30,8 @@
     "react-dom": "^18.2.0",
     "react-hotkeys-hook": "^4.5.0",
     "react-use": "^17.5.0",
-    "simplex-noise": "^4.0.1"
+    "simplex-noise": "^4.0.1",
+    "ts-pattern": "^5.2.0"
   },
   "packageManager": "pnpm@9.1.4",
   "devDependencies": {

@@ -1,20 +1,41 @@
-import {getExhibitionStatus} from './get-exhibition-status'
+import {getCurrentSequence} from './get-current-sequence'
+import {AutomatorContext, runAutomationAction} from './run-automation-sequence'
+
+import {getAutomationSequences} from '../../constants/exhibition-sequences'
 
 export class ExhibitionAutomator {
-  sessionStart = '00:00'
-  getCurrentTime = (): Date => new Date()
+  currentCue = -1
+  sequences = getAutomationSequences()
+  actionContext: AutomatorContext = {navigate: () => {}, next: () => {}}
 
-  start() {
-    const now = this.getCurrentTime()
-    const status = getExhibitionStatus(now)
-
-    console.log(now)
-    console.log(status)
-
-    if (status.type === 'active') {
-      this.sessionStart = status.start
+  constructor() {
+    if (typeof window !== 'undefined') {
+      // @ts-expect-error - make it available for debugging
+      window.automator = this
     }
   }
-}
 
-export const exhibitionAutomator = new ExhibitionAutomator()
+  now = () => new Date()
+
+  go() {
+    this.currentCue++
+
+    const action = this.sequences[this.currentCue]
+    console.log(`running action cue ${this.currentCue}:`, action)
+    runAutomationAction(action, this.actionContext)
+  }
+
+  seek(time: string) {
+    const seq = getCurrentSequence(time)
+    if (!seq) return
+
+    const [cue, action] = seq
+
+    if (cue <= this.currentCue) {
+      return
+    }
+
+    this.currentCue = cue
+    runAutomationAction(action, this.actionContext)
+  }
+}

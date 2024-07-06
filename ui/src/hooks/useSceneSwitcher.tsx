@@ -1,5 +1,5 @@
 import {useMatchRoute, useNavigate} from '@tanstack/react-router'
-import {useHotkeys} from 'react-hotkeys-hook'
+
 import {$generating, $inferencePreview} from '../store/prompt'
 import {$fadeStatus} from '../store/fader'
 import {useStore} from '@nanostores/react'
@@ -27,21 +27,7 @@ export function useSceneSwitcher() {
   const fourB = here(route({to: '/four-b'}))
   const hasFadedBlack = useStore($fadeStatus)
 
-  function clearInference() {
-    $generating.set(false)
-    resetProgress()
-    disableRegen('scene switch')
-  }
-
-  useHotkeys('CTRL + F', () => {
-    document.documentElement.requestFullscreen().then()
-  })
-
-  useHotkeys('CTRL + B', () => {
-    $fadeStatus.set(!$fadeStatus.get())
-  })
-
-  useHotkeys('LeftArrow', () => {
+  const prev = () => {
     clearInference()
 
     if (one) {
@@ -55,9 +41,9 @@ export function useSceneSwitcher() {
     if (threeB) go({to: '/three'})
     if (four) go({to: '/three-b'})
     if (fourB) go({to: '/four'})
-  })
+  }
 
-  useHotkeys('RightArrow', () => {
+  const next = () => {
     clearInference()
 
     if (zero) {
@@ -94,5 +80,16 @@ export function useSceneSwitcher() {
     if (four) {
       go({to: '/four-b'})
     }
-  })
+  }
+
+  const black = () => $fadeStatus.set(!$fadeStatus.get())
+  const fullscreen = () => document.documentElement.requestFullscreen()
+
+  function clearInference() {
+    $generating.set(false)
+    resetProgress()
+    disableRegen('scene switch')
+  }
+
+  return {next, prev, black, fullscreen}
 }
