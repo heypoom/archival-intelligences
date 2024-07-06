@@ -1,17 +1,24 @@
 from fastapi import WebSocket
 
+from utils.connection_state import get_is_connected
 
-def create_send(websocket: WebSocket):
+
+def create_send(sock: WebSocket):
+    conn_id = sock.state.connection_id
+
     async def send(generator):
-        await websocket.send_text("ready")
+        await sock.send_text("ready")
 
         async for out in generator:
-            if isinstance(out, str):
-                await websocket.send_text(out)
-            else:
-                await websocket.send_bytes(out)
+            if not get_is_connected(conn_id):
+                break
 
-        await websocket.send_text("done")
+            if isinstance(out, str):
+                await sock.send_text(out)
+            else:
+                await sock.send_bytes(out)
+
+        await sock.send_text("done")
 
     return send
 

@@ -10,6 +10,8 @@ def load_chuamiatee_lora():
     if lora_applied:
         return
 
+    print("loading LoRA weight")
+
     text2img.load_lora_weights(
         "heypoom/chuamiatee-1", weight_name="pytorch_lora_weights.safetensors"
     )
@@ -22,6 +24,8 @@ def unload_chuamiatee_lora():
 
     if not lora_applied:
         return
+
+    print("unloading LoRA weight")
 
     text2img.unload_lora_weights()
     lora_applied = False
