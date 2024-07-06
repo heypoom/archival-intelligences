@@ -22,7 +22,7 @@ export function useCrossFade(
         setCrossfading(false)
       }, delay)
     }
-  }, [url, prevUrl, delay])
+  }, [url, prevUrl, delay, strict])
 
   return {crossfading, prevUrl}
 }
