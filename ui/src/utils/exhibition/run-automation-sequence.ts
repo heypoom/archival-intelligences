@@ -12,6 +12,8 @@ import {
   onPromptKeyChangeStart,
 } from '../prompt-manager'
 import {startInference} from '../inference'
+import {$transcript} from '../../store/dictation'
+import {processFinalTranscript} from '../process-transcript'
 
 export interface AutomatorContext {
   next(): void
@@ -83,6 +85,13 @@ export function runAutomationAction(
       update()
     })
     .with({action: 'next'}, next)
+    .with({action: 'transcript'}, (action) => {
+      $transcript.set({transcript: action.transcript, final: false})
+
+      if (action.final) {
+        processFinalTranscript(action.transcript)
+      }
+    })
     .with({action: 'end'}, () => {
       // navigate('/countdown')
       console.log('end of show. todo: show a countdown')

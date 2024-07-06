@@ -11,8 +11,6 @@ export const Route = createLazyFileRoute('/')({
 
 function Index() {
   useHotkeys('space', () => {
-    // socket.reconnectSoon('spacebar hotkey', 1)
-
     setTimeout(() => {
       dictation.restart('spacebar hotkey')
     }, 50)

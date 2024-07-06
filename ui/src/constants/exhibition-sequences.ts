@@ -1,6 +1,7 @@
 export type AutomationAction =
   | {action: 'start'} // start the program
   | {action: 'next'} // go to the next program
+  | {action: 'transcript'; transcript: string; final?: boolean} // add transcript
   | {action: 'set-fade-status'; fade: boolean} // set the fade-to-black status
   | {action: 'navigate'; route: string} // navigate to a route
   | {
@@ -18,6 +19,20 @@ export type AutomationSequence = AutomationAction & {time: string}
 
 export const PART_TWO_SEQUENCES: AutomationSequence[] = [
   {time: '00:00:00', action: 'start'},
+
+  {time: '00:00:01', action: 'transcript', transcript: 'hello world'},
+  {
+    time: '00:00:02',
+    action: 'transcript',
+    transcript: 'hello world what the heck',
+  },
+  {time: '00:00:03', action: 'transcript', transcript: 'help me please god'},
+  {
+    time: '00:00:04',
+    action: 'transcript',
+    transcript: 'jesus christ',
+    final: true,
+  },
 
   // fade to black
   {time: '00:02:00', action: 'next'},
