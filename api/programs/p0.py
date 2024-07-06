@@ -6,7 +6,7 @@ PROGRAM_0_STEPS = 30
 PROGRAM_4_STEPS = 30
 
 
-async def infer_program_0(prompt: str):
+async def infer_program_0(prompt: str, conn_id=None):
     def pipeline(on_step_end):
         return text2img(
             prompt=f"{prompt}, photorealistic",
@@ -16,11 +16,11 @@ async def infer_program_0(prompt: str):
             height=HEIGHT,
         )
 
-    async for out in denoise(pipeline, final_only=True):
+    async for out in denoise(pipeline, final_only=True, conn_id=conn_id):
         yield out
 
 
-async def infer_program_4(prompt: str):
+async def infer_program_4(prompt: str, conn_id=None):
     def pipeline(on_step_end):
         p4_prompt = prompt
 
@@ -36,5 +36,5 @@ async def infer_program_4(prompt: str):
             height=HEIGHT,
         )
 
-    async for out in denoise(pipeline):
+    async for out in denoise(pipeline, conn_id=conn_id):
         yield out

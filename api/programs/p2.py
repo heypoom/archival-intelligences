@@ -13,7 +13,7 @@ POEM_OF_MALAYA_SIZE = (960, 800)
 MALAYA = PILImage.open("./malaya.png").resize(POEM_OF_MALAYA_SIZE).convert("RGB")
 
 
-async def infer_program_2(strength: float):
+async def infer_program_2(strength: float, conn_id=None):
     width, height = POEM_OF_MALAYA_SIZE
 
     def pipeline(on_step_end):
@@ -28,11 +28,11 @@ async def infer_program_2(strength: float):
             height=height,
         )
 
-    async for out in denoise(pipeline):
+    async for out in denoise(pipeline, conn_id=conn_id):
         yield out
 
 
-async def infer_program_2_b(strength: float):
+async def infer_program_2_b(strength: float, conn_id=None):
     width, height = POEM_OF_MALAYA_SIZE
 
     def pipeline(on_step_end):
@@ -48,5 +48,5 @@ async def infer_program_2_b(strength: float):
             height=height,
         )
 
-    async for out in denoise(pipeline):
+    async for out in denoise(pipeline, conn_id=conn_id):
         yield out

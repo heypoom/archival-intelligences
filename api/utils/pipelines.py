@@ -3,7 +3,7 @@ import torch
 
 from diffusers import StableDiffusionImg2ImgPipeline, AutoPipelineForText2Image
 
-DEVICE = "cuda:0"
+DEVICE = "cuda"
 
 start_time = time.time()
 

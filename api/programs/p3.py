@@ -4,7 +4,7 @@ from utils.pipelines import text2img
 
 
 # Program 3 pipeline: chua mia tee painting
-async def infer_program_3(prompt: str, strength: float):
+async def infer_program_3(prompt: str, strength: float, conn_id=None):
     width, height = get_chuamiatee_size()
 
     def pipeline(on_step_end):
@@ -18,5 +18,5 @@ async def infer_program_3(prompt: str, strength: float):
             height=height,
         )
 
-    async for out in denoise(pipeline, is_chuamiatee=True):
+    async for out in denoise(pipeline, is_chuamiatee=True, conn_id=conn_id):
         yield out
