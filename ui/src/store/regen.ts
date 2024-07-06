@@ -1,6 +1,7 @@
 import {atom} from 'nanostores'
 import {socket} from '../manager/socket'
 import {$generating} from './prompt'
+import {$progress} from './progress'
 
 let regenerateTimer = 0
 
@@ -32,14 +33,20 @@ export function regen(command: string, prompt: string, origin = true) {
   console.log(`[gen] regen "${prompt}" in ${delay}ms (i=${gen})`)
 
   regenerateTimer = setTimeout(() => {
-    $generating.set(false)
+    const progress = $progress.get()
 
-    const gen = $regenCount.get()
-    socket.sock.send(`${command}:${prompt}`)
+    if (progress > 0 && progress < 98) {
+      console.log(
+        `[gen] progress at ${progress}% is not complete yet, we wait.`
+      )
+    } else {
+      socket.sock.send(`${command}:${prompt}`)
+      $generating.set(false)
 
-    console.log(`[gen] regen "${prompt}" now! (i=${gen}, delay=${delay}ms)`)
-
-    $regenCount.set(gen + 1)
+      const gen = $regenCount.get()
+      console.log(`[gen] regen "${prompt}" now! (i=${gen}, delay=${delay}ms)`)
+      $regenCount.set(gen + 1)
+    }
 
     setTimeout(() => {
       regen(command, prompt, false)
