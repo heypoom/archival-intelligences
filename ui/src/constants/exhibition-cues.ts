@@ -15,25 +15,9 @@ export type AutomationAction =
   | {action: 'move-slider'; program: string; value: number} // slowly move the guidance slider
   | {action: 'end'} // end the showing
 
-export type AutomationSequence = AutomationAction & {time: string}
+export type AutomationCue = AutomationAction & {time: string}
 
-export const PART_TWO_SEQUENCES: AutomationSequence[] = [
-  {time: '00:00:00', action: 'start'},
-
-  {time: '00:00:01', action: 'transcript', transcript: 'hello world'},
-  {
-    time: '00:00:02',
-    action: 'transcript',
-    transcript: 'hello world what the heck',
-  },
-  {time: '00:00:03', action: 'transcript', transcript: 'help me please god'},
-  {
-    time: '00:00:04',
-    action: 'transcript',
-    transcript: 'jesus christ',
-    final: true,
-  },
-
+export const PART_TWO_CUES: AutomationCue[] = [
   // fade to black
   {time: '00:02:00', action: 'next'},
 
@@ -145,7 +129,3 @@ export const PART_TWO_SEQUENCES: AutomationSequence[] = [
     action: 'end',
   },
 ]
-
-export function getAutomationSequences(): AutomationSequence[] {
-  return PART_TWO_SEQUENCES
-}

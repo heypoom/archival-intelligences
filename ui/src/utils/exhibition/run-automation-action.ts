@@ -1,7 +1,7 @@
 import {match} from 'ts-pattern'
 import {Tween, Easing} from '@tweenjs/tween.js'
 
-import {AutomationAction} from '../../constants/exhibition-sequences'
+import {AutomationAction} from '../../constants/exhibition-cues'
 import {$fadeStatus} from '../../store/fader'
 import {$guidance} from '../../store/guidance'
 import {$prompt} from '../../store/prompt'
