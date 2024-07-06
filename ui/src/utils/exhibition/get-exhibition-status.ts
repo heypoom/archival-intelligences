@@ -1,4 +1,4 @@
-import {parseTime} from './date'
+import {timeOf} from './exhibition/timecode'
 
 import {
   EXHIBITION_TIMES,
@@ -8,7 +8,7 @@ import {
 import {ExhibitionStatus} from '../types/exhibition-status'
 
 export function getExhibitionStatus(now: Date = new Date()): ExhibitionStatus {
-  const times = EXHIBITION_TIMES.map(parseTime)
+  const times = EXHIBITION_TIMES.map(timeOf)
 
   for (let i = 0; i < times.length; i++) {
     const time = times[i]

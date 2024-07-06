@@ -1,6 +1,6 @@
 import {test, expect} from 'vitest'
 
-import {parseTime} from './date'
+import {timeOf} from './exhibition/timecode'
 import {getExhibitionStatus} from './get-exhibition-status'
 
 import {ExhibitionStatus} from '../types/exhibition-status'
@@ -16,5 +16,5 @@ const cases: [string, ExhibitionStatus][] = [
 ]
 
 test.each(cases)('get exhibition status', (time, status) => {
-  expect(getExhibitionStatus(parseTime(time))).to.deep.equal(status)
+  expect(getExhibitionStatus(timeOf(time))).to.deep.equal(status)
 })
