@@ -64,7 +64,5 @@ async def websocket_endpoint(sock: WebSocket):
         except starlette.websockets.WebSocketDisconnect:
             handle_socket_disconnect(sock)
 
-            # ADD DISCONNECTION LOGIC + TASK MAPPING HERE
-            # MAKE SURE TO CANCEL INFERENCE TASK WHEN CLIENT IS DISCONNECTED.
             print("client disconnected.")
             break
