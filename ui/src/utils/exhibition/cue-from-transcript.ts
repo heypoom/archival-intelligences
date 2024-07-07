@@ -7,7 +7,7 @@ import {GladiaTranscript} from '../../types/gladia-transcript'
 const SHORT_SENTENCE_WORDS = 6
 
 /** How long to wait until allowing next cue? */
-const CUE_WAIT_SECONDS = 20
+const CUE_WAIT_SECONDS = 15
 
 export async function loadTranscriptCue(): Promise<AutomationCue[]> {
   const body = await fetch('/transcription.json')
