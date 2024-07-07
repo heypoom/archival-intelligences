@@ -27,7 +27,7 @@ function VideoRoute() {
   return (
     <div className="flex flex-col items-center justify-center h-full font-mono min-h-screen bg-black text-white gap-y-8 relative">
       {!interacted && (
-        <div className="flex items-center justify-center absolute w-full h-full">
+        <div className="flex items-center justify-center absolute w-full h-full z-50 bg-black bg-opacity-30">
           <button
             onClick={enableVideoPlayback}
             className="border border-green-300 text-green-300 px-4 py-2"
@@ -40,7 +40,6 @@ function VideoRoute() {
       <video
         src="https://images.poom.dev/history-v1.mp4"
         ref={(ref) => ref && automator.initVideo(ref)}
-        className={cx(status.type !== 'active' && 'invisible')}
       ></video>
     </div>
   )
