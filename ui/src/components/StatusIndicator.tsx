@@ -2,12 +2,14 @@ import cn from 'classnames'
 import {useStore} from '@nanostores/react'
 import {useMatchRoute} from '@tanstack/react-router'
 
-import {$dictationState} from '../store/dictation.ts'
-import {$apiReady, $generating} from '../store/prompt.ts'
+import {$dictationState} from '../store/dictation'
+import {$apiReady, $generating} from '../store/prompt'
+import {$exhibitionMode} from '../store/exhibition'
 
 export const StatusIndicator = () => {
   const mr = useMatchRoute()
-  const isSpeechRoute = mr({to: '/'})
+  const isSpeechRoute = mr({to: '/zero'})
+  const isExhibition = useStore($exhibitionMode)
 
   const status = useStore($dictationState)
   const apiReady = useStore($apiReady)
@@ -28,7 +30,7 @@ export const StatusIndicator = () => {
         )}
       />
 
-      {isSpeechRoute && (
+      {isSpeechRoute && !isExhibition && (
         <div
           className={cn(
             'w-3 h-3 rounded-full',

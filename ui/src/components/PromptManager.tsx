@@ -1,34 +1,31 @@
 import cx from 'classnames'
-import {useState} from 'react'
+
 import {useStore} from '@nanostores/react'
 
 import {GuidanceSlider} from './GuidanceSlider'
 import {PromptInput} from './PromptInput'
 
-import {
-  $apiReady,
-  $generating,
-  $inferencePreview,
-  $prompt,
-} from '../store/prompt'
+import {$generating, $inferencePreview, $prompt} from '../store/prompt'
 
 import {$guidance} from '../store/guidance'
-import {socket} from '../manager/socket.ts'
 
-import {useCrossFade} from '../hooks/useCrossFade.tsx'
+import {useCrossFade} from '../hooks/useCrossFade'
 
-import {regen, disableRegen} from '../store/regen.ts'
+import {startInference} from '../utils/inference'
+import {$imageFadingOut} from '../store/fader'
+import {
+  onGuidanceCommitted,
+  onPromptCommitted,
+  onPromptKeyChangeStart,
+} from '../utils/prompt-manager'
 
 const MIN_KEYWORD_TRIGGER = 2
-const FADE_OUT_DURATION = 2000
 
 interface Props {
   keyword?: string
   command: string
   regenerate?: true | string
 }
-
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export function PromptManager(props: Props) {
   const {keyword, command} = props
@@ -37,32 +34,16 @@ export function PromptManager(props: Props) {
   const isGenerating = useStore($generating)
   const guidance = useStore($guidance)
   const previewUrl = useStore($inferencePreview)
-  const apiReady = useStore($apiReady)
 
-  const [isFadingOut, setFadingOut] = useState(false)
+  const isFadingOut = useStore($imageFadingOut)
   const {crossfading, prevUrl} = useCrossFade(previewUrl, true)
 
   const useKeyword = typeof keyword === 'string' && keyword.length > 0
 
-  async function fadeOutOldImage() {
-    setFadingOut(true)
-
-    // wait for the old image to fully fade out
-    await delay(FADE_OUT_DURATION)
-
-    setFadingOut(false)
-    $inferencePreview.set('')
-  }
-
   async function handleChange(input: string) {
     $prompt.set(input)
 
-    // reset generation count if we're regenerating
-    disableRegen('prompt change')
-
-    if (previewUrl) {
-      await fadeOutOldImage()
-    }
+    onPromptKeyChangeStart()
 
     const trimmedInput = input.trim().toLowerCase()
 
@@ -71,28 +52,7 @@ export function PromptManager(props: Props) {
       const segments = input.split(' ')
 
       if (isKeyword && segments.length > MIN_KEYWORD_TRIGGER) {
-        console.log(
-          `generating "${input}" with guidance ${guidance} -> ${command}`
-        )
-
-        $generating.set(true)
-
-        if (!apiReady) {
-          console.log('[!!!!] socket not ready')
-          return
-        }
-
-        console.log(`[program] c=${command}, g=${guidance}`)
-
-        if (command === 'P2') {
-          socket.sock.send(`P2:${(guidance / 100).toFixed(2)}`)
-        } else if (command === 'P2B') {
-          socket.sock.send(`P2B:${(guidance / 100).toFixed(2)}`)
-        } else if (command === 'P3B') {
-          socket.sock.send(`P3B:${input}`)
-        } else {
-          socket.sock.send(command)
-        }
+        onPromptCommitted({input, command, guidance})
       }
     }
   }
@@ -118,17 +78,7 @@ export function PromptManager(props: Props) {
       return
     }
 
-    if (previewUrl) {
-      await fadeOutOldImage()
-    }
-
-    $generating.set(true)
-
-    if (command === 'P2') {
-      socket.sock.send(`P2:${(value / 100).toFixed(2)}`)
-    } else if (command === 'P2B') {
-      socket.sock.send(`P2B:${(value / 100).toFixed(2)}`)
-    }
+    onGuidanceCommitted({command, value})
   }
 
   const fading = crossfading && !isGenerating
@@ -148,26 +98,10 @@ export function PromptManager(props: Props) {
               onKeyDown: (e) => {
                 // freestyle inference
                 if (e.key === 'Enter' && !useKeyword) {
-                  if (!apiReady) {
-                    console.log('[!!!!] socket not ready')
-                    return
-                  }
-
-                  $generating.set(true)
-
-                  const sys = `${command}:${prompt}`
-                  console.log(`> sent "${sys}"`)
-
-                  socket.sock.send(sys)
-
-                  const shouldRegenerate =
-                    props.regenerate === true ||
-                    (typeof props.regenerate === 'string' &&
-                      prompt.endsWith(props.regenerate.toLowerCase()))
-
-                  if (shouldRegenerate) {
-                    regen(command, prompt)
-                  }
+                  startInference({
+                    command,
+                    regenerate: props.regenerate,
+                  })
                 }
               },
             }}

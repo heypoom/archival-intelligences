@@ -1,5 +1,5 @@
 import {useMatchRoute, useNavigate} from '@tanstack/react-router'
-import {useHotkeys} from 'react-hotkeys-hook'
+
 import {$generating, $inferencePreview} from '../store/prompt'
 import {$fadeStatus} from '../store/fader'
 import {useStore} from '@nanostores/react'
@@ -7,6 +7,7 @@ import {resetProgress} from '../store/progress'
 import {dictation} from '../dictation'
 import {socket} from '../manager/socket'
 import {disableRegen} from '../store/regen'
+import {$exhibitionMode} from '../store/exhibition'
 
 const here = (a: false | object) => {
   if (a === false) return false
@@ -17,7 +18,9 @@ export function useSceneSwitcher() {
   const route = useMatchRoute()
   const go = useNavigate()
 
-  const zero = here(route({to: '/'}))
+  const isExhibition = useStore($exhibitionMode)
+
+  const zero = here(route({to: '/zero'}))
   const one = here(route({to: '/one'}))
   const two = here(route({to: '/two'}))
   const twoB = here(route({to: '/two-b'}))
@@ -27,26 +30,16 @@ export function useSceneSwitcher() {
   const fourB = here(route({to: '/four-b'}))
   const hasFadedBlack = useStore($fadeStatus)
 
-  function clearInference() {
-    $generating.set(false)
-    resetProgress()
-    disableRegen('scene switch')
-  }
-
-  useHotkeys('CTRL + F', () => {
-    document.documentElement.requestFullscreen().then()
-  })
-
-  useHotkeys('CTRL + B', () => {
-    $fadeStatus.set(!$fadeStatus.get())
-  })
-
-  useHotkeys('LeftArrow', () => {
+  const prev = () => {
     clearInference()
 
     if (one) {
-      dictation.start()
-      go({to: '/'})
+      // live performance
+      if (!isExhibition) {
+        dictation.start()
+      }
+
+      go({to: '/zero'})
     }
 
     if (two) go({to: '/one'})
@@ -55,15 +48,14 @@ export function useSceneSwitcher() {
     if (threeB) go({to: '/three'})
     if (four) go({to: '/three-b'})
     if (fourB) go({to: '/four'})
-  })
+  }
 
-  useHotkeys('RightArrow', () => {
+  const next = () => {
     clearInference()
 
     if (zero) {
       dictation.stop()
 
-      // TODO: send a message to the server to stop the inference!
       socket.reconnectSoon('program zero fade out', 1000, {shutup: true})
 
       if (hasFadedBlack) {
@@ -94,5 +86,13 @@ export function useSceneSwitcher() {
     if (four) {
       go({to: '/four-b'})
     }
-  })
+  }
+
+  function clearInference() {
+    $generating.set(false)
+    resetProgress()
+    disableRegen('scene switch')
+  }
+
+  return {next, prev}
 }

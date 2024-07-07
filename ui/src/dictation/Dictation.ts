@@ -1,19 +1,13 @@
 import {$dictationState, $transcript} from '../store/dictation'
+import {$exhibitionMode} from '../store/exhibition'
 
-import {socket} from '../manager/socket.ts'
-import {$apiReady, $generating} from '../store/prompt.ts'
+import {
+  generateFromPrompt,
+  processInterimTranscript,
+} from '../utils/process-transcript'
 
 const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition
-
-/** Show N backlogs in dictation caption */
-const MAX_TRANSCRIPT_BACKLOG = 1
-
-/** Hide the backlog after N interim words */
-const HIDE_BACKLOG_AFTER_N_INTERIM_WORDS = 6
-
-/** Truncate transcription after N words */
-const TRANSCRIPT_WORD_CUTOFF = 15
 
 /** Forcibly restart the recognizer after N words */
 const FORCE_RESTART_BACKLOG_LIMIT = 20
@@ -78,6 +72,9 @@ export class Dictation {
   }
 
   restart(reason: string) {
+    // do not listen in exhibition mode
+    if ($exhibitionMode.get()) return
+
     if (this.restarting) {
       return
     }
@@ -115,66 +112,25 @@ export class Dictation {
     this.restartWatchdog()
 
     if (latest.isFinal) {
-      await this.processFinalTranscript(first.transcript)
+      await generateFromPrompt(first.transcript)
       return
     }
 
     await this.processInterimTranscript(results)
   }
 
-  async processInterimTranscript(results: SpeechRecognitionResultList) {
-    const backlogs: string[] = []
-    const interims: string[] = []
+  async processInterimTranscript(list: SpeechRecognitionResultList) {
+    const results = [...list].map((r) => ({
+      transcript: r.item(0).transcript,
+      isFinal: r.isFinal,
+    }))
 
-    for (const result of results) {
-      const transcript = result.item(0).transcript
-
-      if (result.isFinal) {
-        backlogs.push(transcript)
-      } else {
-        interims.push(transcript)
-      }
-    }
-
-    const backlogLimit = Math.max(backlogs.length - MAX_TRANSCRIPT_BACKLOG, 0)
-    let wordBacklogs = backlogs.slice(backlogLimit).filter((x) => x)
-
-    // If we have too many words in the interim, do not show the backlog.
-    const interimWords = interims.flatMap((x) => x.split(' ')).filter((x) => x)
-    if (interimWords.length > HIDE_BACKLOG_AFTER_N_INTERIM_WORDS)
-      wordBacklogs = []
-
-    const words = [...wordBacklogs, ...interimWords]
-      .filter((x) => x)
-      .flatMap((x) => x.split(' '))
-      .filter((x) => x)
-
-    const wordLimit = Math.max(words.length - TRANSCRIPT_WORD_CUTOFF, 0)
-    const transcript = words.slice(wordLimit).join(' ')
+    const {transcript, backlogLength} = processInterimTranscript(results)
 
     $transcript.set({transcript, final: false})
 
-    if (backlogs.length > FORCE_RESTART_BACKLOG_LIMIT) {
+    if (backlogLength > FORCE_RESTART_BACKLOG_LIMIT) {
       this.restart('too many backlogs')
-    }
-  }
-
-  async processFinalTranscript(transcript: string) {
-    // Create an identifier to correlate transcript, image prompt and generated images.
-    const isGenerating = $generating.get()
-
-    if (!isGenerating) {
-      console.log(`[GENERATING] ${transcript}`)
-
-      try {
-        socket.sock.send(`P0:${transcript}`)
-        $generating.set(true)
-      } catch (err) {
-        $apiReady.set(false)
-        $generating.set(false)
-
-        socket.reconnectSoon('P0 socket send error')
-      }
     }
   }
 

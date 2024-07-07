@@ -13,10 +13,16 @@ const programNameMap: Record<string, string> = {
 export function CurrentProgramBadge() {
   const routeState = useRouterState()
   const mr = useMatchRoute()
-  const isSpeechRoute = mr({to: '/'})
+  const isSpeechRoute = mr({to: '/zero'})
 
   const currentProgramKey = routeState.location.href.replace('/', '')
   const currentProgram = programNameMap[currentProgramKey]
+
+  // const isExhibitionMode = useStore($exhibitionMode)
+
+  // once we finalise, we can hide the programme codes at the bottom left.
+  // we can keep the progress counter and the connection indicator
+  // if (isExhibitionMode) return null
 
   // hide program badge when on the speech route
   if (isSpeechRoute) return null
