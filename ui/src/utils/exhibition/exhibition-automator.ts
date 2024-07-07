@@ -7,11 +7,16 @@ import {AutomatorContext, runAutomationAction} from './run-automation-action'
 
 import {secOf, timecodeOf, hhmmOf, hhmmssOf} from './timecode'
 
-import {$exhibitionMode, $exhibitionStatus} from '../../store/exhibition'
+import {
+  $exhibitionMode,
+  $exhibitionStatus,
+  $interacted,
+} from '../../store/exhibition'
 import {getExhibitionStatus} from './get-exhibition-status'
 import {match} from 'ts-pattern'
 import {routeFromCue} from './route-from-cue'
 import {$ipcMode, IpcMessage} from '../../store/window-ipc'
+import {ExhibitionStatus} from '../../types/exhibition-status'
 
 export class ExhibitionAutomator {
   timer: number | null = null
@@ -72,26 +77,37 @@ export class ExhibitionAutomator {
         if (msg.mode !== 'program') return
 
         $ipcMode.set('video')
-        this.actionContext.navigate('/video')
+        this.sync({force: true})
 
         setTimeout(() => {
-          if (this.videoRef) {
-            this.videoRef.currentTime = msg.elapsed
-            this.videoRef.play()
-          }
+          this.playVideo(msg.elapsed)
         }, 1000)
-
-        this.sync({force: true})
       })
       .with({type: 'play'}, (msg) => {
         if (mode !== 'video' || !this.videoRef) return
 
-        this.actionContext.navigate('/video')
-
-        this.videoRef.currentTime = msg.elapsed
-        this.videoRef.play()
+        this.playVideo(msg.elapsed)
       })
       .exhaustive()
+  }
+
+  async playVideo(elapsed: number = this.elapsed) {
+    if ($ipcMode.get() !== 'video') return
+
+    this.actionContext.navigate('/video')
+
+    if (!$interacted.get()) {
+      console.log(`> lack of interaction - video might not play!`)
+    }
+
+    try {
+      if (this.videoRef) {
+        this.videoRef.currentTime = elapsed
+        await this.videoRef.play()
+      }
+    } catch (err) {
+      console.log(`[cannot play video]`, err)
+    }
   }
 
   sendIpcMessage(message: IpcMessage) {
@@ -194,6 +210,12 @@ export class ExhibitionAutomator {
     }
   }
 
+  configureStartTime(next: ExhibitionStatus) {
+    if (next.type !== 'active') return
+
+    this.startTime = dayjs(hhmmOf(next.start))
+  }
+
   sync(options: {force?: boolean} = {}) {
     const {force = false} = options
 
@@ -209,9 +231,7 @@ export class ExhibitionAutomator {
 
     if (!force && JSON.stringify(prev) === JSON.stringify(next)) return
 
-    if (next && next.type === 'active') {
-      this.startTime = dayjs(hhmmOf(next.start))
-    }
+    this.configureStartTime(next)
 
     const isVideo = $ipcMode.get() === 'video'
     if (isVideo) {

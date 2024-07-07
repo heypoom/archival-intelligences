@@ -14,15 +14,22 @@ function VideoRoute() {
   const status = useStore($exhibitionStatus)
   const interacted = useStore($interacted)
 
+  function play() {
+    $interacted.set(true)
+    fullscreen()
+
+    if (status.type === 'active') {
+      automator.configureStartTime(status)
+      automator.playVideo()
+    }
+  }
+
   return (
     <div className="flex flex-col items-center justify-center h-full font-mono min-h-screen bg-black text-white gap-y-8 relative">
       {!interacted && (
         <div className="flex items-center justify-center absolute w-full h-full">
           <button
-            onClick={() => {
-              $interacted.set(true)
-              fullscreen()
-            }}
+            onClick={play}
             className="border border-green-300 text-green-300 px-4 py-2"
           >
             click here to allow video to play
