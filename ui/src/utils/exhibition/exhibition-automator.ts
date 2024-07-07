@@ -77,6 +77,7 @@ export class ExhibitionAutomator {
         setTimeout(() => {
           if (this.videoRef) {
             this.videoRef.currentTime = msg.elapsed
+            this.videoRef.play()
           }
         }, 1000)
 
