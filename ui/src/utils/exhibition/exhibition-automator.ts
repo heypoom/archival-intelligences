@@ -205,6 +205,7 @@ export class ExhibitionAutomator {
 
     const prev = $exhibitionStatus.get()
     const next = getExhibitionStatus(this.now())
+    $exhibitionStatus.set(next)
 
     if (!force && JSON.stringify(prev) === JSON.stringify(next)) return
 
@@ -218,8 +219,6 @@ export class ExhibitionAutomator {
 
       return
     }
-
-    $exhibitionStatus.set(next)
 
     console.log(`> exhibition status changed:`, next)
 
