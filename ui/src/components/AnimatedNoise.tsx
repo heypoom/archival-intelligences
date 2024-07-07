@@ -13,6 +13,7 @@ export const AnimatedNoise = () => {
     mr({to: '/'}) ||
     mr({to: '/zero'}) ||
     mr({to: '/closed'}) ||
+    mr({to: '/video'}) ||
     mr({to: '/waiting'})
 
   const paint = useCallback(() => {

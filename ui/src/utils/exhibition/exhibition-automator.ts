@@ -1,4 +1,5 @@
 import dayjs, {Dayjs} from 'dayjs'
+import {nanoid} from 'nanoid'
 import {AutomationCue, PART_TWO_CUES} from '../../constants/exhibition-cues'
 import {loadTranscriptCue} from './cue-from-transcript'
 import {getCurrentCue} from './get-current-cue'
@@ -10,6 +11,7 @@ import {$exhibitionMode, $exhibitionStatus} from '../../store/exhibition'
 import {getExhibitionStatus} from './get-exhibition-status'
 import {match} from 'ts-pattern'
 import {routeFromCue} from './route-from-cue'
+import {$ipcMode, IpcMessage} from '../../store/window-ipc'
 
 export class ExhibitionAutomator {
   timer: number | null = null
@@ -18,6 +20,11 @@ export class ExhibitionAutomator {
   currentCue = -1
 
   private startTime: Dayjs | null = null
+
+  ipc = new BroadcastChannel('exhibition-ipc')
+  ipcId = nanoid()
+
+  videoRef: HTMLVideoElement | null = null
 
   // allows emulation of time
   now = () => new Date()
@@ -34,6 +41,60 @@ export class ExhibitionAutomator {
       // @ts-expect-error - make it available for debugging
       window.automator = this
     }
+  }
+
+  async setup() {
+    this.ipc.addEventListener('message', this.onIpcMessage)
+
+    this.sendIpcMessage({type: 'ping', id: this.ipcId})
+
+    await this.load()
+  }
+
+  initVideo(v: HTMLVideoElement) {
+    this.videoRef = v
+    v.currentTime = this.elapsed
+  }
+
+  onIpcMessage = (event: MessageEvent<IpcMessage>) => {
+    console.log(`[ipc] message received:`, event.data)
+    const id = this.ipcId
+    const mode = $ipcMode.get()
+
+    if (!event.data) return
+
+    match(event.data)
+      .with({type: 'ping'}, () => {
+        this.sendIpcMessage({type: 'pong', id, mode, elapsed: this.elapsed})
+      })
+      .with({type: 'pong'}, (msg) => {
+        // if there are already a window in program mode, switch to video mode
+        if (msg.mode !== 'program') return
+
+        // if we are already in video mode, do nothing
+        if (mode === 'video') return
+
+        $ipcMode.set('video')
+
+        setTimeout(() => {
+          if (this.videoRef) {
+            this.videoRef.currentTime = msg.elapsed
+          }
+        }, 1000)
+
+        this.sync()
+      })
+      .with({type: 'play'}, (msg) => {
+        if (mode !== 'video' || !this.videoRef) return
+
+        this.videoRef.currentTime = msg.elapsed
+        this.videoRef.play()
+      })
+      .exhaustive()
+  }
+
+  sendIpcMessage(message: IpcMessage) {
+    this.ipc.postMessage(message)
   }
 
   startClock() {
@@ -77,6 +138,11 @@ export class ExhibitionAutomator {
 
     this.actionContext.cue = () => this.currentCue
     this.actionContext.elapsed = () => this.elapsed
+
+    if (action.action === 'start') {
+      this.sendIpcMessage({type: 'play', elapsed: this.elapsed})
+    }
+
     runAutomationAction(action, this.actionContext)
   }
 
@@ -134,10 +200,23 @@ export class ExhibitionAutomator {
     const isExhibition = $exhibitionMode.get()
     if (!isExhibition) return
 
+    const {navigate: go} = this.actionContext
+
     const prev = $exhibitionStatus.get()
     const next = getExhibitionStatus(this.now())
 
     if (!force && JSON.stringify(prev) === JSON.stringify(next)) return
+
+    if (next && next.type === 'active') {
+      this.startTime = dayjs(hhmmOf(next.start))
+    }
+
+    const isVideo = $ipcMode.get() === 'video'
+    if (isVideo) {
+      go('/video')
+
+      return
+    }
 
     $exhibitionStatus.set(next)
 
@@ -145,14 +224,16 @@ export class ExhibitionAutomator {
 
     if (next.type !== 'active') {
       this.stopClock()
+      this.startTime = null
     } else {
-      this.startTime = dayjs(hhmmOf(next.start))
       this.seekCue(timecodeOf(this.elapsed))
 
       if (automator.timer === null) automator.startClock()
-    }
 
-    const {navigate: go} = this.actionContext
+      if (force) {
+        this.sendIpcMessage({type: 'play', elapsed: this.elapsed})
+      }
+    }
 
     match(next.type)
       .with('loading', () => {
@@ -180,4 +261,4 @@ export class ExhibitionAutomator {
 }
 
 export const automator = new ExhibitionAutomator()
-automator.load()
+automator.setup()
