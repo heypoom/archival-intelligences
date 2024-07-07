@@ -127,7 +127,7 @@ export function runAutomationAction(
           if (duration > word.end) {
             words.shift()
 
-            sentence += `${word.word} `
+            sentence += `${word.word}`
             $transcript.set({transcript: sentence, final: false})
           }
         }
