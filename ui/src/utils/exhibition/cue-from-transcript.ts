@@ -3,7 +3,7 @@ import {timecodeOf} from './timecode'
 import {AutomationCue} from '../../constants/exhibition-cues'
 import {GladiaTranscript} from '../../types/gladia-transcript'
 
-/** Exclude short sentences. */
+/** Exclude short sentences from image generation. */
 const SHORT_SENTENCE_WORDS = 6
 
 /** How long to wait until allowing next image generation cue? */

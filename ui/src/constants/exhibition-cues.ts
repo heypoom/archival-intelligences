@@ -28,18 +28,18 @@ export type AutomationAction =
 export type AutomationCue = AutomationAction & {time: string}
 
 export const PART_TWO_CUES: AutomationCue[] = [
-  // fade to black
-  {time: '02:30:00', action: 'next'},
+  // fade program 0 to black
+  {time: '00:40:00', action: 'next'},
 
-  // start program 1
-  {time: '02:03:00', action: 'next'},
+  // fade in program 1
+  {time: '00:40:10', action: 'next'},
 
   // start program 2
-  {time: '02:04:00', action: 'next'},
+  {time: '00:40:30', action: 'navigate', route: '/two'},
 
   // type prompt
   {
-    time: '02:06:00',
+    time: '00:40:45',
     action: 'prompt',
     program: 'P2',
     prompt: 'painting like epic poem of malaya',
@@ -47,28 +47,28 @@ export const PART_TWO_CUES: AutomationCue[] = [
   },
 
   // slide to 0%
-  {time: '02:05:00', action: 'move-slider', value: 0, program: 'P2'},
+  {time: '00:41:00', action: 'move-slider', value: 0, program: 'P2'},
 
   // slide to 70%
-  {time: '02:07:00', action: 'move-slider', value: 70, program: 'P2'},
+  {time: '00:41:15', action: 'move-slider', value: 70, program: 'P2'},
 
   // start program 2B
-  {time: '02:08:00', action: 'navigate', route: '/two-b'},
+  {time: '00:41:30', action: 'navigate', route: '/two-b'},
 
   // type prompt
   {
-    time: '02:09:00',
+    time: '00:41:45',
     action: 'prompt',
     program: 'P2B',
     prompt: 'painting like epic poem of malaya but with more people',
   },
 
   // start program 3B
-  {time: '02:10:00', action: 'navigate', route: '/three-b'},
+  {time: '00:42:00', action: 'navigate', route: '/three-b'},
 
   // erase prompt
   {
-    time: '02:10:30',
+    time: '00:42:15',
     action: 'prompt',
     prompt: '',
     delay: {base: 30, variance: 20},
@@ -78,7 +78,7 @@ export const PART_TWO_CUES: AutomationCue[] = [
 
   // type prompt
   {
-    time: '02:11:00',
+    time: '00:42:30',
     action: 'prompt',
     program: 'P3B',
     prompt: 'chua mia tee painting',
@@ -86,11 +86,11 @@ export const PART_TWO_CUES: AutomationCue[] = [
   },
 
   // start program 4
-  {time: '02:12:00', action: 'navigate', route: '/four'},
+  {time: '00:42:45', action: 'navigate', route: '/four'},
 
   // type prompt
   {
-    time: '02:13:00',
+    time: '00:43:00',
     action: 'prompt',
     program: 'P4',
     prompt: 'data researcher',
@@ -100,7 +100,7 @@ export const PART_TWO_CUES: AutomationCue[] = [
 
   // type prompt
   {
-    time: '02:14:00',
+    time: '00:43:15',
     action: 'prompt',
     program: 'P4',
     prompt: 'crowdworker',
@@ -108,11 +108,11 @@ export const PART_TWO_CUES: AutomationCue[] = [
   },
 
   // start program 4B
-  {time: '02:15:00', action: 'navigate', route: '/four-b'},
+  {time: '00:43:30', action: 'navigate', route: '/four-b'},
 
   // type prompt
   {
-    time: '02:16:00',
+    time: '00:43:45',
     action: 'prompt',
     program: 'P4',
     prompt: 'big tech ceo',
@@ -121,7 +121,7 @@ export const PART_TWO_CUES: AutomationCue[] = [
 
   // type prompt
   {
-    time: '02:17:00',
+    time: '00:44:00',
     action: 'prompt',
     program: 'P4',
     prompt: 'stable diffusion',
@@ -130,13 +130,13 @@ export const PART_TWO_CUES: AutomationCue[] = [
 
   // fade to black
   {
-    time: '02:18:00',
+    time: '00:44:15',
     action: 'set-fade-status',
     fade: true,
   },
 
   {
-    time: '02:19:00',
+    time: '00:50:00',
     action: 'end',
   },
 ]

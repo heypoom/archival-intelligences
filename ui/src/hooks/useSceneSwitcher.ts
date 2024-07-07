@@ -56,7 +56,6 @@ export function useSceneSwitcher() {
     if (zero) {
       dictation.stop()
 
-      // TODO: send a message to the server to stop the inference!
       socket.reconnectSoon('program zero fade out', 1000, {shutup: true})
 
       if (hasFadedBlack) {

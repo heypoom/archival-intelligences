@@ -14,7 +14,7 @@ export const Route = createLazyFileRoute('/waiting')({
 
 export function WaitingRoomRoute() {
   const status = useStore($exhibitionStatus)
-  const [countdown, setCountdown] = useState('00:00:00')
+  const [countdown, setCountdown] = useState('--:--:--')
 
   const tick = useCallback(() => {
     if (status.type !== 'wait') return

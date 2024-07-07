@@ -17,7 +17,7 @@ export function CurrentProgramBadge() {
   const mr = useMatchRoute()
   const isSpeechRoute = mr({to: '/zero'})
 
-  const currentProgramKey = routeState.location.href.replace('/zero', '')
+  const currentProgramKey = routeState.location.href.replace('/', '')
   const currentProgram = programNameMap[currentProgramKey]
 
   // const isExhibitionMode = useStore($exhibitionMode)

@@ -3,15 +3,7 @@ import duration from 'dayjs/plugin/duration'
 
 dayjs.extend(duration)
 
-export const hhmmOf = (input: string): Date => {
-  const [hour, minute] = input.split(':').map(Number)
-
-  return dayjs()
-    .set('hour', hour)
-    .set('minute', minute)
-    .set('second', 0)
-    .toDate()
-}
+export const hhmmOf = (input: string): Date => hhmmssOf(`${input}:00`)
 
 export const secOf = (timecode: string): number => {
   const [hours, minutes, seconds] = timecode.split(':').map(Number)
@@ -27,4 +19,14 @@ export const timecodeOf = (seconds: number): string => {
   const secs = duration.seconds().toString().padStart(2, '0')
 
   return `${hours}:${minutes}:${secs}`
+}
+
+export const hhmmssOf = (input: string): Date => {
+  const [hour, minute, second] = input.split(':').map(Number)
+
+  return dayjs()
+    .set('hour', hour)
+    .set('minute', minute)
+    .set('second', second)
+    .toDate()
 }

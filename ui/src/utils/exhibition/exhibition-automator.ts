@@ -4,11 +4,12 @@ import {loadTranscriptCue} from './cue-from-transcript'
 import {getCurrentCue} from './get-current-cue'
 import {AutomatorContext, runAutomationAction} from './run-automation-action'
 
-import {secOf, timecodeOf, hhmmOf} from './timecode'
+import {secOf, timecodeOf, hhmmOf, hhmmssOf} from './timecode'
 
 import {$exhibitionMode, $exhibitionStatus} from '../../store/exhibition'
 import {getExhibitionStatus} from './get-exhibition-status'
 import {match} from 'ts-pattern'
+import {routeFromCue} from './route-from-cue'
 
 export class ExhibitionAutomator {
   timer: number | null = null
@@ -37,7 +38,7 @@ export class ExhibitionAutomator {
 
   startClock() {
     if (this.timer) {
-      clearInterval(this.timer)
+      this.stopClock()
     }
 
     this.tick()
@@ -90,9 +91,14 @@ export class ExhibitionAutomator {
 
   seekCue(time: string) {
     const seq = getCurrentCue(time, this.cues)
-    if (!seq) return
+    if (!seq) {
+      console.log('no cue found for', time)
+      return
+    }
 
     const [cue] = seq
+
+    console.log(`seeking to cue ${cue} | t=${time}`)
     this.currentCue = cue
   }
 
@@ -104,7 +110,7 @@ export class ExhibitionAutomator {
 
   /** Mock the time source. */
   mockTime(time: string, dynamic = true) {
-    const origin = hhmmOf(time)
+    const origin = hhmmssOf(time)
 
     if (!dynamic) {
       this.now = () => origin
@@ -121,7 +127,9 @@ export class ExhibitionAutomator {
     }
   }
 
-  sync() {
+  sync(options: {force?: boolean} = {}) {
+    const {force = false} = options
+
     // only activate when in exhibition mode
     const isExhibition = $exhibitionMode.get()
     if (!isExhibition) return
@@ -129,8 +137,7 @@ export class ExhibitionAutomator {
     const prev = $exhibitionStatus.get()
     const next = getExhibitionStatus(this.now())
 
-    // do not sync if the status is the same
-    if (prev.type === next.type) return
+    if (!force && JSON.stringify(prev) === JSON.stringify(next)) return
 
     $exhibitionStatus.set(next)
 
@@ -158,11 +165,17 @@ export class ExhibitionAutomator {
         go('/closed')
       })
       .with('active', () => {
-        // TODO: restore current route from cue?
+        this.restoreRouteFromCue()
       })
       .exhaustive()
 
     return {prev, next}
+  }
+
+  restoreRouteFromCue() {
+    const route = routeFromCue(this.currentCue, this.cues)
+
+    this.actionContext.navigate(route)
   }
 }
 
