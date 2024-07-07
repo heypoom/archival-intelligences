@@ -11,7 +11,6 @@ function VideoRoute() {
       <video
         src="https://images.poom.dev/history-v1.mp4"
         ref={(ref) => ref && automator.initVideo(ref)}
-        controls
       ></video>
     </div>
   )

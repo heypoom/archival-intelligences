@@ -230,9 +230,7 @@ export class ExhibitionAutomator {
 
       if (automator.timer === null) automator.startClock()
 
-      if (force) {
-        this.sendIpcMessage({type: 'play', elapsed: this.elapsed})
-      }
+      this.sendIpcMessage({type: 'play', elapsed: this.elapsed})
     }
 
     match(next.type)
