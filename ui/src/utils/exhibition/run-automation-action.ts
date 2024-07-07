@@ -4,7 +4,7 @@ import {Tween, Easing} from '@tweenjs/tween.js'
 import {AutomationAction} from '../../constants/exhibition-cues'
 import {$fadeStatus} from '../../store/fader'
 import {$guidance} from '../../store/guidance'
-import {$generating, $prompt} from '../../store/prompt'
+import {$prompt} from '../../store/prompt'
 import {keystrokeStream, getRandomDelay} from './keystroke-stream'
 
 import {
@@ -17,8 +17,8 @@ import {
 import {startInference} from '../inference'
 import {$transcript} from '../../store/dictation'
 import {generateFromPrompt} from '../process-transcript'
-import {disableRegen} from '../../store/regen'
-import {resetProgress} from '../../store/progress'
+
+import {resetAll} from './reset'
 
 export interface AutomatorContext {
   next(): void
@@ -48,14 +48,7 @@ export function runAutomationAction(
       console.log('[start of show]')
 
       navigate('/zero')
-      $prompt.set('/zero')
-      $transcript.set({transcript: '', final: false})
-      $guidance.set(30)
-      $fadeStatus.set(false)
-      $generating.set(false)
-
-      resetProgress()
-      disableRegen('start of show')
+      resetAll()
     })
     .with({action: 'move-slider'}, (action) => {
       const guidance = {value: $guidance.get()}

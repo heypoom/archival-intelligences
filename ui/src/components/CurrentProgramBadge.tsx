@@ -1,6 +1,4 @@
-import {useStore} from '@nanostores/react'
 import {useMatchRoute, useRouterState} from '@tanstack/react-router'
-import {$exhibitionMode} from '../store/exhibition'
 
 const programNameMap: Record<string, string> = {
   one: '1',

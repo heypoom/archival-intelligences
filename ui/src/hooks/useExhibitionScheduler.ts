@@ -12,7 +12,7 @@ export function useExhibitionScheduler() {
   const isExhibitionMode = useStore($exhibitionMode)
 
   useEffect(() => {
-    let timer: number
+    let timer: number | undefined
 
     if (isExhibitionMode) {
       timer = setInterval(() => {
@@ -20,6 +20,9 @@ export function useExhibitionScheduler() {
       }, POLL_INTERVAL)
 
       automator.sync({force: true})
+    } else {
+      clearInterval(timer)
+      automator.stopClock()
     }
 
     return () => clearInterval(timer)

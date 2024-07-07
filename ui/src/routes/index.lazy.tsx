@@ -1,6 +1,8 @@
 import {createLazyFileRoute, useNavigate} from '@tanstack/react-router'
 import {$exhibitionMode} from '../store/exhibition'
 import {automator} from '../utils/exhibition/exhibition-automator'
+import {useEffect} from 'react'
+import {resetAll} from '../utils/exhibition/reset'
 
 export const Route = createLazyFileRoute('/')({
   component: HomeRoute,
@@ -8,6 +10,10 @@ export const Route = createLazyFileRoute('/')({
 
 export function HomeRoute() {
   const go = useNavigate()
+
+  useEffect(() => {
+    resetAll()
+  }, [])
 
   // exhibition mode
   function startExhibition() {
@@ -18,6 +24,7 @@ export function HomeRoute() {
   // performance lecture mode
   function startLiveLecture() {
     $exhibitionMode.set(false)
+    automator.stopClock()
 
     go({to: '/zero'})
   }
