@@ -28,10 +28,9 @@ export function getCueFromTranscript(
     let shouldGenerate = false
 
     if (u.words.length > SHORT_SENTENCE_WORDS) {
-      const should_resume =
-        u.start - lastFinalTime > GENERATION_CUE_WAIT_SECONDS
+      const shouldResume = u.start - lastFinalTime > GENERATION_CUE_WAIT_SECONDS
 
-      if (should_resume || !firstTaken) {
+      if (shouldResume || !firstTaken) {
         shouldGenerate = true
         lastFinalTime = u.start
       }
