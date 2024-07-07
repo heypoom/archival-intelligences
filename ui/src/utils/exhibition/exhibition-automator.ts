@@ -134,13 +134,19 @@ export class ExhibitionAutomator {
 
   /** Mock the time source. */
   mockTime(time: string, dynamic = true) {
-    if (!dynamic) return hhmmOf(time)
-
-    const begin = new Date()
     const origin = hhmmOf(time)
 
+    if (!dynamic) {
+      this.now = () => origin
+      return
+    }
+
+    const begin = new Date()
+
     this.now = () => {
+      // simulate passage of time
       const elapsed = dayjs().diff(begin, 'seconds')
+
       return dayjs(origin).add(elapsed, 'seconds').toDate()
     }
   }
