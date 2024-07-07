@@ -14,7 +14,7 @@ function VideoRoute() {
   const status = useStore($exhibitionStatus)
   const interacted = useStore($interacted)
 
-  function play() {
+  function enableVideoPlayback() {
     $interacted.set(true)
     fullscreen()
 
@@ -29,7 +29,7 @@ function VideoRoute() {
       {!interacted && (
         <div className="flex items-center justify-center absolute w-full h-full">
           <button
-            onClick={play}
+            onClick={enableVideoPlayback}
             className="border border-green-300 text-green-300 px-4 py-2"
           >
             click here to allow video to play
