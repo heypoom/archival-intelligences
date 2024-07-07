@@ -1,9 +1,9 @@
 import {test, expect} from 'vitest'
 
-import {timeOf} from './exhibition/timecode'
+import {hhmmOf} from './timecode'
 import {getExhibitionStatus} from './get-exhibition-status'
 
-import {ExhibitionStatus} from '../types/exhibition-status'
+import {ExhibitionStatus} from '../../types/exhibition-status'
 
 const cases: [string, ExhibitionStatus][] = [
   ['10:30', {type: 'wait', next: '11:00'}],
@@ -16,5 +16,7 @@ const cases: [string, ExhibitionStatus][] = [
 ]
 
 test.each(cases)('get exhibition status', (time, status) => {
-  expect(getExhibitionStatus(timeOf(time))).to.deep.equal(status)
+  const t = hhmmOf(time)
+
+  expect(getExhibitionStatus(t)).to.deep.equal(status)
 })

@@ -1,14 +1,14 @@
-import {timeOf} from './exhibition/timecode'
+import {hhmmOf} from './timecode'
 
 import {
-  EXHIBITION_TIMES,
   EXHIBITION_DURATION,
-} from '../constants/exhibition-times'
+  EXHIBITION_TIMES,
+} from '../../constants/exhibition-times'
 
-import {ExhibitionStatus} from '../types/exhibition-status'
+import {ExhibitionStatus} from '../../types/exhibition-status'
 
 export function getExhibitionStatus(now: Date = new Date()): ExhibitionStatus {
-  const times = EXHIBITION_TIMES.map(timeOf)
+  const times = EXHIBITION_TIMES.map((timecode) => hhmmOf(timecode))
 
   for (let i = 0; i < times.length; i++) {
     const time = times[i]

@@ -1,19 +1,17 @@
-import {useEffect, useRef} from 'react'
+import {useEffect} from 'react'
 import * as TWEEN from '@tweenjs/tween.js'
-
-import {ExhibitionAutomator} from '../utils/exhibition/exhibition-automator'
-import {useSceneSwitcher} from './useSceneSwitcher'
 import {useNavigate} from '@tanstack/react-router'
 
+import {useSceneSwitcher} from './useSceneSwitcher'
+
+import {automator} from '../utils/exhibition/exhibition-automator'
+
 export function useExhibitionAutomator() {
-  const automator = useRef<ExhibitionAutomator>()
   const switcher = useSceneSwitcher()
   const navigate = useNavigate()
 
-  useEffect(() => {
-    automator.current = new ExhibitionAutomator()
-  }, [])
-
+  // Update the tween engine.
+  // Used to automate slowly dragging the guidance slider.
   useEffect(() => {
     const animate = (time: number) => {
       TWEEN.update(time)
@@ -23,13 +21,10 @@ export function useExhibitionAutomator() {
     requestAnimationFrame(animate)
   }, [])
 
+  // Keep the automator in sync with the switcher
   useEffect(() => {
-    if (automator.current) {
-      automator.current.actionContext.navigate = (route) =>
-        navigate({to: route})
-
-      automator.current.actionContext.next = switcher.next
-    }
+    automator.actionContext.next = switcher.next
+    automator.actionContext.navigate = (route) => navigate({to: route})
   }, [navigate, switcher.next])
 
   return automator

@@ -3,16 +3,20 @@ import duration from 'dayjs/plugin/duration'
 
 dayjs.extend(duration)
 
-export const timeOf = (input: string): Date => {
+export const hhmmOf = (input: string): Date => {
   const [hour, minute] = input.split(':').map(Number)
 
-  return dayjs().set('hour', hour).set('minute', minute).toDate()
+  return dayjs()
+    .set('hour', hour)
+    .set('minute', minute)
+    .set('second', 0)
+    .toDate()
 }
 
 export const secOf = (timecode: string): number => {
-  const [sh, sm, ss] = timecode.split(':').map(Number)
+  const [hours, minutes, seconds] = timecode.split(':').map(Number)
 
-  return sh * 3600 + sm * 60 + ss
+  return hours * 3600 + minutes * 60 + seconds
 }
 
 export const timecodeOf = (seconds: number): string => {
