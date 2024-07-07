@@ -1,12 +1,22 @@
+import {GladiaWord} from '../types/gladia-transcript'
+
 export type AutomationAction =
   | {action: 'start'} // start the program
   | {action: 'next'} // go to the next program
-  | {action: 'transcript'; transcript: string; final?: boolean} // add transcript
+  | {
+      action: 'transcript'
+      transcript: string
+
+      when?: [number, number]
+      words?: GladiaWord[]
+      final?: boolean
+    } // add transcript
   | {action: 'set-fade-status'; fade: boolean} // set the fade-to-black status
   | {action: 'navigate'; route: string} // navigate to a route
   | {
       action: 'prompt'
       prompt: string
+      override?: string
       delay?: {base?: number; variance?: number}
       program: string
       enter?: {regen: boolean}
@@ -84,6 +94,7 @@ export const PART_TWO_CUES: AutomationCue[] = [
     action: 'prompt',
     program: 'P4',
     prompt: 'data researcher',
+    override: 'person, data researcher, photorealistic',
     enter: {regen: false},
   },
 

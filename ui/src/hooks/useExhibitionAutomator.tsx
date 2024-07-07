@@ -25,10 +25,10 @@ export function useExhibitionAutomator() {
 
   useEffect(() => {
     if (automator.current) {
-      automator.current.actionContext = {
-        navigate: (route) => navigate({to: route}),
-        next: switcher.next,
-      }
+      automator.current.actionContext.navigate = (route) =>
+        navigate({to: route})
+
+      automator.current.actionContext.next = switcher.next
     }
   }, [navigate, switcher.next])
 

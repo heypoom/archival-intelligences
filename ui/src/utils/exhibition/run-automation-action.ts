@@ -6,11 +6,14 @@ import {$fadeStatus} from '../../store/fader'
 import {$guidance} from '../../store/guidance'
 import {$prompt} from '../../store/prompt'
 import {keystrokeStream, getRandomDelay} from './keystroke-stream'
+
 import {
+  delay,
   onGuidanceCommitted,
   onPromptCommitted,
   onPromptKeyChangeStart,
 } from '../prompt-manager'
+
 import {startInference} from '../inference'
 import {$transcript} from '../../store/dictation'
 import {processFinalTranscript} from '../process-transcript'
@@ -18,13 +21,23 @@ import {processFinalTranscript} from '../process-transcript'
 export interface AutomatorContext {
   next(): void
   navigate(route: string): void
+  cue(): number
+  now(): number
 }
+
+// Used to control transcription's word-by-word typing speed
+const W_SAMPLE_DELAY_MS = 70
+const W_LIMIT = 100000
+const W_MIN_WORDS_FOR_TYPING = 1
 
 export function runAutomationAction(
   action: AutomationAction,
   context: AutomatorContext
 ) {
   const {next, navigate} = context
+
+  const now = context.now()
+  const currentCue = context.cue()
 
   match(action)
     .with({action: 'start'}, () => {
@@ -61,6 +74,8 @@ export function runAutomationAction(
       const update = () => {
         const result = stream.next()
 
+        const backendPrompt = action.override ?? action.prompt
+
         if (!result.done) {
           $prompt.set(result.value)
 
@@ -70,12 +85,13 @@ export function runAutomationAction(
           // do nothing
         } else if (action.enter && action.program) {
           startInference({
+            prompt: backendPrompt,
             command: action.program,
             regenerate: action.enter.regen,
           })
         } else if (action.program) {
           onPromptCommitted({
-            input: action.prompt,
+            input: backendPrompt,
             command: action.program,
             guidance: $guidance.get(),
           })
@@ -85,12 +101,41 @@ export function runAutomationAction(
       update()
     })
     .with({action: 'next'}, next)
-    .with({action: 'transcript'}, (action) => {
-      $transcript.set({transcript: action.transcript, final: false})
-
+    .with({action: 'transcript'}, async (action) => {
       if (action.final) {
         processFinalTranscript(action.transcript)
       }
+
+      if (action.words && action.words.length > W_MIN_WORDS_FOR_TYPING) {
+        let sentence = ''
+        let timePassed = 0
+        const words = action.words.slice(0, -1)
+
+        // prevent infinite loop
+        let limit = 0
+
+        // simulate hand-typing the transcript
+        while (context.cue() === currentCue && words.length > 0) {
+          if (limit++ > W_LIMIT) break
+
+          const duration = now + timePassed / 1000
+          const [word] = words
+
+          if (duration > word.end) {
+            words.shift()
+
+            sentence += `${word.word} `
+            $transcript.set({transcript: sentence, final: false})
+
+            continue
+          }
+
+          timePassed += W_SAMPLE_DELAY_MS
+          await delay(W_SAMPLE_DELAY_MS)
+        }
+      }
+
+      $transcript.set({transcript: action.transcript, final: false})
     })
     .with({action: 'end'}, () => {
       // navigate('/countdown')

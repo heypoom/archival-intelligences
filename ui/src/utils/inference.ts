@@ -3,14 +3,14 @@ import {$apiReady, $generating, $prompt} from '../store/prompt'
 import {regen} from '../store/regen'
 
 interface Options {
+  prompt?: string
   command: string
   regenerate?: boolean | string
 }
 
 export function startInference(options: Options) {
-  const {command, regenerate} = options
+  const {prompt = $prompt.get(), command, regenerate} = options
 
-  const prompt = $prompt.get()
   const apiReady = $apiReady.get()
 
   if (!apiReady) {

@@ -8,10 +8,17 @@ import {secOf} from './timecode'
 export class ExhibitionAutomator {
   /** Current time in seconds */
   seconds = 0
-  currentCue = -1
-  cues: AutomationCue[] = []
-  actionContext: AutomatorContext = {navigate: () => {}, next: () => {}}
   timer = 0
+
+  cues: AutomationCue[] = []
+  currentCue = -1
+
+  actionContext: AutomatorContext = {
+    navigate: () => {},
+    next: () => {},
+    cue: () => this.currentCue,
+    now: () => this.seconds,
+  }
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -55,6 +62,9 @@ export class ExhibitionAutomator {
 
     const action = this.cues[this.currentCue]
     console.log(`running action cue ${this.currentCue}:`, action)
+
+    this.actionContext.cue = () => this.currentCue
+    this.actionContext.now = () => this.seconds
     runAutomationAction(action, this.actionContext)
   }
 

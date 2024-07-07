@@ -23,7 +23,7 @@ export interface GladiaUtterance {
   words: GladiaWord[]
 }
 
-interface GladiaWord {
+export interface GladiaWord {
   word: string
   start: number
   end: number

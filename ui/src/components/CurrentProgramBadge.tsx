@@ -1,4 +1,6 @@
+import {useStore} from '@nanostores/react'
 import {useMatchRoute, useRouterState} from '@tanstack/react-router'
+import {$exhibitionMode} from '../store/exhibition'
 
 const programNameMap: Record<string, string> = {
   one: '1',
@@ -17,6 +19,12 @@ export function CurrentProgramBadge() {
 
   const currentProgramKey = routeState.location.href.replace('/', '')
   const currentProgram = programNameMap[currentProgramKey]
+
+  // const isExhibitionMode = useStore($exhibitionMode)
+
+  // once we finalise, we can hide the programme codes at the bottom left.
+  // we can keep the progress counter and the connection indicator
+  // if (isExhibitionMode) return null
 
   // hide program badge when on the speech route
   if (isSpeechRoute) return null

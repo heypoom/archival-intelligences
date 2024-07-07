@@ -43,8 +43,10 @@ export function getCueFromTranscript(
     cues.push({
       action: 'transcript',
       time: timecodeOf(u.start),
+      when: [u.start, u.end],
       transcript: u.text,
       final,
+      words: u.words,
     })
   }
 
