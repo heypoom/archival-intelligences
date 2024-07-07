@@ -12,6 +12,7 @@ export function HomeRoute() {
   // exhibition mode
   function startExhibition() {
     $exhibitionMode.set(true)
+    automator.sync({force: true})
   }
 
   // performance lecture mode
