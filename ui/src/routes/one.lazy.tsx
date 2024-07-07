@@ -3,23 +3,15 @@ import {createLazyFileRoute} from '@tanstack/react-router'
 import {GuidanceSlider} from '../components/GuidanceSlider'
 import {PromptInput} from '../components/PromptInput'
 import {useHotkeys} from 'react-hotkeys-hook'
+import {fullscreen} from '../utils/commands'
 
 export const Route = createLazyFileRoute('/one')({
   component: Index,
 })
 
-const isFullscreen = () =>
-  document.fullscreenElement ||
-  // @ts-expect-error
-  document.webkitFullscreenElement ||
-  // @ts-expect-error
-  document.mozFullScreenElement
-
 function Index() {
   useHotkeys('space', () => {
-    if (!isFullscreen()) {
-      document.documentElement.requestFullscreen().then()
-    }
+    fullscreen()
   })
 
   return (
