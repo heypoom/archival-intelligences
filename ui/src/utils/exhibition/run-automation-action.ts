@@ -121,17 +121,15 @@ export function runAutomationAction(
           const duration = now + timePassed / 1000
           const [word] = words
 
+          timePassed += W_SAMPLING_DELAY_MS
+          await delay(W_SAMPLING_DELAY_MS)
+
           if (duration > word.end) {
             words.shift()
 
             sentence += `${word.word} `
             $transcript.set({transcript: sentence, final: false})
-
-            continue
           }
-
-          timePassed += W_SAMPLING_DELAY_MS
-          await delay(W_SAMPLING_DELAY_MS)
         }
       }
 
