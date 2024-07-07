@@ -1,4 +1,4 @@
-import dayjs from 'dayjs'
+import dayjs, {Dayjs} from 'dayjs'
 import {AutomationCue, PART_TWO_CUES} from '../../constants/exhibition-cues'
 import {loadTranscriptCue} from './cue-from-transcript'
 import {getCurrentCue} from './get-current-cue'
@@ -14,6 +14,8 @@ export class ExhibitionAutomator {
 
   cues: AutomationCue[] = []
   currentCue = -1
+
+  private startTime: Dayjs | null = null
 
   // allows emulation of time
   now = () => new Date()
@@ -93,30 +95,10 @@ export class ExhibitionAutomator {
     this.currentCue = cue
   }
 
-  sync() {
-    const status = $exhibitionStatus.get()
-
-    if (status.type !== 'active') {
-      this.stopClock()
-      return
-    }
-
-    const elapsed = this.elapsed
-    const timecode = timecodeOf(elapsed)
-    this.seekCue(timecode)
-
-    console.log(`sync | tc=${timecode} | cue=${this.currentCue} | e=${elapsed}`)
-
-    if (automator.timer === null) automator.startClock()
-  }
-
   get elapsed(): number {
-    const status = $exhibitionStatus.get()
-    if (status.type !== 'active') return -1
+    if (this.startTime === null) return -1
 
-    const start = dayjs(hhmmOf(status.start))
-
-    return dayjs(this.now()).diff(start, 'seconds')
+    return dayjs(this.now()).diff(this.startTime, 'seconds')
   }
 
   /** Mock the time source. */
@@ -138,13 +120,22 @@ export class ExhibitionAutomator {
     }
   }
 
-  syncStatus() {
-    const current = $exhibitionStatus.get()
+  sync() {
+    const prev = $exhibitionStatus.get()
     const next = getExhibitionStatus(this.now())
 
     $exhibitionStatus.set(next)
 
-    return {current, next}
+    if (next.type !== 'active') {
+      this.stopClock()
+    } else {
+      this.startTime = dayjs(hhmmOf(next.start))
+      this.seekCue(timecodeOf(this.elapsed))
+
+      if (automator.timer === null) automator.startClock()
+    }
+
+    return {prev, next}
   }
 }
 

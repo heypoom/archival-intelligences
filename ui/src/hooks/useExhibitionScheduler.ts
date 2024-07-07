@@ -1,7 +1,6 @@
-import {useNavigate} from '@tanstack/react-router'
-import {$exhibitionStatus} from '../store/exhibition'
-import {getExhibitionStatus} from '../utils/exhibition/get-exhibition-status'
 import {useCallback, useEffect} from 'react'
+import {useNavigate} from '@tanstack/react-router'
+
 import {automator} from '../utils/exhibition/exhibition-automator'
 
 export function useExhibitionScheduler() {
@@ -9,25 +8,16 @@ export function useExhibitionScheduler() {
 
   // idempotent sync exhibition status
   const sync = useCallback(() => {
-    const {current, next} = automator.syncStatus()
+    const {prev, next} = automator.sync()
 
-    if (current.type !== next.type) {
-      $exhibitionStatus.set(next)
-      console.log('status |', {current, next})
+    if (prev.type !== next.type) {
+      console.log('status |', {prev, next})
 
       // TODO: check which window we are in (video versus program)
-      if (next.type === 'active') {
-        go({to: '/'})
-        automator.sync()
-      }
 
-      if (next.type === 'wait') {
-        go({to: '/waiting'})
-      }
-
-      if (next.type === 'closed') {
-        go({to: '/closed'})
-      }
+      if (next.type === 'active') go({to: '/'})
+      if (next.type === 'wait') go({to: '/waiting'})
+      if (next.type === 'closed') go({to: '/closed'})
     }
   }, [go])
 
