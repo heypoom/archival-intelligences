@@ -12,7 +12,6 @@ import {getExhibitionStatus} from './get-exhibition-status'
 import {match} from 'ts-pattern'
 import {routeFromCue} from './route-from-cue'
 import {$ipcMode, IpcMessage} from '../../store/window-ipc'
-import {fullscreen} from '../commands'
 
 export class ExhibitionAutomator {
   timer: number | null = null
