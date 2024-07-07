@@ -1,6 +1,7 @@
+import {$interacted} from '../store/exhibition'
 import {$fadeStatus} from '../store/fader'
 
-export const fullscreen = () => {
+export const fullscreen = async () => {
   const isFullscreen = () =>
     document.fullscreenElement ||
     // @ts-expect-error - fff
@@ -8,8 +9,14 @@ export const fullscreen = () => {
     // @ts-expect-error - fff
     document.mozFullScreenElement
 
-  if (!isFullscreen()) {
-    document.documentElement.requestFullscreen().then()
+  try {
+    if (!isFullscreen()) {
+      await document.documentElement.requestFullscreen({navigationUI: 'hide'})
+    }
+  } catch (err) {
+    console.log(
+      `[failed to enter fullscreen]: ${err}, interacted=${$interacted.get()}`
+    )
   }
 }
 
