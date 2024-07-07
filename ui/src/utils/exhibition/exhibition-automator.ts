@@ -12,6 +12,7 @@ import {getExhibitionStatus} from './get-exhibition-status'
 import {match} from 'ts-pattern'
 import {routeFromCue} from './route-from-cue'
 import {$ipcMode, IpcMessage} from '../../store/window-ipc'
+import {fullscreen} from '../commands'
 
 export class ExhibitionAutomator {
   timer: number | null = null
@@ -82,7 +83,7 @@ export class ExhibitionAutomator {
           }
         }, 1000)
 
-        this.sync()
+        this.sync({force: true})
       })
       .with({type: 'play'}, (msg) => {
         if (mode !== 'video' || !this.videoRef) return
