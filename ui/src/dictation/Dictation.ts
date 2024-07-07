@@ -1,4 +1,5 @@
 import {$dictationState, $transcript} from '../store/dictation'
+import {$exhibitionMode} from '../store/exhibition'
 
 import {
   generateFromPrompt,
@@ -71,6 +72,9 @@ export class Dictation {
   }
 
   restart(reason: string) {
+    // do not listen in exhibition mode
+    if ($exhibitionMode.get()) return
+
     if (this.restarting) {
       return
     }

@@ -16,6 +16,7 @@
     "@fontsource/inter": "^5.0.17",
     "@mui/base": "5.0.0-beta.40",
     "@mui/joy": "5.0.0-beta.32",
+    "@nanostores/persistent": "^0.10.1",
     "@nanostores/react": "^0.7.1",
     "@tanstack/react-router": "^1.26.1",
     "@tweenjs/tween.js": "^23.1.2",

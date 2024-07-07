@@ -7,6 +7,7 @@ import {resetProgress} from '../store/progress'
 import {dictation} from '../dictation'
 import {socket} from '../manager/socket'
 import {disableRegen} from '../store/regen'
+import {$exhibitionMode} from '../store/exhibition'
 
 const here = (a: false | object) => {
   if (a === false) return false
@@ -17,7 +18,9 @@ export function useSceneSwitcher() {
   const route = useMatchRoute()
   const go = useNavigate()
 
-  const zero = here(route({to: '/'}))
+  const isExhibition = useStore($exhibitionMode)
+
+  const zero = here(route({to: '/zero'}))
   const one = here(route({to: '/one'}))
   const two = here(route({to: '/two'}))
   const twoB = here(route({to: '/two-b'}))
@@ -31,8 +34,12 @@ export function useSceneSwitcher() {
     clearInference()
 
     if (one) {
-      dictation.start()
-      go({to: '/'})
+      // live performance
+      if (!isExhibition) {
+        dictation.start()
+      }
+
+      go({to: '/zero'})
     }
 
     if (two) go({to: '/one'})

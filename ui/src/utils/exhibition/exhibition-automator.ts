@@ -6,7 +6,7 @@ import {AutomatorContext, runAutomationAction} from './run-automation-action'
 
 import {secOf, timecodeOf, hhmmOf} from './timecode'
 
-import {$exhibitionStatus} from '../../store/exhibition'
+import {$exhibitionMode, $exhibitionStatus} from '../../store/exhibition'
 import {getExhibitionStatus} from './get-exhibition-status'
 import {match} from 'ts-pattern'
 
@@ -122,6 +122,10 @@ export class ExhibitionAutomator {
   }
 
   sync() {
+    // only activate when in exhibition mode
+    const isExhibition = $exhibitionMode.get()
+    if (!isExhibition) return
+
     const prev = $exhibitionStatus.get()
     const next = getExhibitionStatus(this.now())
 
@@ -150,7 +154,6 @@ export class ExhibitionAutomator {
       })
       .with('active', () => {
         // TODO: restore current route from cue?
-        go('/')
       })
       .exhaustive()
 

@@ -16,6 +16,7 @@ import { Route as rootRoute } from './routes/__root'
 
 // Create Virtual Routes
 
+const ZeroLazyImport = createFileRoute('/zero')()
 const WaitingLazyImport = createFileRoute('/waiting')()
 const VideoLazyImport = createFileRoute('/video')()
 const TwoBLazyImport = createFileRoute('/two-b')()
@@ -29,6 +30,11 @@ const ClosedLazyImport = createFileRoute('/closed')()
 const IndexLazyImport = createFileRoute('/')()
 
 // Create/Update Routes
+
+const ZeroLazyRoute = ZeroLazyImport.update({
+  path: '/zero',
+  getParentRoute: () => rootRoute,
+} as any).lazy(() => import('./routes/zero.lazy').then((d) => d.Route))
 
 const WaitingLazyRoute = WaitingLazyImport.update({
   path: '/waiting',
@@ -133,6 +139,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WaitingLazyImport
       parentRoute: typeof rootRoute
     }
+    '/zero': {
+      preLoaderRoute: typeof ZeroLazyImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -150,6 +160,7 @@ export const routeTree = rootRoute.addChildren([
   TwoBLazyRoute,
   VideoLazyRoute,
   WaitingLazyRoute,
+  ZeroLazyRoute,
 ])
 
 /* prettier-ignore-end */

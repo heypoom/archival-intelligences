@@ -15,9 +15,9 @@ const programNameMap: Record<string, string> = {
 export function CurrentProgramBadge() {
   const routeState = useRouterState()
   const mr = useMatchRoute()
-  const isSpeechRoute = mr({to: '/'})
+  const isSpeechRoute = mr({to: '/zero'})
 
-  const currentProgramKey = routeState.location.href.replace('/', '')
+  const currentProgramKey = routeState.location.href.replace('/zero', '')
   const currentProgram = programNameMap[currentProgramKey]
 
   // const isExhibitionMode = useStore($exhibitionMode)

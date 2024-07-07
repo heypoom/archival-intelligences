@@ -7,7 +7,7 @@ import {$apiReady, $generating} from '../store/prompt'
 
 export const StatusIndicator = () => {
   const mr = useMatchRoute()
-  const isSpeechRoute = mr({to: '/'})
+  const isSpeechRoute = mr({to: '/zero'})
 
   const status = useStore($dictationState)
   const apiReady = useStore($apiReady)

@@ -23,6 +23,9 @@ importers:
       '@mui/joy':
         specifier: 5.0.0-beta.32
         version: 5.0.0-beta.32(@emotion/react@11.11.4(@types/react@18.2.51)(react@18.2.0))(@emotion/styled@11.11.5(@emotion/react@11.11.4(@types/react@18.2.51)(react@18.2.0))(@types/react@18.2.51)(react@18.2.0))(@types/react@18.2.51)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      '@nanostores/persistent':
+        specifier: ^0.10.1
+        version: 0.10.1(nanostores@0.9.5)
       '@nanostores/react':
         specifier: ^0.7.1
         version: 0.7.1(nanostores@0.9.5)(react@18.2.0)
@@ -716,6 +719,12 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
+
+  '@nanostores/persistent@0.10.1':
+    resolution: {integrity: sha512-BMYj47ONmkrPkHfomimtBAwtDNNjO57lw0uk7jB35GHVwixmqWtlK6DVAAbioqwJn9WEaWSB/9Ss5ukBG0NHlQ==}
+    engines: {node: ^18.0.0 || >=20.0.0}
+    peerDependencies:
+      nanostores: ^0.9.0 || ^0.10.0
 
   '@nanostores/react@0.7.1':
     resolution: {integrity: sha512-EXQg9N4MdI4eJQz/AZLIx3hxQ6BuBmV4Q55bCd5YCSgEOAW7tGTsIZxpRXxvxLXzflNvHTBvfrDNY38TlSVBkQ==}
@@ -2886,6 +2895,10 @@ snapshots:
       react-is: 18.2.0
     optionalDependencies:
       '@types/react': 18.2.51
+
+  '@nanostores/persistent@0.10.1(nanostores@0.9.5)':
+    dependencies:
+      nanostores: 0.9.5
 
   '@nanostores/react@0.7.1(nanostores@0.9.5)(react@18.2.0)':
     dependencies:
