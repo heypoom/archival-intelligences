@@ -88,14 +88,11 @@ export function useSceneSwitcher() {
     }
   }
 
-  const black = () => $fadeStatus.set(!$fadeStatus.get())
-  const fullscreen = () => document.documentElement.requestFullscreen()
-
   function clearInference() {
     $generating.set(false)
     resetProgress()
     disableRegen('scene switch')
   }
 
-  return {next, prev, black, fullscreen}
+  return {next, prev}
 }

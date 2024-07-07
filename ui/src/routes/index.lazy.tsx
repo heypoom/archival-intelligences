@@ -17,16 +17,18 @@ export function HomeRoute() {
   // performance lecture mode
   function startLiveLecture() {
     $exhibitionMode.set(false)
+
     go({to: '/zero'})
   }
 
-  function fakeTime() {
+  // debug: start exhibition from a fake time
+  function startFromFakeTime() {
+    $exhibitionMode.set(true)
     const time = prompt('enter a test time in hh:mm:ss format')
-    console.log(`fake time: "${time}"`)
 
     if (time) {
       automator.mockTime(time)
-      automator.sync()
+      automator.sync({force: true})
     }
   }
 
@@ -50,14 +52,20 @@ export function HomeRoute() {
         </button>
       </div>
 
-      <h2 className="text-xl">options</h2>
+      <h2 className="text-xl">testing options</h2>
 
-      <button
-        onClick={fakeTime}
-        className="border border-gray-300 text-gray-300 px-4 py-2"
-      >
-        start with fake time
-      </button>
+      <div>
+        <div className="flex justify-center items-center gap-x-4 text-xs">
+          <button
+            onClick={startFromFakeTime}
+            className="border border-gray-300 text-gray-300 px-3 py-2 text-xs"
+          >
+            start from a fake time
+          </button>
+
+          <div>simulate a time of day for the exhibition</div>
+        </div>
+      </div>
     </div>
   )
 }

@@ -19,7 +19,7 @@ export function useExhibitionScheduler() {
         automator.sync()
       }, POLL_INTERVAL)
 
-      automator.sync()
+      automator.sync({force: true})
     }
 
     return () => clearInterval(timer)
