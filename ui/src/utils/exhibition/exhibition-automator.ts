@@ -7,6 +7,7 @@ import {AutomatorContext, runAutomationAction} from './run-automation-action'
 import {secOf, timecodeOf, hhmmOf} from './timecode'
 
 import {$exhibitionStatus} from '../../store/exhibition'
+import {getExhibitionStatus} from './get-exhibition-status'
 
 export class ExhibitionAutomator {
   timer: number | null = null
@@ -100,11 +101,11 @@ export class ExhibitionAutomator {
       return
     }
 
-    const timecode = timecodeOf(this.elapsed)
-
+    const elapsed = this.elapsed
+    const timecode = timecodeOf(elapsed)
     this.seekCue(timecode)
 
-    console.log(`sync | tc=${timecode} | cue=${this.currentCue}`)
+    console.log(`sync | tc=${timecode} | cue=${this.currentCue} | e=${elapsed}`)
 
     if (automator.timer === null) automator.startClock()
   }
@@ -115,7 +116,7 @@ export class ExhibitionAutomator {
 
     const start = dayjs(hhmmOf(status.start))
 
-    return dayjs(this.now()).diff(start, 'second')
+    return dayjs(this.now()).diff(start, 'seconds')
   }
 
   /** Mock the time source. */
@@ -135,6 +136,15 @@ export class ExhibitionAutomator {
 
       return dayjs(origin).add(elapsed, 'seconds').toDate()
     }
+  }
+
+  syncStatus() {
+    const current = $exhibitionStatus.get()
+    const next = getExhibitionStatus(this.now())
+
+    $exhibitionStatus.set(next)
+
+    return {current, next}
   }
 }
 

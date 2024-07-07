@@ -9,9 +9,7 @@ export function useExhibitionScheduler() {
 
   // idempotent sync exhibition status
   const sync = useCallback(() => {
-    const now = automator.now()
-    const current = $exhibitionStatus.get()
-    const next = getExhibitionStatus(now)
+    const {current, next} = automator.syncStatus()
 
     if (current.type !== next.type) {
       $exhibitionStatus.set(next)
@@ -20,8 +18,6 @@ export function useExhibitionScheduler() {
       // TODO: check which window we are in (video versus program)
       if (next.type === 'active') {
         go({to: '/'})
-
-        // automator.mockTime('15:30:00')
         automator.sync()
       }
 
