@@ -26,8 +26,8 @@ export interface AutomatorContext {
 }
 
 // Used to control transcription's word-by-word typing speed
-const W_SAMPLE_DELAY_MS = 70
-const W_LIMIT = 100000
+const W_SAMPLING_DELAY_MS = 70
+const W_SAMPLING_LIMIT = 100000
 const W_MIN_WORDS_FOR_TYPING = 1
 
 export function runAutomationAction(
@@ -116,7 +116,7 @@ export function runAutomationAction(
 
         // simulate hand-typing the transcript
         while (context.cue() === currentCue && words.length > 0) {
-          if (limit++ > W_LIMIT) break
+          if (limit++ > W_SAMPLING_LIMIT) break
 
           const duration = now + timePassed / 1000
           const [word] = words
@@ -130,8 +130,8 @@ export function runAutomationAction(
             continue
           }
 
-          timePassed += W_SAMPLE_DELAY_MS
-          await delay(W_SAMPLE_DELAY_MS)
+          timePassed += W_SAMPLING_DELAY_MS
+          await delay(W_SAMPLING_DELAY_MS)
         }
       }
 
