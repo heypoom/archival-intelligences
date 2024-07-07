@@ -1,5 +1,5 @@
 import {createLazyFileRoute, useNavigate} from '@tanstack/react-router'
-import {$exhibitionMode} from '../store/exhibition'
+import {$exhibitionMode, $interacted} from '../store/exhibition'
 import {automator} from '../utils/exhibition/exhibition-automator'
 import {useEffect} from 'react'
 import {resetAll} from '../utils/exhibition/reset'
@@ -19,6 +19,7 @@ export function HomeRoute() {
   // exhibition mode
   function startExhibition() {
     $exhibitionMode.set(true)
+    $interacted.set(true)
     automator.sync({force: true})
     fullscreen()
   }
@@ -26,6 +27,7 @@ export function HomeRoute() {
   // performance lecture mode
   function startLiveLecture() {
     $exhibitionMode.set(false)
+    $interacted.set(true)
     automator.stopClock()
     fullscreen()
 
@@ -35,6 +37,7 @@ export function HomeRoute() {
   // debug: start exhibition from a fake time
   function startFromFakeTime() {
     $exhibitionMode.set(true)
+    $interacted.set(true)
     const time = prompt('enter a test time in hh:mm:ss format')
 
     if (time) {
