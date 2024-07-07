@@ -16,7 +16,7 @@ import {
 
 import {startInference} from '../inference'
 import {$transcript} from '../../store/dictation'
-import {processFinalTranscript} from '../process-transcript'
+import {generateFromPrompt} from '../process-transcript'
 
 export interface AutomatorContext {
   next(): void
@@ -102,8 +102,8 @@ export function runAutomationAction(
     })
     .with({action: 'next'}, next)
     .with({action: 'transcript'}, async (action) => {
-      if (action.final) {
-        processFinalTranscript(action.transcript)
+      if (action.generate) {
+        generateFromPrompt(action.transcript)
       }
 
       if (action.words && action.words.length > W_MIN_WORDS_FOR_TYPING) {

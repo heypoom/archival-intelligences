@@ -1,7 +1,7 @@
 import {$dictationState, $transcript} from '../store/dictation'
 
 import {
-  processFinalTranscript,
+  generateFromPrompt,
   processInterimTranscript,
 } from '../utils/process-transcript.ts'
 
@@ -108,7 +108,7 @@ export class Dictation {
     this.restartWatchdog()
 
     if (latest.isFinal) {
-      await processFinalTranscript(first.transcript)
+      await generateFromPrompt(first.transcript)
       return
     }
 

@@ -1,15 +1,15 @@
 import {socket} from '../manager/socket'
 import {$generating, $apiReady} from '../store/prompt'
 
-export async function processFinalTranscript(transcript: string) {
+export async function generateFromPrompt(prompt: string) {
   // Create an identifier to correlate transcript, image prompt and generated images.
   const isGenerating = $generating.get()
 
   if (!isGenerating) {
-    console.log(`[GENERATING] ${transcript}`)
+    console.log(`[GENERATING] ${prompt}`)
 
     try {
-      socket.sock.send(`P0:${transcript}`)
+      socket.sock.send(`P0:${prompt}`)
       $generating.set(true)
     } catch (err) {
       $apiReady.set(false)

@@ -9,7 +9,7 @@ export type AutomationAction =
 
       when?: [number, number]
       words?: GladiaWord[]
-      final?: boolean
+      generate?: boolean
     } // add transcript
   | {action: 'set-fade-status'; fade: boolean} // set the fade-to-black status
   | {action: 'navigate'; route: string} // navigate to a route

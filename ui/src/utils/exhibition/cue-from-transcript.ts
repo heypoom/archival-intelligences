@@ -6,8 +6,8 @@ import {GladiaTranscript} from '../../types/gladia-transcript'
 /** Exclude short sentences. */
 const SHORT_SENTENCE_WORDS = 6
 
-/** How long to wait until allowing next cue? */
-const CUE_WAIT_SECONDS = 15
+/** How long to wait until allowing next image generation cue? */
+const GENERATION_CUE_WAIT_SECONDS = 15
 
 export async function loadTranscriptCue(): Promise<AutomationCue[]> {
   const body = await fetch('/transcription.json')
@@ -21,22 +21,23 @@ export function getCueFromTranscript(
 ): AutomationCue[] {
   const cues: AutomationCue[] = []
 
-  let first_taken = false
-  let last_final_time = 0
+  let firstTaken = false
+  let lastFinalTime = 0
 
   for (const u of transcript.transcription.utterances) {
-    let final = false
+    let shouldGenerate = false
 
     if (u.words.length > SHORT_SENTENCE_WORDS) {
-      const should_resume = u.start - last_final_time > CUE_WAIT_SECONDS
+      const should_resume =
+        u.start - lastFinalTime > GENERATION_CUE_WAIT_SECONDS
 
-      if (should_resume || !first_taken) {
-        final = true
-        last_final_time = u.start
+      if (should_resume || !firstTaken) {
+        shouldGenerate = true
+        lastFinalTime = u.start
       }
 
-      if (!first_taken) {
-        first_taken = true
+      if (!firstTaken) {
+        firstTaken = true
       }
     }
 
@@ -45,7 +46,7 @@ export function getCueFromTranscript(
       time: timecodeOf(u.start),
       when: [u.start, u.end],
       transcript: u.text,
-      final,
+      generate: shouldGenerate,
       words: u.words,
     })
   }
