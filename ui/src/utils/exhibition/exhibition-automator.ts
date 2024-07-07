@@ -72,6 +72,7 @@ export class ExhibitionAutomator {
         if (msg.mode !== 'program') return
 
         $ipcMode.set('video')
+        this.actionContext.navigate('/video')
 
         setTimeout(() => {
           if (this.videoRef) {
