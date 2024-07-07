@@ -22,7 +22,12 @@ export function HomeRoute() {
 
   function fakeTime() {
     const time = prompt('enter a test time in hh:mm:ss format')
-    if (time) automator.mockTime(time)
+    console.log(`fake time: "${time}"`)
+
+    if (time) {
+      automator.mockTime(time)
+      automator.sync()
+    }
   }
 
   return (
@@ -51,7 +56,7 @@ export function HomeRoute() {
         onClick={fakeTime}
         className="border border-gray-300 text-gray-300 px-4 py-2"
       >
-        fake time
+        start with fake time
       </button>
     </div>
   )

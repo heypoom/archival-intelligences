@@ -1,27 +1,27 @@
-import {useCallback, useEffect} from 'react'
+import {useEffect} from 'react'
+import {useStore} from '@nanostores/react'
 
 import {automator} from '../utils/exhibition/exhibition-automator'
-import {useStore} from '@nanostores/react'
+
 import {$exhibitionMode} from '../store/exhibition'
 
 // sync exhibition status every 3 seconds
 const POLL_INTERVAL = 3000
 
 export function useExhibitionScheduler() {
-  const isExhibition = useStore($exhibitionMode)
-
-  // idempotent sync exhibition status
-  const sync = useCallback(() => {
-    if (isExhibition) automator.sync()
-  }, [isExhibition])
+  const isExhibitionMode = useStore($exhibitionMode)
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      sync()
-    }, POLL_INTERVAL)
+    let timer: number
 
-    sync()
+    if (isExhibitionMode) {
+      timer = setInterval(() => {
+        automator.sync()
+      }, POLL_INTERVAL)
+
+      automator.sync()
+    }
 
     return () => clearInterval(timer)
-  }, [sync])
+  }, [isExhibitionMode])
 }

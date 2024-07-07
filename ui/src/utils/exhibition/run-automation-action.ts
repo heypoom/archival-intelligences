@@ -45,6 +45,8 @@ export function runAutomationAction(
 
   match(action)
     .with({action: 'start'}, () => {
+      console.log('[start of show]')
+
       navigate('/zero')
       $prompt.set('/zero')
       $transcript.set({transcript: '', final: false})

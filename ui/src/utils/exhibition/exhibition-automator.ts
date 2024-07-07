@@ -134,6 +134,8 @@ export class ExhibitionAutomator {
 
     $exhibitionStatus.set(next)
 
+    console.log(`> exhibition status changed:`, next)
+
     if (next.type !== 'active') {
       this.stopClock()
     } else {
