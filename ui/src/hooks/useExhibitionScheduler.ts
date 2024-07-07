@@ -1,22 +1,27 @@
 import {useCallback, useEffect} from 'react'
-import {useNavigate} from '@tanstack/react-router'
 
 import {automator} from '../utils/exhibition/exhibition-automator'
-import {match} from 'ts-pattern'
+import {useStore} from '@nanostores/react'
+import {$exhibitionMode} from '../store/exhibition'
+
+// sync exhibition status every 3 seconds
+const POLL_INTERVAL = 3000
 
 export function useExhibitionScheduler() {
-  const go = useNavigate()
+  const isExhibition = useStore($exhibitionMode)
 
   // idempotent sync exhibition status
   const sync = useCallback(() => {
-    automator.sync()
-  }, [go])
+    if (isExhibition) automator.sync()
+  }, [isExhibition])
 
   useEffect(() => {
-    sync()
-  }, [sync])
+    const timer = setInterval(() => {
+      sync()
+    }, POLL_INTERVAL)
 
-  return {
-    sync,
-  }
+    sync()
+
+    return () => clearInterval(timer)
+  }, [sync])
 }

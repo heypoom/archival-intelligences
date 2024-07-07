@@ -1,6 +1,6 @@
 import {useStore} from '@nanostores/react'
 import {createLazyFileRoute} from '@tanstack/react-router'
-import {useCallback, useEffect, useRef, useState} from 'react'
+import {useCallback, useEffect, useState} from 'react'
 import dayjs from 'dayjs'
 
 import {$exhibitionStatus} from '../store/exhibition'
@@ -16,8 +16,6 @@ export function WaitingRoomRoute() {
   const status = useStore($exhibitionStatus)
   const [countdown, setCountdown] = useState('00:00:00')
 
-  const [timer, setTimer] = useState<number>()
-
   const tick = useCallback(() => {
     if (status.type !== 'wait') return
 
@@ -30,7 +28,6 @@ export function WaitingRoomRoute() {
     } else {
       setCountdown('00:00:00')
       console.log('waiting is over, begin next screening')
-      automator.sync()
     }
   }, [status])
 
@@ -39,11 +36,7 @@ export function WaitingRoomRoute() {
       tick()
     }, 1000)
 
-    setTimer(timer)
-
-    return () => {
-      clearInterval(timer)
-    }
+    return () => clearInterval(timer)
   }, [tick])
 
   return (

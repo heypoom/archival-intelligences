@@ -129,6 +129,9 @@ export class ExhibitionAutomator {
     const prev = $exhibitionStatus.get()
     const next = getExhibitionStatus(this.now())
 
+    // do not sync if the status is the same
+    if (prev.type === next.type) return
+
     $exhibitionStatus.set(next)
 
     if (next.type !== 'active') {
