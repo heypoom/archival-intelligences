@@ -1,7 +1,7 @@
 import {hhmmOf} from './timecode'
 
 import {
-  EXHIBITION_DURATION,
+  SCREENING_DURATION,
   EXHIBITION_TIMES,
 } from '../../constants/exhibition-times'
 
@@ -13,7 +13,7 @@ export function getExhibitionStatus(now: Date = new Date()): ExhibitionStatus {
   for (let i = 0; i < times.length; i++) {
     const time = times[i]
     const exhibitionTime = EXHIBITION_TIMES[i]
-    const endTime = new Date(time.getTime() + EXHIBITION_DURATION)
+    const endTime = new Date(time.getTime() + SCREENING_DURATION)
 
     if (now < time) {
       return {type: 'wait', next: exhibitionTime}
