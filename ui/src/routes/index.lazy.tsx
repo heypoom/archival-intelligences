@@ -3,6 +3,7 @@ import {$exhibitionMode} from '../store/exhibition'
 import {automator} from '../utils/exhibition/exhibition-automator'
 import {useEffect} from 'react'
 import {resetAll} from '../utils/exhibition/reset'
+import {fullscreen} from '../utils/commands'
 
 export const Route = createLazyFileRoute('/')({
   component: HomeRoute,
@@ -19,12 +20,14 @@ export function HomeRoute() {
   function startExhibition() {
     $exhibitionMode.set(true)
     automator.sync({force: true})
+    fullscreen()
   }
 
   // performance lecture mode
   function startLiveLecture() {
     $exhibitionMode.set(false)
     automator.stopClock()
+    fullscreen()
 
     go({to: '/zero'})
   }
@@ -37,6 +40,7 @@ export function HomeRoute() {
     if (time) {
       automator.mockTime(time)
       automator.sync({force: true})
+      fullscreen()
     }
   }
 
