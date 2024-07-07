@@ -1,5 +1,4 @@
 import {createLazyFileRoute} from '@tanstack/react-router'
-import cx from 'classnames'
 
 import {automator} from '../utils/exhibition/exhibition-automator'
 import {$exhibitionStatus, $interacted} from '../store/exhibition'
