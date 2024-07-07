@@ -5,11 +5,10 @@ import {getCurrentCue} from './get-current-cue'
 import {AutomatorContext, runAutomationAction} from './run-automation-action'
 
 import {secOf, timecodeOf, hhmmOf} from './timecode'
-import {getExhibitionStatus} from './get-exhibition-status'
+
+import {$exhibitionStatus} from '../../store/exhibition'
 
 export class ExhibitionAutomator {
-  /** Current time in seconds */
-  seconds = 0
   timer: number | null = null
 
   cues: AutomationCue[] = []
@@ -22,7 +21,7 @@ export class ExhibitionAutomator {
     navigate: () => {},
     next: () => {},
     cue: () => this.currentCue,
-    now: () => this.seconds,
+    elapsed: () => this.elapsed,
   }
 
   constructor() {
@@ -62,8 +61,6 @@ export class ExhibitionAutomator {
   }
 
   tick() {
-    this.syncClock()
-
     if (this.canGo()) this.go()
   }
 
@@ -74,7 +71,7 @@ export class ExhibitionAutomator {
     console.log(`running action cue ${this.currentCue}:`, action)
 
     this.actionContext.cue = () => this.currentCue
-    this.actionContext.now = () => this.seconds
+    this.actionContext.elapsed = () => this.elapsed
     runAutomationAction(action, this.actionContext)
   }
 
@@ -84,7 +81,7 @@ export class ExhibitionAutomator {
 
     const nextCueTime = secOf(nextCue.time)
 
-    return this.seconds >= nextCueTime
+    return this.elapsed >= nextCueTime
   }
 
   seekCue(time: string) {
@@ -96,13 +93,15 @@ export class ExhibitionAutomator {
   }
 
   sync() {
-    const timing = this.getClock()
-    if (!timing) {
+    const status = $exhibitionStatus.get()
+
+    if (status.type !== 'active') {
       this.stopClock()
       return
     }
 
-    const {timecode} = timing
+    const timecode = timecodeOf(this.elapsed)
+
     this.seekCue(timecode)
 
     console.log(`sync | tc=${timecode} | cue=${this.currentCue}`)
@@ -110,26 +109,13 @@ export class ExhibitionAutomator {
     if (automator.timer === null) automator.startClock()
   }
 
-  getClock() {
-    // time source
-    const now = this.now()
+  get elapsed(): number {
+    const status = $exhibitionStatus.get()
+    if (status.type !== 'active') return -1
 
-    const status = getExhibitionStatus(now)
-    if (status.type !== 'active') return
+    const start = dayjs(hhmmOf(status.start))
 
-    const startedAt = dayjs(hhmmOf(status.start))
-    const secondsSinceStart = dayjs(now).diff(startedAt, 'second')
-    const timecode = timecodeOf(secondsSinceStart)
-
-    return {secondsSinceStart, timecode}
-  }
-
-  /** Sync the automator time with wall clock */
-  syncClock() {
-    const timing = this.getClock()
-    if (!timing) return
-
-    this.seconds = timing.secondsSinceStart
+    return dayjs(this.now()).diff(start, 'second')
   }
 
   /** Mock the time source. */
@@ -141,11 +127,11 @@ export class ExhibitionAutomator {
       return
     }
 
-    const begin = new Date()
+    const start = new Date()
 
+    // Simulates passage of time
     this.now = () => {
-      // simulate passage of time
-      const elapsed = dayjs().diff(begin, 'seconds')
+      const elapsed = dayjs().diff(start, 'seconds')
 
       return dayjs(origin).add(elapsed, 'seconds').toDate()
     }

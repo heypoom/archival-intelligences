@@ -22,7 +22,7 @@ export interface AutomatorContext {
   next(): void
   navigate(route: string): void
   cue(): number
-  now(): number
+  elapsed(): number
 }
 
 // Used to control transcription's word-by-word typing speed
@@ -36,7 +36,7 @@ export function runAutomationAction(
 ) {
   const {next, navigate} = context
 
-  const now = context.now()
+  const now = context.elapsed()
   const currentCue = context.cue()
 
   match(action)
