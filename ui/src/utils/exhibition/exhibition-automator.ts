@@ -58,7 +58,6 @@ export class ExhibitionAutomator {
 
   initVideo(v: HTMLVideoElement) {
     this.videoRef = v
-    v.currentTime = this.elapsed
   }
 
   onIpcMessage = (event: MessageEvent<IpcMessage>) => {
@@ -78,14 +77,11 @@ export class ExhibitionAutomator {
 
         $ipcMode.set('video')
         this.sync({force: true})
-
-        setTimeout(() => {
-          this.playVideo(msg.elapsed)
-        }, 1000)
       })
       .with({type: 'play'}, (msg) => {
         if (mode !== 'video' || !this.videoRef) return
 
+        this.sync({force: true})
         this.playVideo(msg.elapsed)
       })
       .exhaustive()
@@ -93,6 +89,8 @@ export class ExhibitionAutomator {
 
   async playVideo(elapsed: number = this.elapsed) {
     if ($ipcMode.get() !== 'video') return
+
+    console.log(`[play video] at ${elapsed} seconds`)
 
     this.actionContext.navigate('/video')
 
@@ -104,6 +102,7 @@ export class ExhibitionAutomator {
       if (this.videoRef) {
         this.videoRef.currentTime = elapsed
         await this.videoRef.play()
+        console.log(`[video playing]`)
       }
     } catch (err) {
       console.log(`[cannot play video]`, err)
