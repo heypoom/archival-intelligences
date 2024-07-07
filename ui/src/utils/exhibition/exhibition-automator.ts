@@ -86,6 +86,8 @@ export class ExhibitionAutomator {
       .with({type: 'play'}, (msg) => {
         if (mode !== 'video' || !this.videoRef) return
 
+        this.actionContext.navigate('/video')
+
         this.videoRef.currentTime = msg.elapsed
         this.videoRef.play()
       })
