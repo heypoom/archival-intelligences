@@ -4,10 +4,12 @@ import {useMatchRoute} from '@tanstack/react-router'
 
 import {$dictationState} from '../store/dictation'
 import {$apiReady, $generating} from '../store/prompt'
+import {$exhibitionMode} from '../store/exhibition'
 
 export const StatusIndicator = () => {
   const mr = useMatchRoute()
   const isSpeechRoute = mr({to: '/zero'})
+  const isExhibition = useStore($exhibitionMode)
 
   const status = useStore($dictationState)
   const apiReady = useStore($apiReady)
@@ -28,7 +30,7 @@ export const StatusIndicator = () => {
         )}
       />
 
-      {isSpeechRoute && (
+      {isSpeechRoute && !isExhibition && (
         <div
           className={cn(
             'w-3 h-3 rounded-full',
