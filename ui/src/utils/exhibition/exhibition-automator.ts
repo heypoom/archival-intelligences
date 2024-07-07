@@ -71,9 +71,6 @@ export class ExhibitionAutomator {
         // if there are already a window in program mode, switch to video mode
         if (msg.mode !== 'program') return
 
-        // if we are already in video mode, do nothing
-        if (mode === 'video') return
-
         $ipcMode.set('video')
 
         setTimeout(() => {
