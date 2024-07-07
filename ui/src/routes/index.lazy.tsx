@@ -15,7 +15,7 @@ export function HomeRoute() {
   }
 
   // performance lecture mode
-  function startLiveProgram() {
+  function startLiveLecture() {
     $exhibitionMode.set(false)
     go({to: '/zero'})
   }
@@ -43,10 +43,10 @@ export function HomeRoute() {
         </button>
 
         <button
-          onClick={startLiveProgram}
+          onClick={startLiveLecture}
           className="border border-blue-300 text-blue-300 px-4 py-2"
         >
-          start live program
+          start live lecture
         </button>
       </div>
 
