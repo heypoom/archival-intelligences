@@ -1,4 +1,4 @@
-import {useEffect, useRef} from 'react'
+import {useCallback, useEffect, useRef} from 'react'
 
 import {paintDenseNoise} from '../utils/noise'
 import {useMatchRoute} from '@tanstack/react-router'
@@ -7,26 +7,35 @@ export const AnimatedNoise = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   const mr = useMatchRoute()
-  const isSpeechRoute = mr({to: '/'})
 
-  function paint() {
+  // these routes are no-noise routes
+  const isNoNoiseRoute =
+    mr({to: '/'}) || mr({to: '/closed'}) || mr({to: '/waiting'})
+
+  const paint = useCallback(() => {
+    if (isNoNoiseRoute) return
+
     const canvas = canvasRef.current
     if (!canvas) return
 
     paintDenseNoise(canvas)
-  }
+  }, [isNoNoiseRoute])
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      paint()
-    }, 400)
+    let timer: number
+
+    if (!isNoNoiseRoute) {
+      timer = setInterval(() => {
+        paint()
+      }, 400)
+    }
 
     return () => {
       clearInterval(timer)
     }
-  }, [])
+  }, [isNoNoiseRoute, paint])
 
-  if (isSpeechRoute) return null
+  if (isNoNoiseRoute) return null
 
   return (
     <div

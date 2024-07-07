@@ -8,6 +8,7 @@ import {secOf, timecodeOf, hhmmOf} from './timecode'
 
 import {$exhibitionStatus} from '../../store/exhibition'
 import {getExhibitionStatus} from './get-exhibition-status'
+import {match} from 'ts-pattern'
 
 export class ExhibitionAutomator {
   timer: number | null = null
@@ -134,6 +135,24 @@ export class ExhibitionAutomator {
 
       if (automator.timer === null) automator.startClock()
     }
+
+    const {navigate: go} = this.actionContext
+
+    match(next.type)
+      .with('loading', () => {
+        // do nothing
+      })
+      .with('wait', () => {
+        go('/waiting')
+      })
+      .with('closed', () => {
+        go('/closed')
+      })
+      .with('active', () => {
+        // TODO: restore current route from cue?
+        go('/')
+      })
+      .exhaustive()
 
     return {prev, next}
   }
