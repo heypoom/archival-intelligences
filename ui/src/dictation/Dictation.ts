@@ -3,7 +3,7 @@ import {$dictationState, $transcript} from '../store/dictation'
 import {
   generateFromPrompt,
   processInterimTranscript,
-} from '../utils/process-transcript.ts'
+} from '../utils/process-transcript'
 
 const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition

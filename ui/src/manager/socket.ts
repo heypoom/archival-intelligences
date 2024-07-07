@@ -1,5 +1,5 @@
-import {$startTimestep, $timestep, resetProgress} from '../store/progress.ts'
-import {$apiReady, $generating, $inferencePreview} from '../store/prompt.ts'
+import {$startTimestep, $timestep, resetProgress} from '../store/progress'
+import {$apiReady, $generating, $inferencePreview} from '../store/prompt'
 
 // ruian-sg-api.poom.dev = ws://35.247.139.252:8000/ws
 const REMOTE_WS_URL = 'wss://ruian-sg-api.poom.dev/ws'

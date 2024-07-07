@@ -9,15 +9,15 @@ import {$generating, $inferencePreview, $prompt} from '../store/prompt'
 
 import {$guidance} from '../store/guidance'
 
-import {useCrossFade} from '../hooks/useCrossFade.tsx'
+import {useCrossFade} from '../hooks/useCrossFade'
 
-import {startInference} from '../utils/inference.ts'
-import {$imageFadingOut} from '../store/fader.ts'
+import {startInference} from '../utils/inference'
+import {$imageFadingOut} from '../store/fader'
 import {
   onGuidanceCommitted,
   onPromptCommitted,
   onPromptKeyChangeStart,
-} from '../utils/prompt-manager.ts'
+} from '../utils/prompt-manager'
 
 const MIN_KEYWORD_TRIGGER = 2
 

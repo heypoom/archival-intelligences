@@ -1,7 +1,7 @@
 import {createLazyFileRoute} from '@tanstack/react-router'
 
-import {GuidanceSlider} from '../components/GuidanceSlider.tsx'
-import {PromptInput} from '../components/PromptInput.tsx'
+import {GuidanceSlider} from '../components/GuidanceSlider'
+import {PromptInput} from '../components/PromptInput'
 import {useHotkeys} from 'react-hotkeys-hook'
 
 export const Route = createLazyFileRoute('/one')({
