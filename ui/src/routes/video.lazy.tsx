@@ -1,10 +1,12 @@
 import {createLazyFileRoute} from '@tanstack/react-router'
+import cx from 'classnames'
 
 import {automator} from '../utils/exhibition/exhibition-automator'
-import {$exhibitionStatus, $interacted} from '../store/exhibition'
+import {$exhibitionStatus, $canPlay} from '../store/exhibition'
 import {useStore} from '@nanostores/react'
 import {fullscreen} from '../utils/commands'
 import {EXHIBITION_VIDEO_SOURCES} from '../constants/exhibition-videos'
+import {useCallback, useEffect} from 'react'
 
 export const Route = createLazyFileRoute('/video')({
   component: VideoRoute,
@@ -12,17 +14,25 @@ export const Route = createLazyFileRoute('/video')({
 
 function VideoRoute() {
   const status = useStore($exhibitionStatus)
-  const interacted = useStore($interacted)
+  const interacted = useStore($canPlay)
 
-  function enableVideoPlayback() {
-    $interacted.set(true)
+  const isVideoShown = status.type === 'active'
+
+  const enableVideoPlayback = useCallback(() => {
+    $canPlay.set(true)
     fullscreen()
 
     if (status.type === 'active') {
       automator.configureStartTime(status)
       automator.playVideo()
     }
-  }
+  }, [status])
+
+  useEffect(() => {
+    if (isVideoShown) {
+      enableVideoPlayback()
+    }
+  }, [enableVideoPlayback, isVideoShown])
 
   return (
     <div className="flex flex-col items-center justify-center h-full font-mono min-h-screen bg-black text-white gap-y-8 relative">
@@ -41,6 +51,7 @@ function VideoRoute() {
         src={EXHIBITION_VIDEO_SOURCES.lecture}
         ref={(ref) => ref && automator.initVideo(ref)}
         onClick={enableVideoPlayback}
+        className={cx(isVideoShown ? 'opacity-100' : 'opacity-0')}
       ></video>
     </div>
   )

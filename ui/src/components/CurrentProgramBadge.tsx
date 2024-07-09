@@ -1,4 +1,6 @@
+import {useStore} from '@nanostores/react'
 import {useMatchRoute, useRouterState} from '@tanstack/react-router'
+import {$ipcMode} from '../store/window-ipc'
 
 const programNameMap: Record<string, string> = {
   one: '1',
@@ -14,15 +16,20 @@ export function CurrentProgramBadge() {
   const routeState = useRouterState()
   const mr = useMatchRoute()
   const isSpeechRoute = mr({to: '/zero'})
+  const ipcMode = useStore($ipcMode)
 
   const currentProgramKey = routeState.location.href.replace('/', '')
-  const currentProgram = programNameMap[currentProgramKey]
+  let currentProgram = programNameMap[currentProgramKey]
 
   // const isExhibitionMode = useStore($exhibitionMode)
 
   // once we finalise, we can hide the programme codes at the bottom left.
   // we can keep the progress counter and the connection indicator
   // if (isExhibitionMode) return null
+
+  if (ipcMode === 'video') currentProgram = 'VDO'
+
+  if (!currentProgram) return null
 
   // hide program badge when on the speech route
   if (isSpeechRoute) return null

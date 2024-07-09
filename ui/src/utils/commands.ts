@@ -1,4 +1,4 @@
-import {$interacted} from '../store/exhibition'
+import {$canPlay} from '../store/exhibition'
 import {$fadeStatus} from '../store/fader'
 
 export const fullscreen = async () => {
@@ -15,7 +15,7 @@ export const fullscreen = async () => {
     }
   } catch (err) {
     console.log(
-      `[failed to enter fullscreen]: ${err}, interacted=${$interacted.get()}`
+      `[failed to enter fullscreen]: ${err}, interacted=${$canPlay.get()}`
     )
   }
 }

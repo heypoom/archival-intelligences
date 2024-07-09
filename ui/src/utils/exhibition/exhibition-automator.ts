@@ -11,7 +11,7 @@ import {
   $disconnected,
   $exhibitionMode,
   $exhibitionStatus,
-  $interacted,
+  $canPlay,
 } from '../../store/exhibition'
 import {getExhibitionStatus} from './get-exhibition-status'
 import {match} from 'ts-pattern'
@@ -80,28 +80,44 @@ export class ExhibitionAutomator {
   }
 
   onIpcMessage = (event: MessageEvent<IpcMessage>) => {
-    console.log(`[ipc] message received:`, event.data)
     const id = this.ipcId
     const mode = $ipcMode.get()
+    const status = $exhibitionStatus.get()
 
     if (!event.data) return
 
     match(event.data)
       .with({type: 'ping'}, () => {
-        this.sendIpcMessage({type: 'pong', id, mode, elapsed: this.elapsed})
+        this.sendIpcMessage({
+          type: 'pong',
+          id,
+          mode,
+          elapsed: this.elapsed,
+          status,
+        })
       })
       .with({type: 'pong'}, (msg) => {
         // if there are already a window in program mode, switch to video mode
         if (msg.mode !== 'program') return
 
+        // keep the exhibition status in sync
+        $exhibitionStatus.set(msg.status)
+
         $ipcMode.set('video')
         this.sync({force: true})
+
+        console.log(`[ipc] we switch to video mode`)
       })
       .with({type: 'play'}, (msg) => {
         if (mode !== 'video' || !this.videoRef) return
 
+        // keep the exhibition status in sync
+        $exhibitionStatus.set(msg.status)
+
         this.sync({force: true})
         this.playVideo(msg.elapsed)
+
+        console.log(`[ipc] we play the video`)
       })
       .exhaustive()
   }
@@ -113,10 +129,6 @@ export class ExhibitionAutomator {
 
     this.actionContext.navigate('/video')
 
-    if (!$interacted.get()) {
-      console.log(`> lack of interaction - video might not play!`)
-    }
-
     try {
       if (this.videoRef) {
         this.videoRef.currentTime = elapsed
@@ -124,11 +136,12 @@ export class ExhibitionAutomator {
         if (isVideoPlaying(this.videoRef)) return
 
         await this.videoRef.play()
-
-        console.log(`[video play]`)
       }
     } catch (err) {
       console.log(`[cannot play video]`, err)
+
+      // something is wrong with the auto-play policy
+      $canPlay.set(false)
     }
   }
 
@@ -179,7 +192,8 @@ export class ExhibitionAutomator {
     this.actionContext.elapsed = () => this.elapsed
 
     if (action.action === 'start') {
-      this.sendIpcMessage({type: 'play', elapsed: this.elapsed})
+      const status = $exhibitionStatus.get()
+      this.sendIpcMessage({type: 'play', elapsed: this.elapsed, status})
     }
 
     runAutomationAction(action, this.actionContext)
@@ -272,7 +286,7 @@ export class ExhibitionAutomator {
 
       if (automator.timer === null) automator.startClock()
 
-      this.sendIpcMessage({type: 'play', elapsed: this.elapsed})
+      this.sendIpcMessage({type: 'play', elapsed: this.elapsed, status: next})
     }
 
     match(next.type)
@@ -299,14 +313,22 @@ export class ExhibitionAutomator {
     this.actionContext.navigate(route)
   }
 
-  playFallbackVideo = () => {
+  playFallbackVideo = async () => {
     const video = this.fallbackVideoRef
     if (!video) return
 
     if (isVideoPlaying(video)) return
 
     video.currentTime = this.elapsed
-    video.play()
+
+    try {
+      await video.play()
+    } catch (err) {
+      console.error(`[cannot play fallback video]`, err)
+
+      // something is wrong with the auto-play policy
+      $canPlay.set(false)
+    }
   }
 }
 
