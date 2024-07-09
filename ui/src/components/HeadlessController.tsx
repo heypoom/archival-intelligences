@@ -6,12 +6,13 @@ import {black, fullscreen} from '../utils/commands'
 import {useSceneSwitcher} from '../hooks/useSceneSwitcher'
 
 import {useExhibitionScheduler} from '../hooks/useExhibitionScheduler'
+import {useExhibitionAutomator} from '../hooks/useExhibitionAutomator'
 
 export const HeadlessController = () => {
   const cmd = useSceneSwitcher()
-
   const go = useNavigate()
 
+  useExhibitionAutomator()
   useExhibitionScheduler()
 
   useHotkeys('CTRL + F', fullscreen)

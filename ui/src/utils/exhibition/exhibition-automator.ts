@@ -55,6 +55,7 @@ export class ExhibitionAutomator {
   async setup() {
     this.ipc.addEventListener('message', this.onIpcMessage)
 
+    // send the ping message to discover other windows
     this.sendIpcMessage({type: 'ping', id: this.ipcId})
 
     await this.load()
@@ -106,7 +107,7 @@ export class ExhibitionAutomator {
         $ipcMode.set('video')
         this.sync({force: true})
 
-        console.log(`[ipc] we switch to video mode`)
+        console.log(`[ipc] we switch to video mode`, msg)
       })
       .with({type: 'play'}, (msg) => {
         if (mode !== 'video' || !this.videoRef) return
@@ -117,7 +118,7 @@ export class ExhibitionAutomator {
         this.sync({force: true})
         this.playVideo(msg.elapsed)
 
-        console.log(`[ipc] we play the video`)
+        console.log(`[ipc] we play the video`, msg)
       })
       .exhaustive()
   }
