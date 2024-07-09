@@ -43,7 +43,6 @@ export function HomeRoute() {
     if (time) {
       automator.mockTime(time)
       automator.sync({force: true})
-      fullscreen()
     }
   }
 

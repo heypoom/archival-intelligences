@@ -16,7 +16,7 @@ import {
 import {getExhibitionStatus} from './get-exhibition-status'
 import {match} from 'ts-pattern'
 import {routeFromCue} from './route-from-cue'
-import {$ipcMode, IpcMessage} from '../../store/window-ipc'
+import {$ipcMode, IpcAction, IpcMessage, IpcMeta} from '../../store/window-ipc'
 import {ExhibitionStatus} from '../../types/exhibition-status'
 
 export class ExhibitionAutomator {
@@ -38,6 +38,8 @@ export class ExhibitionAutomator {
   // allows emulation of time
   now = () => new Date()
 
+  dynamicMockedTime: string | null = null
+
   actionContext: AutomatorContext = {
     navigate: () => {},
     next: () => {},
@@ -56,7 +58,7 @@ export class ExhibitionAutomator {
     this.ipc.addEventListener('message', this.onIpcMessage)
 
     // send the ping message to discover other windows
-    this.sendIpcMessage({type: 'ping', id: this.ipcId})
+    this.sendIpcAction({type: 'ping'})
 
     await this.load()
   }
@@ -81,40 +83,28 @@ export class ExhibitionAutomator {
   }
 
   onIpcMessage = (event: MessageEvent<IpcMessage>) => {
-    const id = this.ipcId
     const mode = $ipcMode.get()
-    const status = $exhibitionStatus.get()
 
     if (!event.data) return
 
     match(event.data)
       .with({type: 'ping'}, () => {
-        this.sendIpcMessage({
-          type: 'pong',
-          id,
-          mode,
-          elapsed: this.elapsed,
-          status,
-        })
+        this.sendIpcAction({type: 'pong', mode, elapsed: this.elapsed})
       })
       .with({type: 'pong'}, (msg) => {
-        // if there are already a window in program mode, switch to video mode
-        if (msg.mode !== 'program') return
+        // if there are already a window in program mode, switch to video mode.
+        if (msg.mode === 'program') {
+          this.syncIpcTime(msg)
+          $ipcMode.set('video')
+          this.sync({force: true})
 
-        // keep the exhibition status in sync
-        $exhibitionStatus.set(msg.status)
-
-        $ipcMode.set('video')
-        this.sync({force: true})
-
-        console.log(`[ipc] we switch to video mode`, msg)
+          console.log(`[ipc] we switch ourselves to video mode`, msg)
+        }
       })
       .with({type: 'play'}, (msg) => {
         if (mode !== 'video' || !this.videoRef) return
 
-        // keep the exhibition status in sync
-        $exhibitionStatus.set(msg.status)
-
+        this.syncIpcTime(msg)
         this.sync({force: true})
         this.playVideo(msg.elapsed)
 
@@ -126,18 +116,21 @@ export class ExhibitionAutomator {
   async playVideo(elapsed: number = this.elapsed) {
     if ($ipcMode.get() !== 'video') return
 
-    console.log(`[play video] at ${elapsed} seconds`)
-
     this.actionContext.navigate('/video')
 
+    // if the video element is not ready, do nothing
+    if (!this.videoRef) return
+
+    // if the video is already playing at the same time, do nothing
+    if (isVideoPlaying(this.videoRef) && this.videoRef.currentTime === elapsed)
+      return
+
+    console.log(`[play video] at ${elapsed} seconds`)
+
     try {
-      if (this.videoRef) {
-        this.videoRef.currentTime = elapsed
+      this.videoRef.currentTime = elapsed
 
-        if (isVideoPlaying(this.videoRef)) return
-
-        await this.videoRef.play()
-      }
+      await this.videoRef.play()
     } catch (err) {
       console.log(`[cannot play video]`, err)
 
@@ -146,7 +139,14 @@ export class ExhibitionAutomator {
     }
   }
 
-  sendIpcMessage(message: IpcMessage) {
+  sendIpcAction(action: IpcAction) {
+    const meta: IpcMeta = {
+      ipcId: this.ipcId,
+      dynamicMockedTime: this.dynamicMockedTime,
+    }
+
+    const message: IpcMessage = {...action, ...meta}
+
     this.ipc.postMessage(message)
   }
 
@@ -193,8 +193,7 @@ export class ExhibitionAutomator {
     this.actionContext.elapsed = () => this.elapsed
 
     if (action.action === 'start') {
-      const status = $exhibitionStatus.get()
-      this.sendIpcMessage({type: 'play', elapsed: this.elapsed, status})
+      this.sendIpcAction({type: 'play', elapsed: this.elapsed})
     }
 
     runAutomationAction(action, this.actionContext)
@@ -237,6 +236,8 @@ export class ExhibitionAutomator {
       return
     }
 
+    this.dynamicMockedTime = time
+
     const start = new Date()
 
     // Simulates passage of time
@@ -247,10 +248,8 @@ export class ExhibitionAutomator {
     }
   }
 
-  configureStartTime(next: ExhibitionStatus) {
-    if (next.type !== 'active') return
-
-    this.startTime = dayjs(hhmmOf(next.start))
+  configureStartTime(startAt: string) {
+    this.startTime = dayjs(hhmmOf(startAt))
   }
 
   sync(options: {force?: boolean} = {}) {
@@ -287,7 +286,7 @@ export class ExhibitionAutomator {
 
       if (automator.timer === null) automator.startClock()
 
-      this.sendIpcMessage({type: 'play', elapsed: this.elapsed, status: next})
+      this.sendIpcAction({type: 'play', elapsed: this.elapsed})
     }
 
     match(next.type)
@@ -330,6 +329,11 @@ export class ExhibitionAutomator {
       // something is wrong with the auto-play policy
       $canPlay.set(false)
     }
+  }
+
+  syncIpcTime(msg: IpcMessage) {
+    const time = msg.dynamicMockedTime
+    if (time !== null) this.mockTime(time)
   }
 }
 

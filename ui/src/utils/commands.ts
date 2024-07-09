@@ -15,7 +15,7 @@ export const fullscreen = async () => {
     }
   } catch (err) {
     console.log(
-      `[failed to enter fullscreen]: ${err}, interacted=${$canPlay.get()}`
+      `[failed to enter fullscreen]: ${err}, canPlay=${$canPlay.get()}`
     )
   }
 }
