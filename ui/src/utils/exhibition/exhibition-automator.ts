@@ -125,6 +125,9 @@ export class ExhibitionAutomator {
     if (isVideoPlaying(this.videoRef) && this.videoRef.currentTime === elapsed)
       return
 
+    // this means that the video is not ready yet, as it does not have a configured start time
+    if (elapsed === -1) return
+
     console.log(`[play video] at ${elapsed} seconds`)
 
     try {
@@ -222,6 +225,7 @@ export class ExhibitionAutomator {
   }
 
   get elapsed(): number {
+    // this means that the video is not ready yet, as it does not have a configured start time
     if (this.startTime === null) return -1
 
     return dayjs(this.now()).diff(this.startTime, 'seconds')
