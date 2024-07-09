@@ -126,7 +126,7 @@ export class ExhibitionAutomator {
       return
 
     // this means that the video is not ready yet, as it does not have a configured start time
-    if (elapsed === -1) return
+    if (elapsed === -1 || isNaN(elapsed)) return
 
     console.log(`[play video] at ${elapsed} seconds`)
 
