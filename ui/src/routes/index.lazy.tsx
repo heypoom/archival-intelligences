@@ -38,6 +38,7 @@ export function HomeRoute() {
   function startFromFakeTime() {
     $exhibitionMode.set(true)
     $canPlay.set(true)
+
     const time = prompt('enter a test time in hh:mm:ss format')
 
     if (time) {

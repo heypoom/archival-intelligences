@@ -17,7 +17,6 @@ import {getExhibitionStatus} from './get-exhibition-status'
 import {match} from 'ts-pattern'
 import {routeFromCue} from './route-from-cue'
 import {$ipcMode, IpcAction, IpcMessage, IpcMeta} from '../../store/window-ipc'
-import {ExhibitionStatus} from '../../types/exhibition-status'
 
 export class ExhibitionAutomator {
   timer: number | null = null
@@ -271,7 +270,9 @@ export class ExhibitionAutomator {
 
     if (!force && JSON.stringify(prev) === JSON.stringify(next)) return
 
-    this.configureStartTime(next)
+    if (next.type === 'active') {
+      this.configureStartTime(next.start)
+    }
 
     const isVideo = $ipcMode.get() === 'video'
     if (isVideo) {
