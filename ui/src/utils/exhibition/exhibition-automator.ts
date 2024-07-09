@@ -98,6 +98,10 @@ export class ExhibitionAutomator {
           this.sync({force: true})
 
           console.log(`[ipc] we switch ourselves to video mode`, msg)
+
+          setTimeout(() => {
+            automator.playVideo(msg.elapsed)
+          }, 100)
         }
       })
       .with({type: 'play'}, (msg) => {
@@ -112,7 +116,7 @@ export class ExhibitionAutomator {
       .exhaustive()
   }
 
-  async playVideo(elapsed: number = this.elapsed) {
+  async playVideo(elapsed: number | null) {
     if ($ipcMode.get() !== 'video') return
 
     this.actionContext.navigate('/video')
@@ -125,14 +129,19 @@ export class ExhibitionAutomator {
       return
 
     // this means that the video is not ready yet, as it does not have a configured start time
-    if (elapsed === -1 || isNaN(elapsed)) return
-
-    console.log(`[play video] at ${elapsed} seconds`)
+    if (elapsed !== null && (elapsed === -1 || isNaN(elapsed))) return
 
     try {
-      this.videoRef.currentTime = elapsed
+      if (elapsed !== null) {
+        this.videoRef.currentTime = elapsed
+
+        console.log(`[play video] at ${elapsed} seconds`)
+      }
 
       await this.videoRef.play()
+
+      // auto-play policy is working
+      $canPlay.set(true)
     } catch (err) {
       console.log(`[cannot play video]`, err)
 
