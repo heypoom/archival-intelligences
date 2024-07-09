@@ -10,3 +10,4 @@ export const $exhibitionMode = persistentAtom('exhibitionMode', false, S)
 export const $exhibitionStatus = atom<ExhibitionStatus>({type: 'loading'})
 
 export const $interacted = atom(false)
+export const $disconnected = atom(false)

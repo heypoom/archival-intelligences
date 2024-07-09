@@ -4,6 +4,7 @@ import {automator} from '../utils/exhibition/exhibition-automator'
 import {$exhibitionStatus, $interacted} from '../store/exhibition'
 import {useStore} from '@nanostores/react'
 import {fullscreen} from '../utils/commands'
+import {EXHIBITION_VIDEO_SOURCES} from '../constants/exhibition-videos'
 
 export const Route = createLazyFileRoute('/video')({
   component: VideoRoute,
@@ -37,8 +38,9 @@ function VideoRoute() {
       )}
 
       <video
-        src="https://images.poom.dev/history-v1.mp4"
+        src={EXHIBITION_VIDEO_SOURCES.lecture}
         ref={(ref) => ref && automator.initVideo(ref)}
+        onClick={enableVideoPlayback}
       ></video>
     </div>
   )

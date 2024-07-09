@@ -1,12 +1,17 @@
+import {$disconnected} from '../store/exhibition'
 import {$startTimestep, $timestep, resetProgress} from '../store/progress'
 import {$apiReady, $generating, $inferencePreview} from '../store/prompt'
 
 // ruian-sg-api.poom.dev = ws://35.247.139.252:8000/ws
 const REMOTE_WS_URL = 'wss://ruian-sg-api.poom.dev/ws'
 
+/** After 8 seconds of no activity, consider the connection dead */
+const DISCONNECT_TIMEOUT = 8 * 1000
+
 class SocketManager {
   sock: WebSocket
   url = REMOTE_WS_URL
+  disconnectTimer?: number
 
   constructor() {
     this.sock = this.createWs()
@@ -28,6 +33,14 @@ class SocketManager {
     $apiReady.set(false)
     $generating.set(false)
     resetProgress()
+
+    if (this.disconnectTimer === undefined) {
+      this.disconnectTimer = setTimeout(() => {
+        // connection is dead
+        console.log(`[ws] websocket connection dead`)
+        $disconnected.set(true)
+      }, DISCONNECT_TIMEOUT)
+    }
   }
 
   addListeners() {
@@ -45,28 +58,29 @@ class SocketManager {
   }
 
   onError = (event: Event) => {
-    console.error('$ websocket error', event)
+    console.error('[ws] websocket error', event)
 
     this.markDisconnect()
     this.reconnectSoon('websocket error')
   }
 
   onOpen = () => {
-    console.log(`$ websocket connected to "${this.sock.url}"`)
+    console.log(`[ws] websocket connected to "${this.sock.url}"`)
 
-    $apiReady.set(true)
+    this.markAlive()
   }
 
   onClose = () => {
-    console.log('$ websocket closed')
+    console.log('[ws] websocket closed')
 
     this.markDisconnect()
     this.reconnectSoon('websocket closed', 5000)
   }
 
   onMessage = (event: MessageEvent) => {
+    this.markAlive()
+
     const data = event.data
-    $apiReady.set(true)
 
     // binary data received - assume JPEG-encoded image
     if (data instanceof Blob) {
@@ -105,6 +119,14 @@ class SocketManager {
     }
   }
 
+  markAlive() {
+    $apiReady.set(true)
+    $disconnected.set(false)
+
+    clearTimeout(this.disconnectTimer)
+    this.disconnectTimer = undefined
+  }
+
   reconnectSoon(reason?: string, delay = 5000, flags?: {shutup?: boolean}) {
     if (!this.sock) return
 
@@ -116,7 +138,7 @@ class SocketManager {
     }
 
     setTimeout(() => {
-      console.log(`$ reconnecting due to "${reason}"`)
+      console.log(`[ws] reconnecting due to "${reason}"`)
 
       this.sock = this.createWs()
     }, delay)

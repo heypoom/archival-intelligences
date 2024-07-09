@@ -8,6 +8,7 @@ import {AutomatorContext, runAutomationAction} from './run-automation-action'
 import {secOf, timecodeOf, hhmmOf, hhmmssOf} from './timecode'
 
 import {
+  $disconnected,
   $exhibitionMode,
   $exhibitionStatus,
   $interacted,
@@ -30,6 +31,9 @@ export class ExhibitionAutomator {
   ipcId = nanoid()
 
   videoRef: HTMLVideoElement | null = null
+
+  // for emergency fallback video, when the GPU server crashes.
+  fallbackVideoRef: HTMLVideoElement | null = null
 
   // allows emulation of time
   now = () => new Date()
@@ -56,8 +60,23 @@ export class ExhibitionAutomator {
     await this.load()
   }
 
-  initVideo(v: HTMLVideoElement) {
-    this.videoRef = v
+  initVideo(video: HTMLVideoElement) {
+    this.videoRef = video
+  }
+
+  initFallbackVideo(video: HTMLVideoElement) {
+    this.fallbackVideoRef = video
+
+    const shouldPlayFallbackVideo =
+      $exhibitionMode.get() &&
+      $exhibitionStatus.get().type === 'active' &&
+      $ipcMode.get() !== 'video' &&
+      $disconnected.get()
+
+    if (shouldPlayFallbackVideo) {
+      console.log('[init fallback video]', shouldPlayFallbackVideo)
+      this.playFallbackVideo()
+    }
   }
 
   onIpcMessage = (event: MessageEvent<IpcMessage>) => {
@@ -101,8 +120,12 @@ export class ExhibitionAutomator {
     try {
       if (this.videoRef) {
         this.videoRef.currentTime = elapsed
+
+        if (isVideoPlaying(this.videoRef)) return
+
         await this.videoRef.play()
-        console.log(`[video playing]`)
+
+        console.log(`[video play]`)
       }
     } catch (err) {
       console.log(`[cannot play video]`, err)
@@ -275,7 +298,25 @@ export class ExhibitionAutomator {
 
     this.actionContext.navigate(route)
   }
+
+  playFallbackVideo = () => {
+    const video = this.fallbackVideoRef
+    if (!video) return
+
+    if (isVideoPlaying(video)) return
+
+    video.currentTime = this.elapsed
+    video.play()
+  }
 }
+
+export const isVideoPlaying = (video: HTMLVideoElement) =>
+  !!(
+    video.currentTime > 0 &&
+    !video.paused &&
+    !video.ended &&
+    video.readyState > 2
+  )
 
 export const automator = new ExhibitionAutomator()
 automator.setup()

@@ -7,10 +7,13 @@ import FadeToBlack from '../components/FadeToBlack'
 import {ProgressBadge} from '../components/ProgressBadge'
 import {AnimatedNoise} from '../components/AnimatedNoise'
 import {RegenCountBadge} from '../components/RegenCountBadge'
+import {ExhibitionFallbackVideo} from '../components/ExhibitionFallbackVideo'
 
 export const Route = createRootRoute({
   component: () => (
     <>
+      <ExhibitionFallbackVideo />
+
       <Outlet />
       <HeadlessController />
 
