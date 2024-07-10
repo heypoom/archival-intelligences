@@ -98,10 +98,6 @@ export class ExhibitionAutomator {
           this.sync({force: true})
 
           console.log(`[ipc] we switch ourselves to video mode`, msg)
-
-          setTimeout(() => {
-            automator.playVideo(msg.elapsed)
-          }, 100)
         }
       })
       .with({type: 'play'}, (msg) => {
@@ -109,7 +105,6 @@ export class ExhibitionAutomator {
 
         this.syncIpcTime(msg)
         this.sync({force: true})
-        this.playVideo(msg.elapsed)
 
         console.log(`[ipc] we play the video`, msg)
       })
@@ -122,21 +117,38 @@ export class ExhibitionAutomator {
     this.actionContext.navigate('/video')
 
     // if the video element is not ready, do nothing
-    if (!this.videoRef) return
+    if (!this.videoRef) {
+      console.log('[video] missing video ref')
+      return
+    }
 
     // if the video is already playing at the same time, do nothing
-    if (isVideoPlaying(this.videoRef) && this.videoRef.currentTime === elapsed)
-      return
+    if (
+      isVideoPlaying(this.videoRef) &&
+      this.videoRef.currentTime === elapsed
+    ) {
+      console.log(`[play video] already playing`)
 
-    // this means that the video is not ready yet, as it does not have a configured start time
-    if (elapsed !== null && (elapsed === -1 || isNaN(elapsed))) return
+      return
+    }
 
     try {
-      if (elapsed !== null) {
+      if (elapsed !== null && elapsed !== -1 && !isNaN(elapsed)) {
         this.videoRef.currentTime = elapsed
+      } else {
+        // re-configure start time
+        const status = $exhibitionStatus.get()
 
-        console.log(`[play video] at ${elapsed} seconds`)
+        if (status.type === 'active') {
+          this.configureStartTime(status.start)
+        }
+
+        elapsed = this.elapsed
+        this.videoRef.currentTime = elapsed
+        console.log(`[elapsed] reconfigured elapsed time dynamic`, elapsed)
       }
+
+      console.log(`[play video] at ${elapsed} seconds`)
 
       await this.videoRef.play()
 
@@ -264,7 +276,7 @@ export class ExhibitionAutomator {
     this.startTime = dayjs(hhmmOf(startAt))
   }
 
-  sync(options: {force?: boolean} = {}) {
+  sync(options: {force?: boolean; elapsed?: number} = {}) {
     const {force = false} = options
 
     // only activate when in exhibition mode
@@ -286,6 +298,10 @@ export class ExhibitionAutomator {
     const isVideo = $ipcMode.get() === 'video'
     if (isVideo) {
       go('/video')
+
+      setTimeout(() => {
+        automator.playVideo(options.elapsed ?? null)
+      }, 200)
 
       return
     }
