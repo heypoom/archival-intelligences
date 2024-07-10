@@ -131,6 +131,17 @@ export function HomeRoute() {
 
           <div>simulate a time of day for the exhibition</div>
         </div>
+
+        <div className="flex justify-start items-center gap-x-4 text-xs">
+          <button
+            onClick={fullscreen}
+            className="border border-gray-300 text-gray-300 px-3 py-2 text-xs"
+          >
+            fullscreen
+          </button>
+
+          <div>set the page to full-screen</div>
+        </div>
       </div>
     </div>
   )
