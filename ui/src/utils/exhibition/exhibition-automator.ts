@@ -148,7 +148,11 @@ export class ExhibitionAutomator {
 
         elapsed = this.elapsed
         this.videoRef.currentTime = elapsed
-        console.log(`[elapsed] reconfigured elapsed time dynamic`, elapsed)
+      }
+
+      if (elapsed === -1) {
+        console.log(`[play video] video should not play yet.`)
+        return
       }
 
       console.log(`[play video] at ${elapsed} seconds`)
