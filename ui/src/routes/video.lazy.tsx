@@ -2,11 +2,12 @@ import {createLazyFileRoute} from '@tanstack/react-router'
 import cx from 'classnames'
 
 import {automator} from '../utils/exhibition/exhibition-automator'
-import {$exhibitionStatus, $canPlay} from '../store/exhibition'
+import {$exhibitionStatus, $canPlay, $videoMode} from '../store/exhibition'
 import {useStore} from '@nanostores/react'
 import {EXHIBITION_VIDEO_SOURCES} from '../constants/exhibition-videos'
 
 import {fullscreen} from '../utils/commands'
+import {useEffect} from 'react'
 
 export const Route = createLazyFileRoute('/video')({
   component: VideoRoute,
@@ -17,6 +18,10 @@ function VideoRoute() {
   const canPlay = useStore($canPlay)
 
   const isVideoShown = status.type === 'active'
+
+  useEffect(() => {
+    $videoMode.set(true)
+  }, [])
 
   return (
     <div className="flex flex-col items-center justify-center h-full font-mono min-h-screen bg-black text-white gap-y-8 relative">

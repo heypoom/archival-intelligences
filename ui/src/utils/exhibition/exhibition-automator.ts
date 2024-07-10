@@ -12,6 +12,7 @@ import {
   $exhibitionMode,
   $exhibitionStatus,
   $canPlay,
+  $videoMode,
 } from '../../store/exhibition'
 import {getExhibitionStatus} from './get-exhibition-status'
 import {match} from 'ts-pattern'
@@ -278,7 +279,7 @@ export class ExhibitionAutomator {
   }
 
   get isVideo() {
-    return window.location.href.includes('/video')
+    return window.location.href.includes('/video') || $videoMode.get()
   }
 
   sync(options: {force?: boolean; elapsed?: number} = {}) {
