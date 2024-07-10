@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Monaco';
+  font-style: normal;
+  font-weight: normal;
+  src: local('Monaco'), url('/Monaco.woff') format('woff');
+}
+
 body {
     background: #424242;
 }
