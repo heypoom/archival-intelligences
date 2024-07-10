@@ -61,6 +61,16 @@ export function HomeRoute() {
     }
   }
 
+  function setFakeExhibitionOpenTime() {
+    automator.mockTime('10:59:55')
+
+    if ($videoMode.get()) {
+      setTimeout(() => {
+        go({to: '/video'})
+      }, 150)
+    }
+  }
+
   return (
     <div className="flex flex-col items-center justify-center h-full font-mono min-h-screen bg-black text-white gap-y-8">
       <h1 className="text-2xl">program manager</h1>
@@ -90,8 +100,19 @@ export function HomeRoute() {
 
       <h2 className="text-xl">testing options</h2>
 
-      <div>
-        <div className="flex justify-center items-center gap-x-4 text-xs">
+      <div className="space-y-4">
+        <div className="flex justify-start items-center gap-x-4 text-xs">
+          <button
+            onClick={setFakeExhibitionOpenTime}
+            className="border border-gray-300 text-gray-300 px-3 py-2 text-xs"
+          >
+            set time to 10:59:55
+          </button>
+
+          <div>simulate when the first screening round is opening</div>
+        </div>
+
+        <div className="flex justify-start items-center gap-x-4 text-xs">
           <button
             onClick={setFakeTime}
             className="border border-gray-300 text-gray-300 px-3 py-2 text-xs"
