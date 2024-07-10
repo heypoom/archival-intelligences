@@ -18,6 +18,7 @@ import {getExhibitionStatus} from './get-exhibition-status'
 import {match} from 'ts-pattern'
 import {routeFromCue} from './route-from-cue'
 import {IpcAction, IpcMessage, IpcMeta} from '../../store/window-ipc'
+import {resetAll} from './reset'
 
 export class ExhibitionAutomator {
   timer: number | null = null
@@ -320,6 +321,7 @@ export class ExhibitionAutomator {
       this.stopClock()
       this.startTime = null
     } else {
+      resetAll()
       this.seekCue(timecodeOf(this.elapsed))
 
       if (automator.timer === null) automator.startClock()
