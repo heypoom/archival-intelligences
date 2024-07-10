@@ -1,3 +1,4 @@
+import {Icon} from '@iconify/react'
 import {useMatchRoute, useRouterState} from '@tanstack/react-router'
 
 import {useIsVideo} from '../hooks/useIsVideo'
@@ -20,7 +21,7 @@ export function CurrentProgramBadge() {
   const isVideo = useIsVideo()
 
   const currentProgramKey = routeState.location.href.replace('/', '')
-  let currentProgram = programNameMap[currentProgramKey]
+  const currentProgram = programNameMap[currentProgramKey]
 
   // const isExhibitionMode = useStore($exhibitionMode)
 
@@ -28,8 +29,16 @@ export function CurrentProgramBadge() {
   // we can keep the progress counter and the connection indicator
   // if (isExhibitionMode) return null
 
-  if (isVideo) currentProgram = 'VDO'
+  // indicate that we are on the video screen
+  if (isVideo) {
+    return (
+      <div className="bg-[#2d2d30] text-white px-[4px] py-[2px] text-xs rounded-lg">
+        <Icon icon="lucide:video" fontSize={16} />
+      </div>
+    )
+  }
 
+  // hide program badge when there is no active program
   if (!currentProgram) return null
 
   // hide program badge when on the speech route

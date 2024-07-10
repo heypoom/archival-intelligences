@@ -19,10 +19,10 @@ export const Route = createRootRoute({
       <HeadlessController />
 
       <div className="fixed flex left-3 bottom-3 z-[100000] gap-x-1">
+        <SettingsButton />
         <CurrentProgramBadge />
         <RegenCountBadge />
         <ProgressBadge />
-        <SettingsButton />
       </div>
 
       <div className="fixed right-3 bottom-3 z-10">
