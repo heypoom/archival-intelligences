@@ -52,6 +52,12 @@ export function HomeRoute() {
 
     if (time) {
       automator.mockTime(time)
+
+      if ($videoMode.get()) {
+        setTimeout(() => {
+          go({to: '/video'})
+        }, 150)
+      }
     }
   }
 
