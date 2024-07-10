@@ -1,4 +1,4 @@
-import {Link, useMatchRoute, useNavigate} from '@tanstack/react-router'
+import {useMatchRoute, useNavigate} from '@tanstack/react-router'
 import {Icon} from '@iconify/react'
 
 export const SettingsButton = () => {

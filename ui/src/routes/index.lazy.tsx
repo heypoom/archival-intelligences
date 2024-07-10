@@ -84,7 +84,7 @@ export function HomeRoute() {
     <div className="flex flex-col items-center justify-center h-full font-mono min-h-screen bg-black text-white gap-y-8">
       <h1 className="text-2xl">program manager</h1>
 
-      <div className="space-x-4">
+      <div className="flex flex-col sm:flex-row gap-x-4 gap-y-4">
         <button
           onClick={startExhibitionProgram}
           className="border border-green-300 text-green-300 px-4 py-2"
