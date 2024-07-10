@@ -1,13 +1,13 @@
 import {useStore} from '@nanostores/react'
 import {$regenActive, $regenCount} from '../store/regen'
-import {$ipcMode} from '../store/window-ipc'
+import {useIsVideo} from '../hooks/useIsVideo'
 
 export function RegenCountBadge() {
   const regenCount = useStore($regenCount)
   const regenActive = useStore($regenActive)
 
-  const ipcMode = useStore($ipcMode)
-  if (ipcMode === 'video') return null
+  const isVideo = useIsVideo()
+  if (isVideo) return null
 
   // hide program badge when on the speech route
   if (!regenActive) return null

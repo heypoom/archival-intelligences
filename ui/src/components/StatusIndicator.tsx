@@ -5,7 +5,7 @@ import {useMatchRoute} from '@tanstack/react-router'
 import {$dictationState} from '../store/dictation'
 import {$apiReady, $generating} from '../store/prompt'
 import {$exhibitionMode} from '../store/exhibition'
-import {$ipcMode} from '../store/window-ipc'
+import {useIsVideo} from '../hooks/useIsVideo'
 
 export const StatusIndicator = () => {
   const mr = useMatchRoute()
@@ -16,8 +16,8 @@ export const StatusIndicator = () => {
   const apiReady = useStore($apiReady)
   const generating = useStore($generating)
 
-  const ipcMode = useStore($ipcMode)
-  if (ipcMode === 'video') return null
+  const isVideo = useIsVideo()
+  if (isVideo) return null
 
   const starting = status === 'starting'
   const listening = status === 'listening'

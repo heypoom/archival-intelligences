@@ -16,7 +16,7 @@ import {
 import {getExhibitionStatus} from './get-exhibition-status'
 import {match} from 'ts-pattern'
 import {routeFromCue} from './route-from-cue'
-import {$ipcMode, IpcAction, IpcMessage, IpcMeta} from '../../store/window-ipc'
+import {IpcAction, IpcMessage, IpcMeta} from '../../store/window-ipc'
 
 export class ExhibitionAutomator {
   timer: number | null = null
@@ -69,10 +69,12 @@ export class ExhibitionAutomator {
   initFallbackVideo(video: HTMLVideoElement) {
     this.fallbackVideoRef = video
 
+    const isVideo = this.isVideo
+
     const shouldPlayFallbackVideo =
       $exhibitionMode.get() &&
       $exhibitionStatus.get().type === 'active' &&
-      $ipcMode.get() !== 'video' &&
+      !isVideo &&
       $disconnected.get()
 
     if (shouldPlayFallbackVideo) {
@@ -81,40 +83,39 @@ export class ExhibitionAutomator {
     }
   }
 
+  // REMOVE IPC HANDLERS
   onIpcMessage = (event: MessageEvent<IpcMessage>) => {
-    const mode = $ipcMode.get()
+    // const mode = $ipcMode.get()
 
     if (!event.data) return
 
-    match(event.data)
-      .with({type: 'ping'}, () => {
-        this.sendIpcAction({type: 'pong', mode, elapsed: this.elapsed})
-      })
-      .with({type: 'pong'}, (msg) => {
-        // if there are already a window in program mode, switch to video mode.
-        if (msg.mode === 'program') {
-          this.syncIpcTime(msg)
-          $ipcMode.set('video')
-          this.sync({force: true})
+    // match(event.data)
+    //   .with({type: 'ping'}, () => {
+    //     this.sendIpcAction({type: 'pong', mode, elapsed: this.elapsed})
+    //   })
+    //   .with({type: 'pong'}, (msg) => {
+    //     // if there are already a window in program mode, switch to video mode.
+    //     if (msg.mode === 'program') {
+    //       this.syncIpcTime(msg)
+    //       $ipcMode.set('video')
+    //       this.sync({force: true})
 
-          console.log(`[ipc] we switch ourselves to video mode`, msg)
-        }
-      })
-      .with({type: 'play'}, (msg) => {
-        if (mode !== 'video' || !this.videoRef) return
+    //       console.log(`[ipc] we switch ourselves to video mode`, msg)
+    //     }
+    //   })
+    //   .with({type: 'play'}, (msg) => {
+    //     if (mode !== 'video' || !this.videoRef) return
 
-        this.syncIpcTime(msg)
-        this.sync({force: true})
+    //     this.syncIpcTime(msg)
+    //     this.sync({force: true})
 
-        console.log(`[ipc] we play the video`, msg)
-      })
-      .exhaustive()
+    //     console.log(`[ipc] we play the video`, msg)
+    //   })
+    //   .exhaustive()
   }
 
   async playVideo(elapsed: number | null) {
-    if ($ipcMode.get() !== 'video') return
-
-    this.actionContext.navigate('/video')
+    if (!this.isVideo) return
 
     // if the video element is not ready, do nothing
     if (!this.videoRef) {
@@ -215,9 +216,9 @@ export class ExhibitionAutomator {
     this.actionContext.cue = () => this.currentCue
     this.actionContext.elapsed = () => this.elapsed
 
-    if (action.action === 'start') {
-      this.sendIpcAction({type: 'play', elapsed: this.elapsed})
-    }
+    // if (action.action === 'start') {
+    //   this.sendIpcAction({type: 'play', elapsed: this.elapsed})
+    // }
 
     runAutomationAction(action, this.actionContext)
   }
@@ -276,6 +277,10 @@ export class ExhibitionAutomator {
     this.startTime = dayjs(hhmmOf(startAt))
   }
 
+  get isVideo() {
+    return window.location.href.includes('/video')
+  }
+
   sync(options: {force?: boolean; elapsed?: number} = {}) {
     const {force = false} = options
 
@@ -295,9 +300,11 @@ export class ExhibitionAutomator {
       this.configureStartTime(next.start)
     }
 
-    const isVideo = $ipcMode.get() === 'video'
+    // HACK: is video??
+    const isVideo = this.isVideo
+
     if (isVideo) {
-      go('/video')
+      console.log(`[is video]`)
 
       setTimeout(() => {
         automator.playVideo(options.elapsed ?? null)

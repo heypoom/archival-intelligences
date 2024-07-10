@@ -8,6 +8,7 @@ import {ProgressBadge} from '../components/ProgressBadge'
 import {AnimatedNoise} from '../components/AnimatedNoise'
 import {RegenCountBadge} from '../components/RegenCountBadge'
 import {ExhibitionFallbackVideo} from '../components/ExhibitionFallbackVideo'
+import {SettingsButton} from '../components/SettingsButton'
 
 export const Route = createRootRoute({
   component: () => (
@@ -17,10 +18,11 @@ export const Route = createRootRoute({
       <Outlet />
       <HeadlessController />
 
-      <div className="fixed flex left-3 bottom-3 z-10 gap-x-1">
+      <div className="fixed flex left-3 bottom-3 z-[100000] gap-x-1">
         <CurrentProgramBadge />
         <RegenCountBadge />
         <ProgressBadge />
+        <SettingsButton />
       </div>
 
       <div className="fixed right-3 bottom-3 z-10">

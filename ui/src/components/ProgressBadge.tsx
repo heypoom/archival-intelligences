@@ -2,15 +2,15 @@ import {useStore} from '@nanostores/react'
 import {$generating} from '../store/prompt'
 import {$progress} from '../store/progress'
 import {$regenActive} from '../store/regen'
-import {$ipcMode} from '../store/window-ipc'
+import {useIsVideo} from '../hooks/useIsVideo'
 
 export function ProgressBadge() {
   const generating = useStore($generating)
   const progress = useStore($progress)
   const regenActive = useStore($regenActive)
 
-  const ipcMode = useStore($ipcMode)
-  if (ipcMode === 'video') return null
+  const isVideo = useIsVideo()
+  if (isVideo) return null
 
   if (!generating && !regenActive) return null
   if (progress === 0 && regenActive) return null

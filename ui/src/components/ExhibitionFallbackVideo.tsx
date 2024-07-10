@@ -5,8 +5,9 @@ import {
   $exhibitionStatus,
 } from '../store/exhibition'
 import {automator} from '../utils/exhibition/exhibition-automator'
-import {$ipcMode} from '../store/window-ipc'
+
 import {EXHIBITION_VIDEO_SOURCES} from '../constants/exhibition-videos'
+import {useIsVideo} from '../hooks/useIsVideo'
 
 /**
  * When the GPU server crashes, we show a fallback video to the audience.
@@ -14,7 +15,7 @@ import {EXHIBITION_VIDEO_SOURCES} from '../constants/exhibition-videos'
 export const ExhibitionFallbackVideo = () => {
   const isDisconnected = useStore($disconnected)
   const isExhibitionMode = useStore($exhibitionMode)
-  const ipcMode = useStore($ipcMode)
+  const isVideo = useIsVideo()
   const status = useStore($exhibitionStatus)
 
   const isScreening = status.type === 'active'
@@ -23,7 +24,7 @@ export const ExhibitionFallbackVideo = () => {
   if (!isExhibitionMode || !isScreening) return null
 
   // only show the fallback video if we are in program mode
-  if (ipcMode === 'video') return null
+  if (isVideo) return null
 
   return (
     <div className="fixed flex flex-col items-center justify-center w-full h-full font-mono min-h-screen bg-black text-white gap-y-8 z-[10000]">
