@@ -57,17 +57,26 @@ export function HomeRoute() {
         setTimeout(() => {
           go({to: '/video'})
         }, 150)
+      } else {
+        automator.sync()
       }
     }
   }
 
   function setFakeExhibitionOpenTime() {
-    automator.mockTime('10:59:55')
+    automator.mockTime('10:59:50')
 
     if ($videoMode.get()) {
       setTimeout(() => {
         go({to: '/video'})
+
+        setTimeout(() => {
+          automator.sync()
+        }, 100)
       }, 150)
+    } else {
+      go({to: '/waiting'})
+      automator.sync({force: true})
     }
   }
 
@@ -106,7 +115,7 @@ export function HomeRoute() {
             onClick={setFakeExhibitionOpenTime}
             className="border border-gray-300 text-gray-300 px-3 py-2 text-xs"
           >
-            set time to 10:59:55
+            set time to 10:59:50
           </button>
 
           <div>simulate when the first screening round is opening</div>
