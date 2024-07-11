@@ -30,7 +30,6 @@ import {IpcAction, IpcMessage, IpcMeta} from '../../store/window-ipc'
 import {resetAll} from './reset'
 import {compareTimecode} from './compare-timecode'
 import {transcriptWithinTimeRange} from './exclude-transcription-before'
-import {$fadeStatus} from '../../store/fader'
 
 export class ExhibitionAutomator {
   timer: number | null = null
