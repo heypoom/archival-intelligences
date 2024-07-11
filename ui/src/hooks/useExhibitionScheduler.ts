@@ -15,7 +15,6 @@ export function useExhibitionScheduler() {
     let timer: number | undefined
 
     if (isExhibitionMode) {
-      // @ts-expect-error - fffff
       timer = setInterval(() => {
         automator.sync()
       }, POLL_INTERVAL)

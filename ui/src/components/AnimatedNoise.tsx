@@ -29,7 +29,6 @@ export const AnimatedNoise = () => {
     let timer: number
 
     if (!isNoNoiseRoute) {
-      // @ts-expect-error - fffff
       timer = setInterval(() => {
         paint()
       }, 400)

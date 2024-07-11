@@ -32,7 +32,6 @@ export function regen(command: string, prompt: string, origin = true) {
 
   console.log(`[gen] regen "${prompt}" in ${delay}ms (i=${gen})`)
 
-  // @ts-expect-error - fffff
   regenerateTimer = setTimeout(() => {
     const progress = $progress.get()
 

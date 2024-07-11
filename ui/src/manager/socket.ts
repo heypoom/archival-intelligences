@@ -35,7 +35,6 @@ class SocketManager {
     resetProgress()
 
     if (this.disconnectTimer === undefined) {
-      // @ts-expect-error - fffff
       this.disconnectTimer = setTimeout(() => {
         // connection is dead
         console.log(`[ws] websocket connection dead`)

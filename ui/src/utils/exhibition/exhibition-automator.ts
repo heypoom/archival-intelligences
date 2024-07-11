@@ -195,7 +195,6 @@ export class ExhibitionAutomator {
 
     this.tick()
 
-    // @ts-expect-error - fffff
     this.timer = setInterval(() => {
       this.tick()
     }, 1000)
