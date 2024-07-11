@@ -22,6 +22,26 @@ function VideoRoute() {
     $videoMode.set(true)
   }, [])
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (!automator.videoRef) return
+      if (automator.videoRef.readyState < 3) return
+
+      const actualTime = automator.videoRef.currentTime
+      const expectedTime = automator.elapsed
+      const drift = actualTime - expectedTime
+
+      if (Math.abs(drift) > 1.5) {
+        automator.videoRef.currentTime = expectedTime
+        console.log(`[video] drift by ${drift}s`)
+      }
+    }, 1000)
+
+    return () => {
+      clearInterval(timer)
+    }
+  }, [])
+
   return (
     <div className="flex flex-col items-center justify-center h-full font-mono min-h-screen bg-black text-white gap-y-8 relative">
       {!canPlay && (
