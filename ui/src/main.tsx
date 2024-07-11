@@ -6,6 +6,8 @@ import ReactDOM from 'react-dom/client'
 
 import {routeTree} from './routeTree.gen'
 
+import './utils/sentry'
+
 import 'animate.css'
 
 import './index.css'

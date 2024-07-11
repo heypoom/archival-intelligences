@@ -19,6 +19,7 @@
     "@mui/joy": "5.0.0-beta.32",
     "@nanostores/persistent": "^0.10.1",
     "@nanostores/react": "^0.7.1",
+    "@sentry/react": "^8.17.0",
     "@tanstack/react-router": "^1.26.1",
     "@tweenjs/tween.js": "^23.1.2",
     "@uidotdev/usehooks": "^2.4.1",
