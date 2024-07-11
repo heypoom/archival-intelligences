@@ -12,7 +12,7 @@ export const HeadlessController = () => {
   const cmd = useSceneSwitcher()
   const go = useNavigate()
 
-  useExhibitionAutomator()
+  const atm = useExhibitionAutomator()
   useExhibitionScheduler()
 
   useHotkeys('CTRL + F', fullscreen)
@@ -23,6 +23,7 @@ export const HeadlessController = () => {
 
   // go to settings
   useHotkeys('CTRL + H', () => go({to: '/'}))
+  useHotkeys('CTRL + G', () => atm.go())
 
   return null
 }

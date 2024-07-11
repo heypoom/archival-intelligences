@@ -380,7 +380,15 @@ export class ExhibitionAutomator {
     const route = routeFromCue(this.currentCue, this.cues)
 
     // stay in the waiting room.
-    if (this.currentCue === 0) return
+    if (this.currentCue === 0) {
+      // show the waiting screen
+      if (window.location.pathname === '/') {
+        this.actionContext.navigate('/waiting')
+        return
+      }
+
+      return
+    }
 
     this.actionContext.navigate(route)
   }
