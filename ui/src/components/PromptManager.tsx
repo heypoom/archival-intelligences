@@ -36,7 +36,10 @@ export function PromptManager(props: Props) {
   const previewUrl = useStore($inferencePreview)
 
   const isFadingOut = useStore($imageFadingOut)
-  const {crossfading, prevUrl} = useCrossFade(previewUrl, true)
+
+  const {crossfading, prevUrl} = useCrossFade(previewUrl, {
+    skipFade: isGenerating,
+  })
 
   const useKeyword = typeof keyword === 'string' && keyword.length > 0
 

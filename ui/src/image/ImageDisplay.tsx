@@ -7,7 +7,7 @@ import {useCrossFade} from '../hooks/useCrossFade'
 export const ImageDisplay = () => {
   const url = useStore($inferencePreview)
 
-  const {crossfading, prevUrl} = useCrossFade(url, true)
+  const {crossfading, prevUrl} = useCrossFade(url)
 
   const visible = !!url
 
