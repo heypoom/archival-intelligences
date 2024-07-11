@@ -41,7 +41,7 @@ export function regen(command: string, prompt: string, origin = true) {
       )
     } else {
       socket.sock.send(`${command}:${prompt}`)
-      $generating.set(false)
+      $generating.set(true)
 
       const gen = $regenCount.get()
       console.log(`[gen] regen "${prompt}" now! (i=${gen}, delay=${delay}ms)`)
