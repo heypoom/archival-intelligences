@@ -36,7 +36,7 @@ export const PROGRAM_CUES: AutomationCue[] = [
   {time: '00:00:00', action: 'start'},
 
   // fade in program zero
-  {time: '00:06:49', action: 'navigate', route: '/zero'},
+  {time: '00:06:51', action: 'navigate', route: '/zero'},
   {time: PROGRAM_ZERO_START_TIME, action: 'set-fade-status', fade: false},
 
   // fade to black, prepare to go to program 1
