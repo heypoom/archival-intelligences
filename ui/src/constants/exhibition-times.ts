@@ -1,4 +1,4 @@
-import dayjs from 'dayjs'
+// import dayjs from 'dayjs'
 
 /**
  * Each screening is 75 minutes.
@@ -7,7 +7,7 @@ import dayjs from 'dayjs'
 export const SCREENING_DURATION = 75 * 60 * 1000
 
 // Vernissage is July 12th
-const isVernissage = (): boolean => dayjs().format('MM-DD') === '07-12'
+// const isVernissage = (): boolean => dayjs().format('MM-DD') === '07-12'
 
 /**
  * To better manage the viewing process, I'm thinking of having the video restart every 90 mins,
