@@ -16,28 +16,26 @@ import {ClosedScreen} from '../components/ClosedScreen'
 export const Route = createRootRoute({
   component: () => (
     <ProgramErrorBoundary>
-      <div className="cursor-none">
-        <WaitingRoomScreen />
-        <ClosedScreen />
+      <WaitingRoomScreen />
+      <ClosedScreen />
 
-        <ExhibitionFallbackVideo />
-        <Outlet />
-        <HeadlessController />
+      <ExhibitionFallbackVideo />
+      <Outlet />
+      <HeadlessController />
 
-        <div className="fixed flex left-3 bottom-3 z-[100002] gap-x-1 cursor-pointer">
-          <SettingsButton />
-          <CurrentProgramBadge />
-          <RegenCountBadge />
-          <ProgressBadge />
-        </div>
-
-        <div className="fixed right-3 bottom-3 z-10">
-          <StatusIndicator />
-        </div>
-
-        <FadeToBlack />
-        <AnimatedNoise />
+      <div className="fixed flex left-3 bottom-3 z-[100002] gap-x-1">
+        <SettingsButton />
+        <CurrentProgramBadge />
+        <RegenCountBadge />
+        <ProgressBadge />
       </div>
+
+      <div className="fixed right-3 bottom-3 z-10">
+        <StatusIndicator />
+      </div>
+
+      <FadeToBlack />
+      <AnimatedNoise />
     </ProgramErrorBoundary>
   ),
 })

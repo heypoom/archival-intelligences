@@ -46,7 +46,7 @@ function VideoRoute() {
     <div className="flex flex-col items-center justify-center h-full font-mono min-h-screen bg-black text-white gap-y-8 relative">
       {!canPlay && (
         <div
-          className="flex items-center justify-center absolute w-full h-full z-50 bg-black bg-opacity-70 cursor-pointer"
+          className="flex items-center justify-center absolute w-full h-full z-50 bg-black bg-opacity-70"
           onClick={() => {
             automator.playVideo()
           }}
