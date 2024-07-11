@@ -24,6 +24,7 @@ export type AutomationAction =
       program: string
       enter?: {regen: boolean}
       commit?: boolean
+      guidance?: number
     } // clear, type, and enter prompt
   | {action: 'move-slider'; program: string; value: number} // slowly move the guidance slider
   | {action: 'end'} // end the showing
@@ -72,6 +73,7 @@ export const PROGRAM_CUES: AutomationCue[] = [
     action: 'prompt',
     program: 'P2B',
     prompt: 'painting like epic poem of malaya but with more people',
+    guidance: 70,
   },
 
   // start program 3B

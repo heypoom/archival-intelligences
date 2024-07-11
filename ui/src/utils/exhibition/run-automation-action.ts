@@ -107,10 +107,12 @@ export function runAutomationAction(
             regenerate: action.enter.regen,
           })
         } else if (action.program) {
+          const guidance = action.guidance ?? $guidance.get()
+
           onPromptCommitted({
             input: backendPrompt,
             command: action.program,
-            guidance: $guidance.get(),
+            guidance,
           })
         }
       }
