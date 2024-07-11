@@ -9,27 +9,35 @@ import {AnimatedNoise} from '../components/AnimatedNoise'
 import {RegenCountBadge} from '../components/RegenCountBadge'
 import {ExhibitionFallbackVideo} from '../components/ExhibitionFallbackVideo'
 import {SettingsButton} from '../components/SettingsButton'
+import {ProgramErrorBoundary} from '../components/ErrorBoundary'
+import {WaitingRoomScreen} from '../components/WaitingScreen'
+import {ClosedScreen} from '../components/ClosedScreen'
 
 export const Route = createRootRoute({
   component: () => (
-    <div className="cursor-none">
-      <ExhibitionFallbackVideo />
-      <Outlet />
-      <HeadlessController />
+    <ProgramErrorBoundary>
+      <div className="cursor-none">
+        <WaitingRoomScreen />
+        <ClosedScreen />
 
-      <div className="fixed flex left-3 bottom-3 z-[100002] gap-x-1 cursor-pointer">
-        <SettingsButton />
-        <CurrentProgramBadge />
-        <RegenCountBadge />
-        <ProgressBadge />
+        <ExhibitionFallbackVideo />
+        <Outlet />
+        <HeadlessController />
+
+        <div className="fixed flex left-3 bottom-3 z-[100002] gap-x-1 cursor-pointer">
+          <SettingsButton />
+          <CurrentProgramBadge />
+          <RegenCountBadge />
+          <ProgressBadge />
+        </div>
+
+        <div className="fixed right-3 bottom-3 z-10">
+          <StatusIndicator />
+        </div>
+
+        <FadeToBlack />
+        <AnimatedNoise />
       </div>
-
-      <div className="fixed right-3 bottom-3 z-10">
-        <StatusIndicator />
-      </div>
-
-      <FadeToBlack />
-      <AnimatedNoise />
-    </div>
+    </ProgramErrorBoundary>
   ),
 })

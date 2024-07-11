@@ -316,8 +316,6 @@ export class ExhibitionAutomator {
     const isExhibition = $exhibitionMode.get()
     if (!isExhibition) return
 
-    const {navigate: go} = this.actionContext
-
     const prev = $exhibitionStatus.get()
     const next = getExhibitionStatus(this.now())
     $exhibitionStatus.set(next)
@@ -331,8 +329,23 @@ export class ExhibitionAutomator {
     // HACK: is video??
     const isVideo = this.isVideo
 
+    setTimeout(() => {
+      match(next.type)
+        .with('loading', () => {})
+        .with('wait', () => {})
+        .with('closed', () => {})
+        .with('active', () => {
+          if (!isVideo) {
+            this.restoreRouteFromCue()
+          }
+        })
+        .exhaustive()
+    }, 50)
+
     if (isVideo) {
       console.log(`[is video]`)
+
+      this.actionContext.navigate('/video')
 
       setTimeout(() => {
         automator.playVideo()
@@ -358,37 +371,11 @@ export class ExhibitionAutomator {
       if (automator.timer === null) automator.startClock()
     }
 
-    match(next.type)
-      .with('loading', () => {
-        // do nothing
-      })
-      .with('wait', () => {
-        go('/waiting')
-      })
-      .with('closed', () => {
-        go('/closed')
-      })
-      .with('active', () => {
-        this.restoreRouteFromCue()
-      })
-      .exhaustive()
-
     return {prev, next}
   }
 
   restoreRouteFromCue() {
     const route = routeFromCue(this.currentCue, this.cues)
-
-    // stay in the waiting room.
-    if (this.currentCue === 0) {
-      // show the waiting screen
-      if (window.location.pathname === '/') {
-        this.actionContext.navigate('/waiting')
-        return
-      }
-
-      return
-    }
 
     this.actionContext.navigate(route)
   }

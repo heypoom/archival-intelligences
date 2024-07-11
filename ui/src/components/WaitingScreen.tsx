@@ -1,5 +1,4 @@
 import {useStore} from '@nanostores/react'
-import {createLazyFileRoute} from '@tanstack/react-router'
 import {useCallback, useEffect, useState} from 'react'
 import dayjs from 'dayjs'
 
@@ -7,14 +6,12 @@ import {$exhibitionStatus} from '../store/exhibition'
 
 import {automator} from '../utils/exhibition/exhibition-automator'
 import {hhmmOf, timecodeOf} from '../utils/exhibition/timecode'
+import {useMatchRoute} from '@tanstack/react-router'
 
-export const Route = createLazyFileRoute('/waiting')({
-  component: WaitingRoomRoute,
-})
-
-export function WaitingRoomRoute() {
+export function WaitingRoomScreen() {
   const status = useStore($exhibitionStatus)
   const [countdown, setCountdown] = useState('--:--:--')
+  const mr = useMatchRoute()
 
   const tick = useCallback(() => {
     if (status.type !== 'wait') return
@@ -39,8 +36,12 @@ export function WaitingRoomRoute() {
     return () => clearInterval(timer)
   }, [tick])
 
+  // only show in waiting mode
+  if (status.type !== 'wait') return null
+  if (mr({to: '/'})) return null
+
   return (
-    <div className="flex flex-col items-center justify-center h-full font-mono min-h-screen bg-black text-white gap-y-8">
+    <div className="fixed z-[100] left-0 top-0 flex flex-col items-center justify-center w-full h-full font-mono min-h-screen bg-black text-white gap-y-8">
       <h1 className="text-4xl">Next screening in {countdown}</h1>
     </div>
   )

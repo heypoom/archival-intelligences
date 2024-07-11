@@ -18,11 +18,15 @@ export function HomeRoute() {
 
   // exhibition mode - program
   function startExhibitionProgram() {
+    console.log('--program')
+
     $exhibitionMode.set(true)
     $videoMode.set(false)
     $canPlay.set(true)
     automator.sync({force: true})
     fullscreen()
+
+    go({to: '/zero'})
   }
 
   // exhibition mode - video
@@ -51,20 +55,12 @@ export function HomeRoute() {
     const time = prompt('enter a test time in hh:mm:ss format')
 
     if (time) {
-      automator.mockTime(time)
-
-      if ($videoMode.get()) {
-        setTimeout(() => {
-          go({to: '/video'})
-        }, 150)
-      } else {
-        automator.sync()
-      }
+      setFakeExhibitionOpenTime(time)
     }
   }
 
-  function setFakeExhibitionOpenTime() {
-    automator.mockTime('10:59:55')
+  function setFakeExhibitionOpenTime(time: string) {
+    automator.mockTime(time)
 
     if ($videoMode.get()) {
       setTimeout(() => {
@@ -75,8 +71,8 @@ export function HomeRoute() {
         }, 100)
       }, 150)
     } else {
-      go({to: '/waiting'})
       automator.sync({force: true})
+      go({to: '/zero'})
     }
   }
 
@@ -112,7 +108,7 @@ export function HomeRoute() {
       <div className="space-y-4">
         <div className="flex justify-start items-center gap-x-4 text-xs">
           <button
-            onClick={setFakeExhibitionOpenTime}
+            onClick={() => setFakeExhibitionOpenTime('10:59:55')}
             className="border border-gray-300 text-gray-300 px-3 py-2 text-xs"
           >
             set time to 10:59:55
