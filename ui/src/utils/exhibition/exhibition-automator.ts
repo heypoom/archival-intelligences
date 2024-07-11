@@ -379,6 +379,9 @@ export class ExhibitionAutomator {
   restoreRouteFromCue() {
     const route = routeFromCue(this.currentCue, this.cues)
 
+    // stay in the waiting room.
+    if (this.currentCue === 0) return
+
     this.actionContext.navigate(route)
   }
 
