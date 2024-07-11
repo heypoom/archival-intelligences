@@ -19,6 +19,7 @@ import {match} from 'ts-pattern'
 import {routeFromCue} from './route-from-cue'
 import {IpcAction, IpcMessage, IpcMeta} from '../../store/window-ipc'
 import {resetAll} from './reset'
+import {compareTimecode} from './compare-timecode'
 
 export class ExhibitionAutomator {
   timer: number | null = null
@@ -202,11 +203,10 @@ export class ExhibitionAutomator {
   load = async () => {
     const transcriptCues = await loadTranscriptCue()
 
-    this.cues = [
-      {time: '00:00:00', action: 'start'},
-      ...transcriptCues,
-      ...PART_TWO_CUES,
-    ]
+    this.cues = [...transcriptCues, ...PART_TWO_CUES]
+
+    // make sure the cues are sorted by time!
+    this.cues = this.cues.sort((a, b) => compareTimecode(a.time, b.time))
   }
 
   tick() {

@@ -19,6 +19,7 @@ import {$transcript} from '../../store/dictation'
 import {generateFromPrompt} from '../process-transcript'
 
 import {resetAll} from './reset'
+import {$exhibitionStatus} from '../../store/exhibition'
 
 export interface AutomatorContext {
   next(): void
@@ -46,6 +47,8 @@ export function runAutomationAction(
   match(action)
     .with({action: 'start'}, () => {
       console.log('[start of show]')
+
+      $fadeStatus.set(true)
 
       navigate('/zero')
       resetAll()
@@ -143,8 +146,7 @@ export function runAutomationAction(
       $transcript.set({transcript: action.transcript, final: false})
     })
     .with({action: 'end'}, () => {
-      // navigate('/countdown')
-      console.log('end of show. todo: show a countdown')
+      navigate('/countdown')
     })
     .exhaustive()
 }

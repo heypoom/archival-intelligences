@@ -1,8 +1,8 @@
 import dayjs from 'dayjs'
 
 /**
- * Each screening is about 75 minutes.
- * > I'm planning for the video to be 75 mins in duration.
+ * Each screening is 75 minutes.
+ * Start countdown at 01:15:00.
  **/
 export const SCREENING_DURATION = 75 * 60 * 1000
 
