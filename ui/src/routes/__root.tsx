@@ -12,13 +12,12 @@ import {SettingsButton} from '../components/SettingsButton'
 
 export const Route = createRootRoute({
   component: () => (
-    <>
+    <div className="cursor-none">
       <ExhibitionFallbackVideo />
-
       <Outlet />
       <HeadlessController />
 
-      <div className="fixed flex left-3 bottom-3 z-[10001] gap-x-1">
+      <div className="fixed flex left-3 bottom-3 z-[10001] gap-x-1 cursor-pointer">
         <SettingsButton />
         <CurrentProgramBadge />
         <RegenCountBadge />
@@ -31,6 +30,6 @@ export const Route = createRootRoute({
 
       <FadeToBlack />
       <AnimatedNoise />
-    </>
+    </div>
   ),
 })

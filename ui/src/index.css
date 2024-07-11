@@ -28,3 +28,7 @@ body {
 .fade-in-image {
     animation: fade-in-image-anim 5s ease-in;
 }
+
+.hide-cursor {
+    cursor: none !important;
+}

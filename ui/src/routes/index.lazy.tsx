@@ -81,7 +81,7 @@ export function HomeRoute() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-full font-mono min-h-screen bg-black text-white gap-y-8">
+    <div className="flex flex-col items-center justify-center h-full font-mono min-h-screen bg-black text-white gap-y-8 cursor-default">
       <h1 className="text-2xl">program manager</h1>
 
       <div className="flex flex-col sm:flex-row gap-x-4 gap-y-4">
