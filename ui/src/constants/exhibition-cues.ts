@@ -1,5 +1,7 @@
 import {GladiaWord} from '../types/gladia-transcript'
 
+export const PROGRAM_ZERO_START_TIME = '00:06:52'
+
 export type AutomationAction =
   | {action: 'start'} // start the program
   | {action: 'next'} // go to the next program
@@ -34,7 +36,7 @@ export const PART_TWO_CUES: AutomationCue[] = [
 
   // fade in program zero
   {time: '00:06:49', action: 'navigate', route: '/zero'},
-  {time: '00:06:52', action: 'set-fade-status', fade: false},
+  {time: PROGRAM_ZERO_START_TIME, action: 'set-fade-status', fade: false},
 
   // fade to black, prepare to go to program 1
   {time: '00:32:24', action: 'next'},

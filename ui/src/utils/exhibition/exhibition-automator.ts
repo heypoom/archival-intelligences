@@ -1,6 +1,10 @@
 import dayjs, {Dayjs} from 'dayjs'
 import {nanoid} from 'nanoid'
-import {AutomationCue, PART_TWO_CUES} from '../../constants/exhibition-cues'
+import {
+  AutomationCue,
+  PART_TWO_CUES,
+  PROGRAM_ZERO_START_TIME,
+} from '../../constants/exhibition-cues'
 import {loadTranscriptCue} from './cue-from-transcript'
 import {getCurrentCue} from './get-current-cue'
 import {AutomatorContext, runAutomationAction} from './run-automation-action'
@@ -20,6 +24,7 @@ import {routeFromCue} from './route-from-cue'
 import {IpcAction, IpcMessage, IpcMeta} from '../../store/window-ipc'
 import {resetAll} from './reset'
 import {compareTimecode} from './compare-timecode'
+import {excludeTranscriptionBefore} from './exclude-transcription-before'
 
 export class ExhibitionAutomator {
   timer: number | null = null
@@ -203,7 +208,12 @@ export class ExhibitionAutomator {
   load = async () => {
     const transcriptCues = await loadTranscriptCue()
 
-    this.cues = [...transcriptCues, ...PART_TWO_CUES]
+    // exclude transcription cues before the program start time.
+    const finalCues = transcriptCues
+      .sort((a, b) => compareTimecode(a.time, b.time))
+      .filter(excludeTranscriptionBefore(PROGRAM_ZERO_START_TIME))
+
+    this.cues = [...finalCues, ...PART_TWO_CUES]
 
     // make sure the cues are sorted by time!
     this.cues = this.cues.sort((a, b) => compareTimecode(a.time, b.time))

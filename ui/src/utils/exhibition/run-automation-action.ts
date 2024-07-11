@@ -19,7 +19,6 @@ import {$transcript} from '../../store/dictation'
 import {generateFromPrompt} from '../process-transcript'
 
 import {resetAll} from './reset'
-import {$exhibitionStatus} from '../../store/exhibition'
 
 export interface AutomatorContext {
   next(): void
