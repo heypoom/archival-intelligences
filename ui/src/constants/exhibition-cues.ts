@@ -73,7 +73,7 @@ export const PROGRAM_CUES: AutomationCue[] = [
     action: 'prompt',
     program: 'P2B',
     prompt: 'painting like epic poem of malaya but with more people',
-    guidance: 70,
+    guidance: 60,
   },
 
   // start program 3B
