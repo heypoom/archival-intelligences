@@ -1,4 +1,4 @@
-import React, {useMemo} from 'react'
+import {useMemo} from 'react'
 import {useStore} from '@nanostores/react'
 import {$videoTimestamp, $programTimestamp} from '../store/timestamps'
 import {useIsVideo} from '../hooks/useIsVideo'
