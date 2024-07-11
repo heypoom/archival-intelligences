@@ -147,7 +147,7 @@ export function runAutomationAction(
       $transcript.set({transcript: action.transcript, final: false})
     })
     .with({action: 'end'}, () => {
-      navigate('/countdown')
+      $fadeStatus.set(false)
     })
     .exhaustive()
 }
