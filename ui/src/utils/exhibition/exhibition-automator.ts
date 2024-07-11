@@ -131,6 +131,8 @@ export class ExhibitionAutomator {
       return
     }
 
+    let elapsed = this.elapsed
+
     // if the video is already playing at the same time, do nothing
     if (
       isVideoPlaying(this.videoRef) &&
