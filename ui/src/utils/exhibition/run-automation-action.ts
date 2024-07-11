@@ -4,7 +4,7 @@ import {Tween, Easing} from '@tweenjs/tween.js'
 import {AutomationAction} from '../../constants/exhibition-cues'
 import {$fadeStatus} from '../../store/fader'
 import {$guidance} from '../../store/guidance'
-import {$prompt} from '../../store/prompt'
+import {$generating, $prompt} from '../../store/prompt'
 import {keystrokeStream, getRandomDelay} from './keystroke-stream'
 
 import {
@@ -19,6 +19,8 @@ import {$transcript} from '../../store/dictation'
 import {generateFromPrompt} from '../process-transcript'
 
 import {resetAll} from './reset'
+import {disableRegen} from '../../store/regen'
+import {resetProgress} from '../../store/progress'
 
 export interface AutomatorContext {
   next(): void
@@ -72,6 +74,10 @@ export function runAutomationAction(
       $fadeStatus.set(action.fade)
     })
     .with({action: 'navigate'}, (action) => {
+      $generating.set(false)
+      resetProgress()
+      disableRegen('scene switch')
+
       navigate(action.route)
     })
     .with({action: 'prompt'}, (action) => {
