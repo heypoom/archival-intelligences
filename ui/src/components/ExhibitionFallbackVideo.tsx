@@ -8,6 +8,7 @@ import {automator} from '../utils/exhibition/exhibition-automator'
 
 import {EXHIBITION_VIDEO_SOURCES} from '../constants/exhibition-videos'
 import {useIsVideo} from '../hooks/useIsVideo'
+import {useMatchRoute} from '@tanstack/react-router'
 
 /**
  * When the GPU server crashes, we show a fallback video to the audience.
@@ -16,12 +17,14 @@ export const ExhibitionFallbackVideo = () => {
   const isDisconnected = useStore($disconnected)
   const isExhibitionMode = useStore($exhibitionMode)
   const isVideo = useIsVideo()
+  const mr = useMatchRoute()
   const status = useStore($exhibitionStatus)
 
   const isScreening = status.type === 'active'
 
   if (!isDisconnected) return null
   if (!isExhibitionMode || !isScreening) return null
+  if (mr({to: '/'})) return null
 
   // only show the fallback video if we are in program mode
   if (isVideo) return null
