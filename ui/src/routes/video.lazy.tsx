@@ -6,7 +6,6 @@ import {$exhibitionStatus, $canPlay, $videoMode} from '../store/exhibition'
 import {useStore} from '@nanostores/react'
 import {EXHIBITION_VIDEO_SOURCES} from '../constants/exhibition-videos'
 
-import {fullscreen} from '../utils/commands'
 import {useEffect} from 'react'
 
 export const Route = createLazyFileRoute('/video')({
