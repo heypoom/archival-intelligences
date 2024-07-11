@@ -61,7 +61,7 @@ function VideoRoute() {
         src={EXHIBITION_VIDEO_SOURCES.lecture}
         preload="auto"
         ref={(ref) => ref && automator.initVideo(ref)}
-        className={cx(isVideoShown ? 'opacity-100' : 'opacity-0')}
+        className={cx(isVideoShown ? 'opacity-100' : 'opacity-5')}
         onClick={() => automator.playVideo()}
       ></video>
     </div>
