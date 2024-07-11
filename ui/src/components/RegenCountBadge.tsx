@@ -13,7 +13,7 @@ export function RegenCountBadge() {
   if (!regenActive) return null
 
   return (
-    <div className="bg-[#2d2d30] text-white leading-3 px-[5px] py-[4px] text-xs rounded-md">
+    <div className="bg-[#2d2d30] text-white leading-3 px-[5px] py-[4px] text-xs rounded-md font-mono">
       G{regenCount}
     </div>
   )
