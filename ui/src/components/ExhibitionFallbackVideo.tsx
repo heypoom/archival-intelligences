@@ -27,14 +27,14 @@ export const ExhibitionFallbackVideo = () => {
   if (isVideo) return null
 
   return (
-    <div className="fixed flex flex-col items-center justify-center w-full h-full font-mono min-h-screen bg-black text-white gap-y-8 z-[1001]">
+    <div className="fixed flex flex-col items-center justify-center w-full h-full font-mono min-h-screen bg-black text-white gap-y-8 z-[100002]">
       <video
         src={EXHIBITION_VIDEO_SOURCES.programFallback}
         ref={(ref) => ref && automator.initFallbackVideo(ref)}
         onClick={automator.playFallbackVideo}
       ></video>
 
-      <div className="fixed right-5 bottom-5 w-4 h-4 rounded-full animate-pulse bg-red-500" />
+      <div className="fixed right-5 bottom-5 w-4 h-4 rounded-full animate-pulse bg-red-500 z-[100005]" />
     </div>
   )
 }
