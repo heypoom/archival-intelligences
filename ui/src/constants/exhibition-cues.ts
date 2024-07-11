@@ -57,7 +57,7 @@ export const PROGRAM_CUES: AutomationCue[] = [
     commit: false,
   },
 
-  // slide to 0%
+  // slide to 0p%
   {time: '00:42:37', action: 'move-slider', value: 0, program: 'P2'},
 
   // slide to 70%

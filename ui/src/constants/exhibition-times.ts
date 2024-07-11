@@ -30,7 +30,8 @@ export function getExhibitionTimes() {
   ]
 
   // We show the exhibition at 20:00 on the vernissage
-  if (isVernissage()) EXHIBITION_TIMES.push('20:00')
+  // if (isVernissage()) EXHIBITION_TIMES.push('20:00')
+  EXHIBITION_TIMES.push('20:00')
 
   return EXHIBITION_TIMES
 }
