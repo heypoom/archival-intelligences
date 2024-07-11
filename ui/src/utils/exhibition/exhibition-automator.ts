@@ -8,7 +8,11 @@ import {
 } from '../../constants/exhibition-cues'
 import {loadTranscriptCue} from './cue-from-transcript'
 import {getCurrentCue} from './get-current-cue'
-import {AutomatorContext, runAutomationAction} from './run-automation-action'
+import {
+  AutomatorContext,
+  runAutomationAction,
+  runScreeningStartTask,
+} from './run-automation-action'
 
 import {secOf, timecodeOf, hhmmOf, hhmmssOf} from './timecode'
 
@@ -26,6 +30,7 @@ import {IpcAction, IpcMessage, IpcMeta} from '../../store/window-ipc'
 import {resetAll} from './reset'
 import {compareTimecode} from './compare-timecode'
 import {transcriptWithinTimeRange} from './exclude-transcription-before'
+import {$fadeStatus} from '../../store/fader'
 
 export class ExhibitionAutomator {
   timer: number | null = null
@@ -346,9 +351,14 @@ export class ExhibitionAutomator {
       resetAll()
       this.seekCue(timecodeOf(this.elapsed))
 
-      if (automator.timer === null) automator.startClock()
+      // play cue zero
+      if (this.currentCue === 0) {
+        runScreeningStartTask()
 
-      this.sendIpcAction({type: 'play', elapsed: this.elapsed})
+        this.actionContext.navigate('/zero')
+      }
+
+      if (automator.timer === null) automator.startClock()
     }
 
     match(next.type)

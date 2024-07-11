@@ -32,6 +32,13 @@ const W_SAMPLING_DELAY_MS = 70
 const W_SAMPLING_LIMIT = 100000
 const W_MIN_WORDS_FOR_TYPING = 1
 
+export function runScreeningStartTask() {
+  console.log('[start of show]')
+  resetAll()
+
+  $fadeStatus.set(true)
+}
+
 export function runAutomationAction(
   action: AutomationAction,
   context: AutomatorContext
@@ -45,12 +52,8 @@ export function runAutomationAction(
 
   match(action)
     .with({action: 'start'}, () => {
-      console.log('[start of show]')
-
-      $fadeStatus.set(true)
-
+      runScreeningStartTask()
       navigate('/zero')
-      resetAll()
     })
     .with({action: 'move-slider'}, (action) => {
       const guidance = {value: $guidance.get()}
