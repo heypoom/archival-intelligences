@@ -2,7 +2,8 @@ import dayjs, {Dayjs} from 'dayjs'
 import {nanoid} from 'nanoid'
 import {
   AutomationCue,
-  PART_TWO_CUES,
+  PROGRAM_CUES,
+  PROGRAM_ZERO_END_TIME,
   PROGRAM_ZERO_START_TIME,
 } from '../../constants/exhibition-cues'
 import {loadTranscriptCue} from './cue-from-transcript'
@@ -24,7 +25,7 @@ import {routeFromCue} from './route-from-cue'
 import {IpcAction, IpcMessage, IpcMeta} from '../../store/window-ipc'
 import {resetAll} from './reset'
 import {compareTimecode} from './compare-timecode'
-import {excludeTranscriptionBefore} from './exclude-transcription-before'
+import {transcriptWithinTimeRange} from './exclude-transcription-before'
 
 export class ExhibitionAutomator {
   timer: number | null = null
@@ -208,14 +209,19 @@ export class ExhibitionAutomator {
   }
 
   load = async () => {
-    const transcriptCues = await loadTranscriptCue()
+    let transcriptCues = await loadTranscriptCue()
+
+    const rangeFilter = transcriptWithinTimeRange(
+      PROGRAM_ZERO_START_TIME,
+      PROGRAM_ZERO_END_TIME
+    )
 
     // exclude transcription cues before the program start time.
-    const finalCues = transcriptCues
+    transcriptCues = transcriptCues
       .sort((a, b) => compareTimecode(a.time, b.time))
-      .filter(excludeTranscriptionBefore(PROGRAM_ZERO_START_TIME))
+      .filter(rangeFilter)
 
-    this.cues = [...finalCues, ...PART_TWO_CUES]
+    this.cues = [...transcriptCues, ...PROGRAM_CUES]
 
     // make sure the cues are sorted by time!
     this.cues = this.cues.sort((a, b) => compareTimecode(a.time, b.time))

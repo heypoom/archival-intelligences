@@ -1,6 +1,7 @@
 import {GladiaWord} from '../types/gladia-transcript'
 
 export const PROGRAM_ZERO_START_TIME = '00:06:52'
+export const PROGRAM_ZERO_END_TIME = '00:32:24'
 
 export type AutomationAction =
   | {action: 'start'} // start the program
@@ -30,7 +31,7 @@ export type AutomationAction =
 export type AutomationCue = AutomationAction & {time: string}
 
 // Must be sorted by time with the transcription cues before use.
-export const PART_TWO_CUES: AutomationCue[] = [
+export const PROGRAM_CUES: AutomationCue[] = [
   // we start at 00:00:00
   {time: '00:00:00', action: 'start'},
 
@@ -39,7 +40,7 @@ export const PART_TWO_CUES: AutomationCue[] = [
   {time: PROGRAM_ZERO_START_TIME, action: 'set-fade-status', fade: false},
 
   // fade to black, prepare to go to program 1
-  {time: '00:32:24', action: 'next'},
+  {time: PROGRAM_ZERO_END_TIME, action: 'next'},
 
   // start program 1
   {time: '00:34:05', action: 'next'},
