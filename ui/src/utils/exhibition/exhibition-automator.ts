@@ -353,8 +353,6 @@ export class ExhibitionAutomator {
       // play cue zero
       if (this.currentCue === 0) {
         runScreeningStartTask()
-
-        this.actionContext.navigate('/zero')
       }
 
       if (automator.timer === null) automator.startClock()

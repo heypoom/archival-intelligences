@@ -53,7 +53,6 @@ export function runAutomationAction(
   match(action)
     .with({action: 'start'}, () => {
       runScreeningStartTask()
-      navigate('/zero')
     })
     .with({action: 'move-slider'}, (action) => {
       const guidance = {value: $guidance.get()}
