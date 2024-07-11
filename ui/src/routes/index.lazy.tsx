@@ -4,16 +4,18 @@ import {automator} from '../utils/exhibition/exhibition-automator'
 import {useEffect} from 'react'
 import {resetAll} from '../utils/exhibition/reset'
 import {fullscreen} from '../utils/commands'
+import {$fadeStatus} from '../store/fader'
 
 export const Route = createLazyFileRoute('/')({
-  component: HomeRoute,
+  component: SettingsRoute,
 })
 
-export function HomeRoute() {
+export function SettingsRoute() {
   const go = useNavigate()
 
   useEffect(() => {
     resetAll()
+    $fadeStatus.set(false)
   }, [])
 
   // exhibition mode - program

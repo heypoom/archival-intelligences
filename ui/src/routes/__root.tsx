@@ -23,7 +23,7 @@ export const Route = createRootRoute({
       <Outlet />
       <HeadlessController />
 
-      <div className="fixed flex left-3 bottom-3 z-[100002] gap-x-1">
+      <div className="fixed flex left-3 bottom-3 z-[100000] gap-x-1">
         <SettingsButton />
         <CurrentProgramBadge />
         <RegenCountBadge />

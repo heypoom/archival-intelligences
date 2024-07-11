@@ -33,6 +33,7 @@ import {transcriptWithinTimeRange} from './exclude-transcription-before'
 
 export class ExhibitionAutomator {
   timer: number | null = null
+  driftTimer: number | null = null
 
   cues: AutomationCue[] = []
   currentCue = -1
@@ -193,6 +194,33 @@ export class ExhibitionAutomator {
     this.ipc.postMessage(message)
   }
 
+  // How much is the current cue lagging behind the actual time?
+  getCueDrift() {
+    if (this.currentCue === -1) return
+
+    const cueTime = secOf(this.cues[this.currentCue].time)
+    const elapsed = this.elapsed
+
+    return elapsed - cueTime
+  }
+
+  fixCueDrift() {
+    const drift = this.getCueDrift()
+    if (drift === undefined) return
+
+    if (Math.abs(drift) > 1) {
+      const from = this.currentCue
+      // this.seekCue(timecodeOf(this.elapsed))
+
+      const to = this.currentCue
+      const diff = to - from
+
+      console.log(
+        `[cue drift] by ${drift}s, jumped ${diff} cue (${from} to ${to})`
+      )
+    }
+  }
+
   startClock() {
     if (this.timer) {
       this.stopClock()
@@ -203,11 +231,18 @@ export class ExhibitionAutomator {
     this.timer = setInterval(() => {
       this.tick()
     }, 500)
+
+    this.driftTimer = setInterval(() => {
+      this.fixCueDrift()
+    }, 3000)
   }
 
   stopClock() {
     if (this.timer !== null) clearInterval(this.timer)
     this.timer = null
+
+    if (this.driftTimer !== null) clearInterval(this.driftTimer)
+    this.driftTimer = null
 
     console.log(`> clock stopped`)
   }
