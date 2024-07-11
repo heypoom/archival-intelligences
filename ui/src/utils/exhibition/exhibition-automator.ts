@@ -202,7 +202,7 @@ export class ExhibitionAutomator {
 
     this.timer = setInterval(() => {
       this.tick()
-    }, 1000)
+    }, 500)
   }
 
   stopClock() {
