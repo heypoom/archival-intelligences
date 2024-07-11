@@ -30,6 +30,7 @@ import {IpcAction, IpcMessage, IpcMeta} from '../../store/window-ipc'
 import {resetAll} from './reset'
 import {compareTimecode} from './compare-timecode'
 import {transcriptWithinTimeRange} from './exclude-transcription-before'
+import {$programTimestamp} from '../../store/timestamps'
 
 export class ExhibitionAutomator {
   timer: number | null = null
@@ -273,6 +274,8 @@ export class ExhibitionAutomator {
 
   tick() {
     if (this.canGo()) this.go()
+
+    $programTimestamp.set(this.elapsed)
   }
 
   go() {

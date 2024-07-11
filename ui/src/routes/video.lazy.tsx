@@ -1,12 +1,14 @@
+import {useEffect} from 'react'
 import {createLazyFileRoute} from '@tanstack/react-router'
 import cx from 'classnames'
+import {useStore} from '@nanostores/react'
+
+import {$videoTimestamp} from '../store/timestamps'
 
 import {automator} from '../utils/exhibition/exhibition-automator'
 import {$exhibitionStatus, $canPlay, $videoMode} from '../store/exhibition'
-import {useStore} from '@nanostores/react'
-import {EXHIBITION_VIDEO_SOURCES} from '../constants/exhibition-videos'
 
-import {useEffect} from 'react'
+import {EXHIBITION_VIDEO_SOURCES} from '../constants/exhibition-videos'
 
 export const Route = createLazyFileRoute('/video')({
   component: VideoRoute,
@@ -66,6 +68,7 @@ function VideoRoute() {
           isVideoShown ? 'opacity-100' : 'opacity-5'
         )}
         onClick={() => automator.playVideo()}
+        onTimeUpdate={(e) => $videoTimestamp.set(e.currentTarget.currentTime)}
       ></video>
     </div>
   )

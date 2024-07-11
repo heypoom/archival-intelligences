@@ -12,6 +12,7 @@ import {SettingsButton} from '../components/SettingsButton'
 import {ProgramErrorBoundary} from '../components/ErrorBoundary'
 import {WaitingRoomScreen} from '../components/WaitingScreen'
 import {ClosedScreen} from '../components/ClosedScreen'
+import {ProgramTimeBadge} from '../components/CurrentTimeBadge'
 
 export const Route = createRootRoute({
   component: () => (
@@ -23,11 +24,12 @@ export const Route = createRootRoute({
       <Outlet />
       <HeadlessController />
 
-      <div className="fixed flex left-3 bottom-3 z-[100000] gap-x-1">
+      <div className="fixed flex left-3 bottom-3 z-[1000000] gap-x-1">
         <SettingsButton />
         <CurrentProgramBadge />
         <RegenCountBadge />
         <ProgressBadge />
+        <ProgramTimeBadge />
       </div>
 
       <div className="fixed right-3 bottom-3 z-10">
