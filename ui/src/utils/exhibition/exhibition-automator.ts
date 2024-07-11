@@ -208,16 +208,21 @@ export class ExhibitionAutomator {
     const drift = this.getCueDrift()
     if (drift === undefined) return
 
+    // do not address the drift if we are at the very first cues
+    if (this.currentCue < 2) return
+
     if (Math.abs(drift) > 1) {
       const from = this.currentCue
-      // this.seekCue(timecodeOf(this.elapsed))
+      this.seekCue(timecodeOf(this.elapsed))
 
       const to = this.currentCue
       const diff = to - from
 
-      console.log(
-        `[cue drift] by ${drift}s, jumped ${diff} cue (${from} to ${to})`
-      )
+      if (diff > 0) {
+        console.log(
+          `[cue drift] by ${drift}s, jumped ${diff} cue (${from} to ${to})`
+        )
+      }
     }
   }
 
