@@ -64,7 +64,7 @@ export function HomeRoute() {
   }
 
   function setFakeExhibitionOpenTime() {
-    automator.mockTime('10:59:50')
+    automator.mockTime('10:59:55')
 
     if ($videoMode.get()) {
       setTimeout(() => {
@@ -115,7 +115,7 @@ export function HomeRoute() {
             onClick={setFakeExhibitionOpenTime}
             className="border border-gray-300 text-gray-300 px-3 py-2 text-xs"
           >
-            set time to 10:59:50
+            set time to 10:59:55
           </button>
 
           <div>simulate when the first screening round is opening</div>
