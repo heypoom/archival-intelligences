@@ -29,8 +29,7 @@ function VideoRoute() {
         <div
           className="flex items-center justify-center absolute w-full h-full z-50 bg-black bg-opacity-70 cursor-pointer"
           onClick={() => {
-            automator.playVideo(null)
-            fullscreen()
+            automator.playVideo()
           }}
         >
           <div className="border border-green-300 text-green-300 px-4 py-2">
@@ -44,7 +43,7 @@ function VideoRoute() {
         preload="auto"
         ref={(ref) => ref && automator.initVideo(ref)}
         className={cx(isVideoShown ? 'opacity-100' : 'opacity-0')}
-        onClick={() => automator.playVideo(null)}
+        onClick={() => automator.playVideo()}
       ></video>
     </div>
   )

@@ -122,7 +122,7 @@ export class ExhibitionAutomator {
     //   .exhaustive()
   }
 
-  async playVideo(elapsed: number | null) {
+  async playVideo() {
     if (!this.isVideo) return
 
     // if the video element is not ready, do nothing
@@ -297,7 +297,7 @@ export class ExhibitionAutomator {
     return window.location.href.includes('/video') || $videoMode.get()
   }
 
-  sync(options: {force?: boolean; elapsed?: number} = {}) {
+  sync(options: {force?: boolean} = {}) {
     const {force = false} = options
 
     // only activate when in exhibition mode
@@ -323,7 +323,7 @@ export class ExhibitionAutomator {
       console.log(`[is video]`)
 
       setTimeout(() => {
-        automator.playVideo(options.elapsed ?? null)
+        automator.playVideo()
       }, 200)
 
       return
