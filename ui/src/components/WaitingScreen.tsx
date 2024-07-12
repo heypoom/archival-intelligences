@@ -3,7 +3,7 @@ import {useCallback, useEffect, useState} from 'react'
 import dayjs from 'dayjs'
 import cx from 'classnames'
 
-import {$exhibitionStatus} from '../store/exhibition'
+import {$exhibitionMode, $exhibitionStatus} from '../store/exhibition'
 
 import {automator} from '../utils/exhibition/exhibition-automator'
 import {hhmmOf, timecodeOf} from '../utils/exhibition/timecode'
@@ -13,6 +13,7 @@ export function WaitingRoomScreen() {
   const status = useStore($exhibitionStatus)
   const [countdown, setCountdown] = useState('--:--:--')
   const mr = useMatchRoute()
+  const isExhibition = useStore($exhibitionMode)
 
   const tick = useCallback(() => {
     if (status.type !== 'wait') return
@@ -36,6 +37,8 @@ export function WaitingRoomScreen() {
 
     return () => clearInterval(timer)
   }, [tick])
+
+  if (!isExhibition) return null
 
   if (mr({to: '/'})) return null
 

@@ -1,11 +1,14 @@
 import {useStore} from '@nanostores/react'
-import {$exhibitionStatus} from '../store/exhibition'
+import {$exhibitionMode, $exhibitionStatus} from '../store/exhibition'
 import {useMatchRoute} from '@tanstack/react-router'
 
 export function ClosedScreen() {
   const status = useStore($exhibitionStatus)
   const mr = useMatchRoute()
 
+  const isExhibition = useStore($exhibitionMode)
+
+  if (!isExhibition) return null
   if (status.type !== 'closed') return null
   if (mr({to: '/'})) return null
 

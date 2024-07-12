@@ -5,6 +5,7 @@ import {useEffect} from 'react'
 import {resetAll} from '../utils/exhibition/reset'
 import {fullscreen} from '../utils/commands'
 import {$fadeStatus} from '../store/fader'
+import {socket} from '../manager/socket'
 
 export const Route = createLazyFileRoute('/')({
   component: SettingsRoute,
@@ -20,9 +21,9 @@ export function SettingsRoute() {
 
   // exhibition mode - program
   function startExhibitionProgram() {
-    console.log('--program')
-
     $exhibitionMode.set(true)
+    socket.reconnectSoon('program change - exhibition', 10)
+
     $videoMode.set(false)
     $canPlay.set(true)
     automator.sync({force: true})
@@ -34,7 +35,10 @@ export function SettingsRoute() {
   // exhibition mode - video
   function startExhibitionVideo() {
     go({to: '/video'})
+
     $exhibitionMode.set(true)
+    socket.reconnectSoon('program change - video', 10)
+
     $videoMode.set(true)
     $canPlay.set(true)
     automator.sync({force: true})
@@ -44,6 +48,11 @@ export function SettingsRoute() {
   // performance lecture mode
   function startLiveLecture() {
     $exhibitionMode.set(false)
+    $videoMode.set(false)
+    socket.reconnectSoon('program change - lecture', 10)
+
+    resetAll()
+
     $canPlay.set(true)
     automator.stopClock()
     fullscreen()
