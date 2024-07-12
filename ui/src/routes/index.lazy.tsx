@@ -62,6 +62,7 @@ export function SettingsRoute() {
   }
 
   function setFakeExhibitionOpenTime(time: string) {
+    resetAll()
     automator.mockTime(time)
 
     if ($videoMode.get()) {
