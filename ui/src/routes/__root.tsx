@@ -17,13 +17,6 @@ import {ProgramTimeBadge} from '../components/CurrentTimeBadge'
 export const Route = createRootRoute({
   component: () => (
     <ProgramErrorBoundary>
-      <WaitingRoomScreen />
-      <ClosedScreen />
-
-      <ExhibitionFallbackVideo />
-      <Outlet />
-      <HeadlessController />
-
       <div className="fixed flex left-3 bottom-3 z-[1000000] gap-x-1">
         <SettingsButton />
         <CurrentProgramBadge />
@@ -32,12 +25,20 @@ export const Route = createRootRoute({
         <ProgramTimeBadge />
       </div>
 
+      <FadeToBlack />
+
+      <WaitingRoomScreen />
+      <ClosedScreen />
+      <ExhibitionFallbackVideo />
+
+      <Outlet />
+
       <div className="fixed right-3 bottom-3 z-10">
         <StatusIndicator />
       </div>
 
-      <FadeToBlack />
       <AnimatedNoise />
+      <HeadlessController />
     </ProgramErrorBoundary>
   ),
 })

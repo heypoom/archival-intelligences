@@ -1,6 +1,7 @@
 import {useStore} from '@nanostores/react'
 import {useCallback, useEffect, useState} from 'react'
 import dayjs from 'dayjs'
+import cx from 'classnames'
 
 import {$exhibitionStatus} from '../store/exhibition'
 
@@ -36,12 +37,15 @@ export function WaitingRoomScreen() {
     return () => clearInterval(timer)
   }, [tick])
 
-  // only show in waiting mode
-  if (status.type !== 'wait') return null
   if (mr({to: '/'})) return null
 
   return (
-    <div className="fixed z-[100] left-0 top-0 flex flex-col items-center justify-center w-full h-full font-mono min-h-screen bg-black text-white gap-y-8">
+    <div
+      className={cx(
+        'fixed z-[100] left-0 top-0 flex flex-col items-center justify-center w-full h-full font-mono min-h-screen bg-black text-white gap-y-8 transition-opacity duration-[5s] ease-in-out',
+        status.type === 'wait' ? 'opacity-100' : 'opacity-0 pointer-events-none'
+      )}
+    >
       <h1 className="text-4xl">Next screening in {countdown}</h1>
     </div>
   )
