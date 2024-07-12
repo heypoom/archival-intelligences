@@ -1,20 +1,27 @@
-import {$disconnected} from '../store/exhibition'
+import {$disconnected, $exhibitionMode} from '../store/exhibition'
 import {$startTimestep, $timestep, resetProgress} from '../store/progress'
 import {$apiReady, $generating, $inferencePreview} from '../store/prompt'
-
-// ruian-sg-api.poom.dev = ws://35.247.139.252:8000/ws
-const REMOTE_WS_URL = 'wss://ruian-sg-api.poom.dev/ws'
 
 /** After 8 seconds of no activity, consider the connection dead */
 const DISCONNECT_TIMEOUT = 8 * 1000
 
+const EXHIBITION_ENDPOINT = 'wss://ruian-sg-api.poom.dev/ws'
+const LIVE_LECTURE_ENDPOINT = 'wss://live-lecture-api.poom.dev'
+
 class SocketManager {
   sock: WebSocket
-  url = REMOTE_WS_URL
   disconnectTimer?: number
 
   constructor() {
     this.sock = this.createWs()
+  }
+
+  get url(): string {
+    if ($exhibitionMode.get()) {
+      return EXHIBITION_ENDPOINT
+    } else {
+      return LIVE_LECTURE_ENDPOINT
+    }
   }
 
   createWs() {
