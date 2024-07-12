@@ -1,13 +1,13 @@
-// import dayjs from 'dayjs'
+import dayjs from 'dayjs'
 
-/**
- * Each screening is 75 minutes.
- * Start countdown at 01:15:00.
- **/
-export const SCREENING_DURATION = 75 * 60 * 1000
+import {SCREENING_END_TIME} from './exhibition-cues'
+
+import {secOf} from '../utils/exhibition/timecode'
+
+export const SCREENING_DURATION = secOf(SCREENING_END_TIME) * 1000
 
 // Vernissage is July 12th
-// const isVernissage = (): boolean => dayjs().format('MM-DD') === '07-12'
+const isVernissage = (): boolean => dayjs().format('MM-DD') === '07-12'
 
 /**
  * To better manage the viewing process, I'm thinking of having the video restart every 90 mins,
@@ -30,8 +30,7 @@ export function getExhibitionTimes() {
   ]
 
   // We show the exhibition at 20:00 on the vernissage
-  // if (isVernissage()) EXHIBITION_TIMES.push('20:00')
-  EXHIBITION_TIMES.push('20:00')
+  if (isVernissage()) EXHIBITION_TIMES.push('20:00')
 
   return EXHIBITION_TIMES
 }

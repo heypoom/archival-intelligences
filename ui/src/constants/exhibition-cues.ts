@@ -2,6 +2,7 @@ import {GladiaWord} from '../types/gladia-transcript'
 
 export const PROGRAM_ZERO_START_TIME = '00:06:52'
 export const PROGRAM_ZERO_END_TIME = '00:32:24'
+export const SCREENING_END_TIME = '01:12:30'
 
 export type AutomationAction =
   | {action: 'start'} // start the program
@@ -134,7 +135,7 @@ export const PROGRAM_CUES: AutomationCue[] = [
 
   // type prompt
   {
-    time: '01:09:54',
+    time: '01:09:10',
     action: 'prompt',
     program: 'P4',
     prompt: 'stable diffusion',
@@ -143,13 +144,13 @@ export const PROGRAM_CUES: AutomationCue[] = [
 
   // fade to black
   {
-    time: '01:12:00',
+    time: '01:11:20',
     action: 'set-fade-status',
     fade: true,
   },
 
   {
-    time: '01:15:00',
+    time: SCREENING_END_TIME,
     action: 'end',
   },
 ]
