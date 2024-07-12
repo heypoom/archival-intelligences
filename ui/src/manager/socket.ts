@@ -26,6 +26,7 @@ class SocketManager {
 
   createWs() {
     const ws = new WebSocket(this.url)
+    this.startDisconnectionTimer()
 
     this.sock = ws
     this.addListeners()
@@ -42,6 +43,10 @@ class SocketManager {
     $generating.set(false)
     resetProgress()
 
+    this.startDisconnectionTimer()
+  }
+
+  startDisconnectionTimer() {
     if (this.disconnectTimer === undefined) {
       this.disconnectTimer = setTimeout(() => {
         // connection is dead
@@ -49,6 +54,11 @@ class SocketManager {
         $disconnected.set(true)
       }, DISCONNECT_TIMEOUT)
     }
+  }
+
+  clearDisconnectionTimer() {
+    clearTimeout(this.disconnectTimer)
+    this.disconnectTimer = undefined
   }
 
   addListeners() {
@@ -131,8 +141,7 @@ class SocketManager {
     $apiReady.set(true)
     $disconnected.set(false)
 
-    clearTimeout(this.disconnectTimer)
-    this.disconnectTimer = undefined
+    this.clearDisconnectionTimer()
   }
 
   reconnectSoon(reason?: string, delay = 5000, flags?: {shutup?: boolean}) {
