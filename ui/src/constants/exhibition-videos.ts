@@ -3,5 +3,5 @@ export const EXHIBITION_VIDEO_SOURCES = {
   lecture: 'https://images.poom.dev/history-v3-fast.mp4',
 
   // Emergency fallback video shown when the GPU server crashes
-  programFallback: 'https://images.poom.dev/history-v3-fast.mp4',
+  programFallback: 'https://images.poom.dev/exhibition-fallback-v1-fast.mp4',
 } as const
