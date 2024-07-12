@@ -312,8 +312,10 @@ export class ExhibitionAutomator {
 
     const [cue] = seq
 
-    console.log(`seeking to cue ${cue} | t=${time}`)
-    this.currentCue = cue
+    if (this.currentCue !== cue) {
+      this.currentCue = cue
+      console.log(`seeking to cue ${cue} | t=${time}`)
+    }
   }
 
   get elapsed(): number {
