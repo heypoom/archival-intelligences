@@ -1,14 +1,17 @@
+import {useEffect} from 'react'
 import {useStore} from '@nanostores/react'
+import {useMatchRoute} from '@tanstack/react-router'
+
 import {
   $disconnected,
   $exhibitionMode,
   $exhibitionStatus,
 } from '../store/exhibition'
+
 import {automator} from '../utils/exhibition/exhibition-automator'
 
 import {EXHIBITION_VIDEO_SOURCES} from '../constants/exhibition-videos'
 import {useIsVideo} from '../hooks/useIsVideo'
-import {useMatchRoute} from '@tanstack/react-router'
 
 /**
  * When the GPU server crashes, we show a fallback video to the audience.
@@ -22,12 +25,38 @@ export const ExhibitionFallbackVideo = () => {
 
   const isScreening = status.type === 'active'
 
-  if (!isDisconnected) return null
-  if (!isExhibitionMode || !isScreening) return null
-  if (mr({to: '/'})) return null
+  const hideFallback =
+    isVideo ||
+    !isDisconnected ||
+    !isExhibitionMode ||
+    !isScreening ||
+    !!mr({to: '/'})
 
-  // only show the fallback video if we are in program mode
-  if (isVideo) return null
+  useEffect(() => {
+    let timer: number | undefined = undefined
+
+    if (!hideFallback) {
+      timer = setInterval(() => {
+        if (!automator.fallbackVideoRef) return
+        if (automator.fallbackVideoRef.readyState < 3) return
+
+        const actualTime = automator.fallbackVideoRef.currentTime
+        const expectedTime = automator.elapsed
+        const drift = actualTime - expectedTime
+
+        if (Math.abs(drift) > 1.5) {
+          automator.fallbackVideoRef.currentTime = expectedTime
+          console.log(`[video] drift by ${drift}s`)
+        }
+      }, 1000)
+    }
+
+    return () => {
+      clearInterval(timer)
+    }
+  }, [hideFallback])
+
+  if (hideFallback) return null
 
   return (
     <div className="fixed flex flex-col items-center justify-center w-full h-full font-mono min-h-screen bg-black text-white gap-y-8 z-[100002]">

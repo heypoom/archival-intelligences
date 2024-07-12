@@ -26,6 +26,7 @@ class SocketManager {
 
   createWs() {
     const ws = new WebSocket(this.url)
+
     this.sock = ws
     this.addListeners()
 
