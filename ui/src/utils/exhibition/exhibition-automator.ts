@@ -22,6 +22,7 @@ import {
   $exhibitionStatus,
   $canPlay,
   $videoMode,
+  $muted,
 } from '../../store/exhibition'
 import {getExhibitionStatus} from './get-exhibition-status'
 import {match} from 'ts-pattern'
@@ -179,8 +180,33 @@ export class ExhibitionAutomator {
     } catch (err) {
       console.log(`[cannot play video]`, err)
 
-      // something is wrong with the auto-play policy
-      $canPlay.set(false)
+      // try a "muted autoplay" instead
+      await this.tryMutedAutoplay()
+    }
+  }
+
+  async tryMutedAutoplay() {
+    if (!this.videoRef) return
+
+    this.videoRef.muted = true
+    $muted.set(true)
+
+    await this.videoRef.play()
+
+    // something is wrong with the auto-play policy
+    $canPlay.set(false)
+  }
+
+  async unmuteVideo() {
+    if (!this.videoRef) return
+
+    this.videoRef.muted = false
+
+    $muted.set(false)
+    $canPlay.set(true)
+
+    if (!isVideoPlaying(this.videoRef)) {
+      await this.videoRef.play()
     }
   }
 

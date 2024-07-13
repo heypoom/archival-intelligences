@@ -17,5 +17,6 @@ export const $videoMode = atom(false)
 
 // assume autoplay policy is enabled by default
 export const $canPlay = atom(true)
+export const $muted = atom(false)
 
 export const $disconnected = atom(false)

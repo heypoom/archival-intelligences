@@ -64,6 +64,7 @@ export const ExhibitionFallbackVideo = () => {
         src={EXHIBITION_VIDEO_SOURCES.programFallback}
         ref={(ref) => ref && automator.initFallbackVideo(ref)}
         onClick={automator.playFallbackVideo}
+        muted
       ></video>
 
       <div className="fixed right-5 bottom-5 w-4 h-4 rounded-full animate-pulse bg-red-500 z-[100005]" />
