@@ -1,4 +1,4 @@
-import {useEffect} from 'react'
+import {useEffect, useState} from 'react'
 import {createLazyFileRoute} from '@tanstack/react-router'
 import cx from 'classnames'
 import {useStore} from '@nanostores/react'
@@ -25,6 +25,8 @@ function VideoRoute() {
   const canPlay = useStore($canPlay)
   const isMuted = useStore($muted)
 
+  const [isVideoLoading, setVideoLoading] = useState(true)
+
   const isVideoShown = status.type === 'active'
 
   useEffect(() => {
@@ -36,11 +38,13 @@ function VideoRoute() {
       if (!automator.videoRef) return
       if (automator.videoRef.readyState < 3) return
 
+      setVideoLoading(false)
+
       const actualTime = automator.videoRef.currentTime
       const expectedTime = automator.elapsed
       const drift = actualTime - expectedTime
 
-      if (Math.abs(drift) > 1.5) {
+      if (Math.abs(drift) > 1) {
         automator.videoRef.currentTime = expectedTime
         console.log(`[video] drift by ${drift}s`)
       }
@@ -62,6 +66,18 @@ function VideoRoute() {
         >
           <div className="border border-green-300 text-green-300 px-4 py-2">
             click anywhere to allow video to play
+          </div>
+        </div>
+      )}
+
+      {isVideoLoading && (
+        <div className="flex items-center justify-center absolute w-full h-full z-50 cursor-pointer">
+          <div className="flex items-center justify-center gap-x-6 absolute bottom-5 bg-gray-900 px-6 py-1 rounded-xl">
+            <div className="">
+              <Icon icon="lucide:loader" fontSize={40} />
+            </div>
+
+            <div className="">video is loading...</div>
           </div>
         </div>
       )}

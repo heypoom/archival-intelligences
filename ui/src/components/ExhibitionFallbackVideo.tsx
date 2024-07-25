@@ -44,7 +44,7 @@ export const ExhibitionFallbackVideo = () => {
         const expectedTime = automator.elapsed
         const drift = actualTime - expectedTime
 
-        if (Math.abs(drift) > 1.5) {
+        if (Math.abs(drift) > 1) {
           automator.fallbackVideoRef.currentTime = expectedTime
           console.log(`[video] drift by ${drift}s`)
         }
