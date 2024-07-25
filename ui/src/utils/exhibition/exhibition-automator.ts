@@ -32,6 +32,7 @@ import {resetAll} from './reset'
 import {compareTimecode} from './compare-timecode'
 import {transcriptWithinTimeRange} from './exclude-transcription-before'
 import {$programTimestamp} from '../../store/timestamps'
+import {getServerTimeDrift} from './get-system-time-drift'
 
 export class ExhibitionAutomator {
   timer: number | null = null
@@ -39,6 +40,9 @@ export class ExhibitionAutomator {
 
   cues: AutomationCue[] = []
   currentCue = -1
+
+  // singapore usually drifts by 2 seconds
+  timeDrift: number = 2
 
   private startTime: Dayjs | null = null
 
@@ -51,7 +55,7 @@ export class ExhibitionAutomator {
   fallbackVideoRef: HTMLVideoElement | null = null
 
   // allows emulation of time
-  now = () => new Date()
+  now = () => new Date(new Date().getTime() + this.timeDrift)
 
   dynamicMockedTime: string | null = null
 
@@ -69,7 +73,20 @@ export class ExhibitionAutomator {
     }
   }
 
+  async computeDrift() {
+    try {
+      const medianDrift = await getServerTimeDrift()
+      this.timeDrift = medianDrift
+
+      console.log(`Final result: Median drift is ${medianDrift}ms`)
+    } catch (error) {
+      console.error('Error:', error)
+    }
+  }
+
   async setup() {
+    this.computeDrift()
+
     this.ipc.addEventListener('message', this.onIpcMessage)
 
     // send the ping message to discover other windows
