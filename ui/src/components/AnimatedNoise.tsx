@@ -40,7 +40,12 @@ export const AnimatedNoise = () => {
   return (
     <div
       className="z-0 fixed w-screen h-screen top-0 left-0"
-      style={{filter: 'blur(8px) brightness(50%)'}}
+      style={
+        {
+          filter: 'blur(8px) brightness(50%)',
+          '-webkit-filter': 'blur(8px) brightness(50%)',
+        } as any
+      }
     >
       <canvas ref={canvasRef} className="w-screen h-screen" />
     </div>
