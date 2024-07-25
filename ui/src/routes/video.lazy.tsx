@@ -19,7 +19,6 @@ import {EXHIBITION_VIDEO_SOURCES} from '../constants/exhibition-videos'
 export const Route = createLazyFileRoute('/video')({
   component: VideoRoute,
 })
-
 function VideoRoute() {
   const status = useStore($exhibitionStatus)
   const canPlay = useStore($canPlay)

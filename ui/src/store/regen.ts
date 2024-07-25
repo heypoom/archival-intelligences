@@ -40,7 +40,7 @@ export function regen(command: string, prompt: string, origin = true) {
         `[gen] progress at ${progress}% is not complete yet, we wait.`
       )
     } else {
-      socket.sock.send(`${command}:${prompt}`)
+      // socket.sock.send(`${command}:${prompt}`)
       $generating.set(true)
 
       const gen = $regenCount.get()

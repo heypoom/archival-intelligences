@@ -9,7 +9,7 @@ export async function generateFromPrompt(prompt: string) {
     console.log(`[GENERATING] ${prompt}`)
 
     try {
-      socket.sock.send(`P0:${prompt}`)
+      // socket.sock.send(`P0:${prompt}`)
       $generating.set(true)
     } catch (err) {
       $apiReady.set(false)

@@ -23,7 +23,7 @@ export function startInference(options: Options) {
   const sys = `${command}:${prompt}`
   console.log(`> sent "${sys}"`)
 
-  socket.sock.send(sys)
+  // socket.sock.send(sys)
 
   const shouldRegenerate =
     regenerate === true ||
