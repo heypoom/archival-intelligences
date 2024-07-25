@@ -1,7 +1,7 @@
 import {GladiaWord} from '../types/gladia-transcript'
 
 export const PROGRAM_ZERO_START_TIME = '00:06:52'
-export const PROGRAM_ZERO_END_TIME = '00:32:24'
+export const PROGRAM_ZERO_END_TIME = '00:32:26'
 export const SCREENING_END_TIME = '01:12:30'
 
 export type AutomationAction =
@@ -38,51 +38,52 @@ export const PROGRAM_CUES: AutomationCue[] = [
   {time: '00:00:00', action: 'start'},
 
   // fade in program zero
-  {time: '00:06:51', action: 'navigate', route: '/zero'},
+  {time: '00:06:49', action: 'navigate', route: '/zero'},
   {time: PROGRAM_ZERO_START_TIME, action: 'set-fade-status', fade: false},
 
   // fade to black, prepare to go to program 1
   {time: PROGRAM_ZERO_END_TIME, action: 'next'},
 
   // start program 1
-  {time: '00:34:05', action: 'next'},
+  {time: '00:34:06', action: 'next'},
 
   // start program 2
-  {time: '00:42:05', action: 'navigate', route: '/two'},
+  {time: '00:42:10', action: 'navigate', route: '/two'},
 
   // type prompt
   {
-    time: '00:42:16',
+    time: '00:42:18',
     action: 'prompt',
     program: 'P2',
     prompt: 'painting like epic poem of malaya',
-    commit: false,
+    commit: true,
+    guidance: 40,
   },
 
   // slide to 0%
-  {time: '00:42:37', action: 'move-slider', value: 0, program: 'P2'},
+  {time: '00:42:48', action: 'move-slider', value: 0, program: 'P2'},
 
   // slide to 70%
-  {time: '00:42:57', action: 'move-slider', value: 70, program: 'P2'},
+  {time: '00:43:15', action: 'move-slider', value: 70, program: 'P2'},
 
   // start program 2B
-  {time: '00:43:30', action: 'navigate', route: '/two-b'},
+  // {time: '00:43:30', action: 'navigate', route: '/two-b'},
 
   // type prompt
-  {
-    time: '00:43:35',
-    action: 'prompt',
-    program: 'P2B',
-    prompt: 'painting like epic poem of malaya but with more people',
-    guidance: 60,
-  },
+  // {
+  //   time: '00:43:35',
+  //   action: 'prompt',
+  //   program: 'P2B',
+  //   prompt: 'painting like epic poem of malaya but with more people',
+  //   guidance: 60,
+  // },
 
   // start program 3B
-  {time: '00:44:30', action: 'navigate', route: '/three-b'},
+  {time: '00:43:54', action: 'navigate', route: '/three-b'},
 
   // erase prompt
   {
-    time: '00:44:33',
+    time: '00:43:58',
     action: 'prompt',
     prompt: '',
     delay: {base: 30, variance: 20},
@@ -92,7 +93,7 @@ export const PROGRAM_CUES: AutomationCue[] = [
 
   // type prompt
   {
-    time: '00:44:37',
+    time: '00:44:00',
     action: 'prompt',
     program: 'P3B',
     prompt: 'chua mia tee painting',
@@ -100,11 +101,11 @@ export const PROGRAM_CUES: AutomationCue[] = [
   },
 
   // start program 4
-  {time: '00:52:50', action: 'navigate', route: '/four'},
+  {time: '00:52:40', action: 'navigate', route: '/four'},
 
   // type prompt
   {
-    time: '00:52:52',
+    time: '00:52:45',
     action: 'prompt',
     program: 'P4',
     prompt: 'data researcher',
@@ -114,7 +115,7 @@ export const PROGRAM_CUES: AutomationCue[] = [
 
   // type prompt
   {
-    time: '00:53:18',
+    time: '00:53:15',
     action: 'prompt',
     program: 'P4',
     prompt: 'crowdworker',
@@ -122,11 +123,11 @@ export const PROGRAM_CUES: AutomationCue[] = [
   },
 
   // start program 4B
-  {time: '00:53:53', action: 'navigate', route: '/four-b'},
+  {time: '00:53:45', action: 'navigate', route: '/four-b'},
 
   // type prompt
   {
-    time: '00:53:55',
+    time: '00:53:50',
     action: 'prompt',
     program: 'P4',
     prompt: 'big tech ceo',
@@ -135,7 +136,7 @@ export const PROGRAM_CUES: AutomationCue[] = [
 
   // type prompt
   {
-    time: '01:09:10',
+    time: '01:08:48',
     action: 'prompt',
     program: 'P4',
     prompt: 'stable diffusion',
@@ -144,7 +145,7 @@ export const PROGRAM_CUES: AutomationCue[] = [
 
   // fade to black
   {
-    time: '01:11:20',
+    time: '01:10:54',
     action: 'set-fade-status',
     fade: true,
   },
