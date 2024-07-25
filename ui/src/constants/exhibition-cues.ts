@@ -18,7 +18,7 @@ export type AutomationAction =
   | {action: 'set-fade-status'; fade: boolean} // set the fade-to-black status
   | {action: 'navigate'; route: string} // navigate to a route
   | {
-    action: 'prompt'
+      action: 'prompt'
       prompt: string
       override?: string
       delay?: {base?: number; variance?: number}

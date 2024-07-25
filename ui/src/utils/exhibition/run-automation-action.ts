@@ -4,7 +4,7 @@ import {Tween, Easing} from '@tweenjs/tween.js'
 import {AutomationAction} from '../../constants/exhibition-cues'
 import {$fadeStatus} from '../../store/fader'
 import {$guidance} from '../../store/guidance'
-import {$generating, $prompt} from '../../store/prompt'
+import {$generating, $inferencePreview, $prompt} from '../../store/prompt'
 import {keystrokeStream, getRandomDelay} from './keystroke-stream'
 
 import {
@@ -155,7 +155,11 @@ export function runAutomationAction(
       $transcript.set({transcript: action.transcript, final: false})
     })
     .with({action: 'end'}, () => {
-      $fadeStatus.set(false)
+      $inferencePreview.set('')
+
+      setTimeout(() => {
+        $fadeStatus.set(false)
+      }, 5000)
     })
     .exhaustive()
 }
