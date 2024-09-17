@@ -13,6 +13,7 @@ import { createFileRoute } from '@tanstack/react-router'
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as TranscriptTesterImport } from './routes/transcript-tester'
 
 // Create Virtual Routes
 
@@ -74,6 +75,11 @@ const FourLazyRoute = FourLazyImport.update({
   getParentRoute: () => rootRoute,
 } as any).lazy(() => import('./routes/four.lazy').then((d) => d.Route))
 
+const TranscriptTesterRoute = TranscriptTesterImport.update({
+  path: '/transcript-tester',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const IndexLazyRoute = IndexLazyImport.update({
   path: '/',
   getParentRoute: () => rootRoute,
@@ -85,6 +91,10 @@ declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
     '/': {
       preLoaderRoute: typeof IndexLazyImport
+      parentRoute: typeof rootRoute
+    }
+    '/transcript-tester': {
+      preLoaderRoute: typeof TranscriptTesterImport
       parentRoute: typeof rootRoute
     }
     '/four': {
@@ -130,6 +140,7 @@ declare module '@tanstack/react-router' {
 
 export const routeTree = rootRoute.addChildren([
   IndexLazyRoute,
+  TranscriptTesterRoute,
   FourLazyRoute,
   FourBLazyRoute,
   OneLazyRoute,

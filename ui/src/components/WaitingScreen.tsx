@@ -41,6 +41,7 @@ export function WaitingRoomScreen() {
   if (!isExhibition) return null
 
   if (mr({to: '/'})) return null
+  if (mr({to: '/transcript-tester'})) return null
 
   return (
     <div
