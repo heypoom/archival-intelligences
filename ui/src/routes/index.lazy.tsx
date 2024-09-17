@@ -26,7 +26,6 @@ export function SettingsRoute() {
     socket.clearDisconnectionTimer()
     socket.reconnectSoon('program change - exhibition', 10)
 
-
     $videoMode.set(false)
     $canPlay.set(true)
     automator.sync({force: true})
@@ -101,17 +100,17 @@ export function SettingsRoute() {
 
       <div className="flex flex-col sm:flex-row gap-x-4 gap-y-4">
         <button
-          onClick={startExhibitionProgram}
-          className="border border-green-300 text-green-300 px-4 py-2"
-        >
-          exhibition - program screen
-        </button>
-
-        <button
           onClick={startExhibitionVideo}
           className="border border-yellow-300 text-yellow-300 px-4 py-2"
         >
           exhibition - video screen
+        </button>
+
+        <button
+          onClick={startExhibitionProgram}
+          className="border border-green-300 text-green-300 px-4 py-2"
+        >
+          exhibition - program screen
         </button>
 
         <button
