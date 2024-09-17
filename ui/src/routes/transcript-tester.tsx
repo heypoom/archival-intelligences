@@ -1,6 +1,5 @@
 import {createFileRoute} from '@tanstack/react-router'
 import {DictationCaption} from '../dictation'
-import {ImageDisplay} from '../image/ImageDisplay'
 import {useEffect} from 'react'
 import {$transcript} from '../store/dictation'
 

@@ -61,7 +61,8 @@ export function SettingsRoute() {
 
     $canPlay.set(true)
     automator.stopClock()
-    fullscreen()
+
+    // NOTE: do not use fullscreen() here, as it will show "To exit full screen"
 
     go({to: '/zero'})
   }
