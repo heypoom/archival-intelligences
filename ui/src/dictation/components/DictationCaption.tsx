@@ -14,11 +14,11 @@ export const DictationCaption = () => {
     <div className="text-center max-w-[1200px] px-2">
       <div
         className={cn(
-          'inline break-words bg-black py-2 px-6 font-extralight leading-[44px]',
+          'inline break-words bg-black py-2 px-6 font-extralight',
           final && 'text-white',
           !final && 'text-gray-300',
-          isExhibition && 'text-[28px]',
-          !isExhibition && 'text-[42px]'
+          isExhibition && 'text-[28px] leading-[44px]',
+          !isExhibition && 'text-[42px] leading-[62px]'
         )}
         style={{
           boxDecorationBreak: 'clone',
