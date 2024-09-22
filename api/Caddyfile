@@ -1,5 +1,5 @@
 # Your domain or IP address
-ruian-sg-api.poom.dev {
+ruian-de-api.poom.dev {
 	# Enable automatic HTTPS
 	encode gzip
 
