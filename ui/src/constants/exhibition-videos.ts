@@ -1,5 +1,5 @@
 const videoSource =
-  'https://rui-an-fr-videos.poom.dev/rui-an-sep-23-fast-1080p.mp4'
+  'https://rui-an-fr-videos.poom.dev/rui-an-sep-23-libx265.mp4'
 
 export const EXHIBITION_VIDEO_SOURCES = {
   // Main lecture video shown to the audience
