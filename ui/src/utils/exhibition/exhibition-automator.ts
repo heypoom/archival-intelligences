@@ -128,12 +128,12 @@ export class ExhibitionAutomator {
       .with({type: 'pong'}, (msg) => {
         // if there are already a window in video mode, switch to program mode.
         if (isVideoMode) {
-          this.syncIpcMockedTime(msg)
+          // this.syncIpcMockedTime(msg)
 
           // switch to PROGRAM mode
-          $videoMode.set(false)
+          // $videoMode.set(false)
 
-          this.sync({force: true})
+          // this.sync({force: true})
 
           console.log(
             `[ipc] video exists! we switch ourselves to program mode`,
