@@ -33,7 +33,10 @@ export function getExhibitionTimes() {
     '19:45',
   ]
 
-  if (isOpeningDay()) EXHIBITION_TIMES.push('21:00')
+  if (isOpeningDay()) {
+    EXHIBITION_TIMES.push('21:00')
+    EXHIBITION_TIMES.push('22:15')
+  }
 
   return EXHIBITION_TIMES
 }
