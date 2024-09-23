@@ -2,15 +2,16 @@ import {$canPlay} from '../store/exhibition'
 import {$fadeStatus} from '../store/fader'
 
 export const fullscreen = async () => {
-  const isFullscreen = () =>
+  const isFullscreen = !!(
     document.fullscreenElement ||
     // @ts-expect-error - fff
     document.webkitFullscreenElement ||
     // @ts-expect-error - fff
     document.mozFullScreenElement
+  )
 
   try {
-    if (!isFullscreen()) {
+    if (!isFullscreen) {
       await document.documentElement.requestFullscreen({navigationUI: 'hide'})
     }
   } catch (err) {

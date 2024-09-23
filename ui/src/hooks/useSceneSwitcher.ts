@@ -7,7 +7,7 @@ import {resetProgress} from '../store/progress'
 import {dictation} from '../dictation'
 import {socket} from '../manager/socket'
 import {disableRegen} from '../store/regen'
-import {$exhibitionMode} from '../store/exhibition'
+import {$exhibitionMode, $videoMode} from '../store/exhibition'
 
 const here = (a: false | object) => {
   if (a === false) return false
@@ -51,6 +51,8 @@ export function useSceneSwitcher() {
   }
 
   const next = () => {
+    if ($videoMode.get()) return
+
     clearInference()
 
     if (zero) {
