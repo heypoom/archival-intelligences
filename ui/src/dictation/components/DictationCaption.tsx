@@ -17,11 +17,12 @@ export const DictationCaption = () => {
           'inline break-words bg-black py-2 px-6 font-extralight',
           final && 'text-white',
           !final && 'text-gray-300',
-          isExhibition && 'text-[28px] leading-[44px]',
+          isExhibition && 'text-[28px] leading-[46px]',
           !isExhibition && 'text-[36px] leading-[54px]'
         )}
         style={{
           boxDecorationBreak: 'clone',
+          WebkitBoxDecorationBreak: 'clone',
         }}
       >
         {transcript}
