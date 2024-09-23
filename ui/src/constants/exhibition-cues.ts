@@ -83,7 +83,7 @@ export const PROGRAM_CUES: AutomationCue[] = [
 
   // erase prompt
   {
-    time: '00:46:03',
+    time: '00:46:02',
     action: 'prompt',
     prompt: '',
     delay: {base: 30, variance: 20},
