@@ -9,7 +9,7 @@ const ErrorFallback = () => {
   useEffect(() => {
     // wait for Sentry to capture the error and reload the page.
     setTimeout(() => {
-      window.location.reload()
+      // window.location.reload()
     }, 100)
   }, [])
 
