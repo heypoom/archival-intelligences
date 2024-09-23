@@ -12,12 +12,12 @@ Sentry.init({
   ],
 
   // Performance Monitoring
-  tracesSampleRate: 1.0, //  Capture 100% of the transactions
+  tracesSampleRate: 0.9, //  Capture 100% of the transactions
 
   // Set 'tracePropagationTargets' to control for which URLs distributed tracing should be enabled
   tracePropagationTargets: ['localhost', /^https:\/\/ruian-de-api\.poom\.dev/],
 
   // Session Replay
-  replaysSessionSampleRate: 0.8, // sample 80% of the sessions
-  replaysOnErrorSampleRate: 1.0, // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
+  replaysSessionSampleRate: 0.2, // sample 80% of the sessions
+  replaysOnErrorSampleRate: 0.3, // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
 })
