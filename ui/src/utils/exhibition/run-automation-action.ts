@@ -21,6 +21,7 @@ import {generateFromPrompt} from '../process-transcript'
 import {resetAll} from './reset'
 import {disableRegen} from '../../store/regen'
 import {resetProgress} from '../../store/progress'
+import {$videoMode} from '../../store/exhibition'
 
 export interface AutomatorContext {
   next(): void
@@ -78,6 +79,8 @@ export function runAutomationAction(
       resetProgress()
       disableRegen('scene switch')
 
+      if ($videoMode.get()) return
+
       navigate(action.route)
     })
     .with({action: 'prompt'}, (action) => {
@@ -119,7 +122,11 @@ export function runAutomationAction(
 
       update()
     })
-    .with({action: 'next'}, next)
+    .with({action: 'next'}, async () => {
+      if ($videoMode.get()) return
+
+      next()
+    })
     .with({action: 'transcript'}, async (action) => {
       if (action.generate) {
         generateFromPrompt(action.transcript)
