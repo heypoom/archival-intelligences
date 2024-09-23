@@ -468,6 +468,8 @@ export class ExhibitionAutomator {
   }
 
   restoreRouteFromCue() {
+    if (this.isVideo) return
+
     const route = routeFromCue(this.currentCue, this.cues)
 
     this.actionContext.navigate(route)
