@@ -27,12 +27,9 @@ export function CurrentProgramBadge() {
 
   const isExhibitionMode = useStore($exhibitionMode)
 
-  // once we finalise, we can hide the programme codes at the bottom left.
-  // we can keep the progress counter and the connection indicator
-  if (isExhibitionMode) return null
-
+  // always show
   // indicate that we are on the video screen
-  if (isVideo) {
+  if (isVideo && isExhibitionMode) {
     return (
       <div className="bg-[#2d2d30] text-white px-[4px] py-[2px] text-xs rounded-lg">
         <Icon icon="lucide:video" fontSize={16} />
@@ -45,6 +42,10 @@ export function CurrentProgramBadge() {
 
   // hide program badge when on the speech route
   if (isSpeechRoute) return null
+
+  // once we finalise, we can hide the programme codes at the bottom left.
+  // we can keep the progress counter and the connection indicator
+  if (isExhibitionMode) return null
 
   return (
     <div className="bg-[#2d2d30] text-white leading-3 px-[5px] py-[4px] text-xs rounded-md font-mono">

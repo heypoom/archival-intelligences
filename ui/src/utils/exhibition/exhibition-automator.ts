@@ -27,7 +27,7 @@ import {
 import {getExhibitionStatus} from './get-exhibition-status'
 import {match} from 'ts-pattern'
 import {routeFromCue} from './route-from-cue'
-import {$ipcMode, IpcAction, IpcMessage, IpcMeta} from '../../store/window-ipc'
+import {IpcAction, IpcMessage, IpcMeta} from '../../store/window-ipc'
 import {resetAll} from './reset'
 import {compareTimecode} from './compare-timecode'
 import {transcriptWithinTimeRange} from './exclude-transcription-before'
@@ -117,28 +117,34 @@ export class ExhibitionAutomator {
   }
 
   onIpcMessage = (event: MessageEvent<IpcMessage>) => {
-    const mode = $ipcMode.get()
+    const isVideoMode = $videoMode.get()
 
     if (!event.data) return
 
     match(event.data)
       .with({type: 'ping'}, () => {
-        this.sendIpcAction({type: 'pong', mode, elapsed: this.elapsed})
+        this.sendIpcAction({type: 'pong', isVideoMode, elapsed: this.elapsed})
       })
       .with({type: 'pong'}, (msg) => {
-        // if there are already a window in program mode, switch to video mode.
-        if (msg.mode === 'program') {
-          this.syncIpcTime(msg)
-          $ipcMode.set('video')
+        // if there are already a window in video mode, switch to program mode.
+        if (isVideoMode) {
+          this.syncIpcMockedTime(msg)
+
+          // switch to PROGRAM mode
+          $videoMode.set(false)
+
           this.sync({force: true})
 
-          console.log(`[ipc] we switch ourselves to video mode`, msg)
+          console.log(
+            `[ipc] video exists! we switch ourselves to program mode`,
+            msg
+          )
         }
       })
       .with({type: 'play'}, (msg) => {
-        if (mode !== 'video' || !this.videoRef) return
+        if (!isVideoMode || !this.videoRef) return
 
-        this.syncIpcTime(msg)
+        this.syncIpcMockedTime(msg)
         this.sync({force: true})
 
         console.log(`[ipc] we play the video`, msg)
@@ -485,9 +491,9 @@ export class ExhibitionAutomator {
     }
   }
 
-  syncIpcTime(msg: IpcMessage) {
-    const time = msg.dynamicMockedTime
-    if (time !== null) this.mockTime(time)
+  syncIpcMockedTime(msg: IpcMessage) {
+    const mockedTime = msg.dynamicMockedTime
+    if (mockedTime !== null) this.mockTime(mockedTime)
   }
 }
 
