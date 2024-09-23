@@ -145,7 +145,7 @@ export class ExhibitionAutomator {
         if (!isVideoMode || !this.videoRef) return
 
         this.syncIpcMockedTime(msg)
-        this.sync({force: true})
+        // this.sync({force: true})
 
         console.log(`[ipc] we play the video`, msg)
       })
