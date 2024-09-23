@@ -27,7 +27,7 @@ import {
 import {getExhibitionStatus} from './get-exhibition-status'
 import {match} from 'ts-pattern'
 import {routeFromCue} from './route-from-cue'
-import {IpcAction, IpcMessage, IpcMeta} from '../../store/window-ipc'
+import {$ipcMode, IpcAction, IpcMessage, IpcMeta} from '../../store/window-ipc'
 import {resetAll} from './reset'
 import {compareTimecode} from './compare-timecode'
 import {transcriptWithinTimeRange} from './exclude-transcription-before'
@@ -116,35 +116,34 @@ export class ExhibitionAutomator {
     }
   }
 
-  // REMOVE IPC HANDLERS
   onIpcMessage = (event: MessageEvent<IpcMessage>) => {
-    // const mode = $ipcMode.get()
+    const mode = $ipcMode.get()
 
     if (!event.data) return
 
-    // match(event.data)
-    //   .with({type: 'ping'}, () => {
-    //     this.sendIpcAction({type: 'pong', mode, elapsed: this.elapsed})
-    //   })
-    //   .with({type: 'pong'}, (msg) => {
-    //     // if there are already a window in program mode, switch to video mode.
-    //     if (msg.mode === 'program') {
-    //       this.syncIpcTime(msg)
-    //       $ipcMode.set('video')
-    //       this.sync({force: true})
+    match(event.data)
+      .with({type: 'ping'}, () => {
+        this.sendIpcAction({type: 'pong', mode, elapsed: this.elapsed})
+      })
+      .with({type: 'pong'}, (msg) => {
+        // if there are already a window in program mode, switch to video mode.
+        if (msg.mode === 'program') {
+          this.syncIpcTime(msg)
+          $ipcMode.set('video')
+          this.sync({force: true})
 
-    //       console.log(`[ipc] we switch ourselves to video mode`, msg)
-    //     }
-    //   })
-    //   .with({type: 'play'}, (msg) => {
-    //     if (mode !== 'video' || !this.videoRef) return
+          console.log(`[ipc] we switch ourselves to video mode`, msg)
+        }
+      })
+      .with({type: 'play'}, (msg) => {
+        if (mode !== 'video' || !this.videoRef) return
 
-    //     this.syncIpcTime(msg)
-    //     this.sync({force: true})
+        this.syncIpcTime(msg)
+        this.sync({force: true})
 
-    //     console.log(`[ipc] we play the video`, msg)
-    //   })
-    //   .exhaustive()
+        console.log(`[ipc] we play the video`, msg)
+      })
+      .exhaustive()
   }
 
   async playVideo() {
@@ -330,9 +329,9 @@ export class ExhibitionAutomator {
     this.actionContext.cue = () => this.currentCue
     this.actionContext.elapsed = () => this.elapsed
 
-    // if (action.action === 'start') {
-    //   this.sendIpcAction({type: 'play', elapsed: this.elapsed})
-    // }
+    if (action.action === 'start') {
+      this.sendIpcAction({type: 'play', elapsed: this.elapsed})
+    }
 
     runAutomationAction(action, this.actionContext)
   }
