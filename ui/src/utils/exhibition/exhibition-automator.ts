@@ -428,7 +428,7 @@ export class ExhibitionAutomator {
         .with('wait', () => {})
         .with('closed', () => {})
         .with('active', () => {
-          if (!isVideo) {
+          if (!this.isVideo) {
             this.restoreRouteFromCue()
           }
         })
