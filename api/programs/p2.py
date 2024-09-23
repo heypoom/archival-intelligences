@@ -1,5 +1,6 @@
 import PIL.Image as PILImage
 
+import torch
 from utils.pipelines import img2img
 from utils.pipeline_manager import denoise
 
@@ -17,16 +18,17 @@ async def infer_program_2(strength: float, conn_id=None):
     width, height = POEM_OF_MALAYA_SIZE
 
     def pipeline(on_step_end):
-        return img2img(
-            image=MALAYA,
-            prompt=PROMPT_2,
-            strength=strength,
-            num_inference_steps=STEPS,
-            callback_on_step_end=on_step_end,
-            callback_on_step_end_tensor_inputs=["latents"],
-            width=width,
-            height=height,
-        )
+        with torch.inference_mode():
+            return img2img(
+                image=MALAYA,
+                prompt=PROMPT_2,
+                strength=strength,
+                num_inference_steps=STEPS,
+                callback_on_step_end=on_step_end,
+                callback_on_step_end_tensor_inputs=["latents"],
+                width=width,
+                height=height,
+            )
 
     async for out in denoise(pipeline, conn_id=conn_id):
         yield out
@@ -36,17 +38,18 @@ async def infer_program_2_b(strength: float, conn_id=None):
     width, height = POEM_OF_MALAYA_SIZE
 
     def pipeline(on_step_end):
-        return img2img(
-            prompt=PROMPT_2B,
-            image=MALAYA,
-            strength=strength,
-            guidance_scale=GUIDANCE_SCALE_2B,
-            num_inference_steps=STEPS,
-            callback_on_step_end=on_step_end,
-            callback_on_step_end_tensor_inputs=["latents"],
-            width=width,
-            height=height,
-        )
+        with torch.inference_mode():
+            return img2img(
+                prompt=PROMPT_2B,
+                image=MALAYA,
+                strength=strength,
+                guidance_scale=GUIDANCE_SCALE_2B,
+                num_inference_steps=STEPS,
+                callback_on_step_end=on_step_end,
+                callback_on_step_end_tensor_inputs=["latents"],
+                width=width,
+                height=height,
+            )
 
     async for out in denoise(pipeline, conn_id=conn_id):
         yield out
