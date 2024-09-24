@@ -5,9 +5,9 @@ import {$apiReady, $generating, $inferencePreview} from '../store/prompt'
 /** After 8 seconds of no activity, consider the connection dead */
 const DISCONNECT_TIMEOUT = 8 * 1000
 
+// FIXME: uncomment this when the server is ready
 const EXHIBITION_ENDPOINT = 'wss://ruian-de-api.poom.dev/ws'
-const LIVE_LECTURE_ENDPOINT = 'wss://ruian-de-api.poom.dev/ws'
-// const LIVE_LECTURE_ENDPOINT = 'wss://live-lecture-api.poom.dev/ws'
+const LIVE_LECTURE_ENDPOINT = 'wss://live-lecture-v2.poom.dev/ws'
 
 class SocketManager {
   sock: WebSocket
