@@ -101,11 +101,11 @@ export const PROGRAM_CUES: AutomationCue[] = [
   },
 
   // start program 4
-  {time: '00:54:30', action: 'navigate', route: '/four'},
+  {time: '00:54:23', action: 'navigate', route: '/four'},
 
   // type prompt
   {
-    time: '00:54:34',
+    time: '00:54:28',
     action: 'prompt',
     program: 'P4',
     prompt: 'data researcher',
@@ -115,7 +115,7 @@ export const PROGRAM_CUES: AutomationCue[] = [
 
   // type prompt
   {
-    time: '00:55:03',
+    time: '00:54:57',
     action: 'prompt',
     program: 'P4',
     prompt: 'crowdworker',
@@ -123,11 +123,11 @@ export const PROGRAM_CUES: AutomationCue[] = [
   },
 
   // start program 4B
-  {time: '00:55:45', action: 'navigate', route: '/four-b'},
+  {time: '00:55:41', action: 'navigate', route: '/four-b'},
 
   // type prompt
   {
-    time: '00:55:50',
+    time: '00:55:46',
     action: 'prompt',
     program: 'P4',
     prompt: 'big tech ceo',
@@ -145,7 +145,7 @@ export const PROGRAM_CUES: AutomationCue[] = [
 
   // fade to black
   {
-    time: '01:12:11',
+    time: '01:12:09',
     action: 'set-fade-status',
     fade: true,
   },
