@@ -1,0 +1,14 @@
+[Unit]
+Description=Uvicorn
+After=network.target
+
+[Service]
+User=poom
+Group=poom
+WorkingDirectory=/home/poom/archival-intelligences/api
+Environment="TORCH_DEVICE=cuda"
+ExecStart=/bin/bash -c 'source /home/poom/miniconda3/etc/profile.d/conda.sh && conda activate api && poetry run uvicorn server:app --host 0.0.0.0 --port 8000'
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
