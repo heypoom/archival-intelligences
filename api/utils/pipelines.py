@@ -12,14 +12,13 @@ text2img = AutoPipelineForText2Image.from_pretrained(
     torch_dtype=torch.float16,
 ).to(DEVICE)
 
-# TODO: enable xformers attention
-# text2img.enable_xformers_memory_efficient_attention()
+text2img.enable_xformers_memory_efficient_attention()
 
 # Program 2 pipeline: Epic Poem of Malaya, Image to Image
 img2img = StableDiffusionImg2ImgPipeline.from_pretrained(
     "runwayml/stable-diffusion-v1-5",
 ).to(DEVICE)
 
-# img2img.enable_xformers_memory_efficient_attention()
+img2img.enable_xformers_memory_efficient_attention()
 
 print(f"two diffusion pipelines ready in {time.time() - start_time}s")
