@@ -11,9 +11,9 @@ export const FadeToBlack = () => {
   const mr = useMatchRoute()
   const isVideo = useIsVideo()
   const cannotFadeToBlack = mr({to: '/'}) || mr({to: '/transcript-tester'})
-  const exhitionStatus = useStore($exhibitionStatus)
+  const exhibitionStatus = useStore($exhibitionStatus)
 
-  const isVisible = isVideo ? exhitionStatus.type === 'active' : fadeStatus
+  const isVisible = isVideo ? exhibitionStatus.type === 'active' : fadeStatus
 
   if (cannotFadeToBlack) return null
 
