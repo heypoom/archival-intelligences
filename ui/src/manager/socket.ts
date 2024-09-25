@@ -21,8 +21,8 @@ const generationTimeouts: Record<string, number> = {
 }
 
 // FIXME: uncomment this when the server is ready
-// const EXHIBITION_ENDPOINT = 'wss://ruian-de-api.poom.dev/ws'
-const EXHIBITION_ENDPOINT = 'wss://live-lecture-v2.poom.dev/ws'
+const EXHIBITION_ENDPOINT = 'wss://ruian-de-api.poom.dev/ws'
+// const EXHIBITION_ENDPOINT = 'wss://live-lecture-v2.poom.dev/ws'
 const LIVE_LECTURE_ENDPOINT = 'wss://live-lecture-v2.poom.dev/ws'
 
 class SocketManager {
