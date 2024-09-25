@@ -172,7 +172,7 @@ export function runAutomationAction(
 
       setTimeout(() => {
         $fadeStatus.set(false)
-      }, 5000)
+      }, 500)
     })
     .exhaustive()
 }
