@@ -13,16 +13,18 @@ export const FadeToBlack = () => {
   const cannotFadeToBlack = mr({to: '/'}) || mr({to: '/transcript-tester'})
   const exhibitionStatus = useStore($exhibitionStatus)
 
-  const isVisible = isVideo ? exhibitionStatus.type === 'active' : fadeStatus
+  const isFaderVisible = isVideo
+    ? exhibitionStatus.type !== 'active'
+    : fadeStatus
 
   if (cannotFadeToBlack) return null
 
   return (
     <div
       className={`fixed z-[100000] w-full h-full top-0 left-0 inset-0 bg-black transition-opacity duration-[5s] ease-in-out ${
-        isVisible ? 'opacity-100' : 'opacity-0'
+        isFaderVisible ? 'opacity-100' : 'opacity-0'
       }`}
-      style={{pointerEvents: isVisible ? 'auto' : 'none'}}
+      style={{pointerEvents: isFaderVisible ? 'auto' : 'none'}}
     />
   )
 }
