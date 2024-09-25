@@ -18,7 +18,7 @@ export const DictationCaption = () => {
           final && 'text-white',
           !final && 'text-gray-300',
           isExhibition && 'text-[28px] leading-[46px]',
-          !isExhibition && 'text-[36px] leading-[54px]'
+          !isExhibition && 'text-[42px] leading-[62px]'
         )}
         style={{
           boxDecorationBreak: 'clone',
