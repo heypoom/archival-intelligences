@@ -6,7 +6,6 @@ import {CurrentProgramBadge} from '../components/CurrentProgramBadge'
 import FadeToBlack from '../components/FadeToBlack'
 import {ProgressBadge} from '../components/ProgressBadge'
 import {AnimatedNoise} from '../components/AnimatedNoise'
-import {RegenCountBadge} from '../components/RegenCountBadge'
 import {ExhibitionFallbackVideo} from '../components/ExhibitionFallbackVideo'
 import {SettingsButton} from '../components/SettingsButton'
 import {ProgramErrorBoundary} from '../components/ErrorBoundary'
@@ -20,7 +19,6 @@ export const Route = createRootRoute({
       <div className="fixed flex left-3 bottom-3 z-[1000000] gap-x-1">
         <SettingsButton />
         <CurrentProgramBadge />
-        <RegenCountBadge />
         <ProgressBadge />
         <ProgramTimeBadge />
       </div>
