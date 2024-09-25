@@ -28,6 +28,7 @@ export type AutomationAction =
       guidance?: number
     } // clear, type, and enter prompt
   | {action: 'move-slider'; program: string; value: number} // slowly move the guidance slider
+  | {action: 'cleanup-before-end'} // clean up the program
   | {action: 'end'} // end the showing
 
 export type AutomationCue = AutomationAction & {time: string}
@@ -148,6 +149,12 @@ export const PROGRAM_CUES: AutomationCue[] = [
     time: '01:12:09',
     action: 'set-fade-status',
     fade: true,
+  },
+
+  // cleanup before the screening ends
+  {
+    time: '01:12:11',
+    action: 'cleanup-before-end',
   },
 
   {

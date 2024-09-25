@@ -58,6 +58,10 @@ export const ExhibitionFallbackVideo = () => {
 
   if (hideFallback) return null
 
+  // FIXME: uncomment this when the fallback video is ready
+  // FIXME: uncomment this when we can avoid playing the fallback video when we restart between screenings
+  return null
+
   return (
     <div className="fixed flex flex-col items-center justify-center w-full h-full font-mono min-h-screen bg-black text-white gap-y-8 z-[100002]">
       <video

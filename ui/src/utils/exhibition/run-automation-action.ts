@@ -161,6 +161,14 @@ export function runAutomationAction(
 
       $transcript.set({transcript: action.transcript, final: false})
     })
+    .with({action: 'cleanup-before-end'}, () => {
+      $prompt.set('')
+      $inferencePreview.set('')
+      $transcript.set({transcript: '', final: false})
+
+      // disable regen and also reconnect to server.
+      disableRegen('cleanup before screening ends')
+    })
     .with({action: 'end'}, () => {
       $inferencePreview.set('')
 
