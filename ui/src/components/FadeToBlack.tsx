@@ -3,20 +3,15 @@ import {useStore} from '@nanostores/react'
 import {$fadeStatus} from '../store/fader'
 import {useMatchRoute} from '@tanstack/react-router'
 import {useIsVideo} from '../hooks/useIsVideo'
-import {$exhibitionStatus} from '../store/exhibition'
 
 export const FadeToBlack = () => {
-  const fadeStatus = useStore($fadeStatus)
+  const isFaderVisible = useStore($fadeStatus)
 
   const mr = useMatchRoute()
   const isVideo = useIsVideo()
   const cannotFadeToBlack = mr({to: '/'}) || mr({to: '/transcript-tester'})
-  const exhibitionStatus = useStore($exhibitionStatus)
 
-  const isFaderVisible = isVideo
-    ? exhibitionStatus.type !== 'active'
-    : fadeStatus
-
+  if (isVideo) return null
   if (cannotFadeToBlack) return null
 
   return (
