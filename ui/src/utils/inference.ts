@@ -21,9 +21,7 @@ export function startInference(options: Options) {
   $generating.set(true)
 
   const sys = `${command}:${prompt}`
-  console.log(`> sent "${sys}"`)
-
-  socket.sock.send(sys)
+  socket.generate(sys)
 
   const shouldRegenerate =
     regenerate === true ||

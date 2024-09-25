@@ -28,7 +28,7 @@ export type AutomationAction =
       guidance?: number
     } // clear, type, and enter prompt
   | {action: 'move-slider'; program: string; value: number} // slowly move the guidance slider
-  | {action: 'cleanup-before-end'} // clean up the program
+  | {action: 'reconnect'} // disable regen and reconnect
   | {action: 'end'} // end the showing
 
 export type AutomationCue = AutomationAction & {time: string}
@@ -37,6 +37,9 @@ export type AutomationCue = AutomationAction & {time: string}
 export const PROGRAM_CUES: AutomationCue[] = [
   // we start at 00:00:00
   {time: '00:00:00', action: 'start'},
+
+  // reconnect to the server a few seconds before the start of the program
+  {time: '00:06:43', action: 'reconnect'},
 
   // fade in program zero
   {time: '00:06:45', action: 'navigate', route: '/zero'},
@@ -123,6 +126,9 @@ export const PROGRAM_CUES: AutomationCue[] = [
     enter: {regen: false},
   },
 
+  // reconnect to the server a few seconds before the start of the program
+  {time: '00:55:39', action: 'reconnect'},
+
   // start program 4B
   {time: '00:55:41', action: 'navigate', route: '/four-b'},
 
@@ -154,7 +160,7 @@ export const PROGRAM_CUES: AutomationCue[] = [
   // cleanup before the screening ends
   {
     time: '01:12:11',
-    action: 'cleanup-before-end',
+    action: 'reconnect',
   },
 
   {

@@ -40,7 +40,7 @@ export function regen(command: string, prompt: string, origin = true) {
         `[gen] progress at ${progress}% is not complete yet, we wait.`
       )
     } else {
-      socket.sock.send(`${command}:${prompt}`)
+      socket.generate(`${command}:${prompt}`)
       $generating.set(true)
 
       const gen = $regenCount.get()
@@ -56,7 +56,7 @@ export function regen(command: string, prompt: string, origin = true) {
 
 export function disableRegen(reason?: string) {
   const regen = $regenActive.get()
-  if (!regen) return
+  if (!regen) return false
 
   console.log(`[gen] disable regen (reason=${reason})`)
 
@@ -65,4 +65,6 @@ export function disableRegen(reason?: string) {
   clearTimeout(regenerateTimer)
 
   socket.reconnectSoon(reason, 10, {shutup: true})
+
+  return true
 }

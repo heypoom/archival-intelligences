@@ -1,17 +1,36 @@
 import {$disconnected, $exhibitionMode} from '../store/exhibition'
-import {$startTimestep, $timestep, resetProgress} from '../store/progress'
+import {
+  $progress,
+  $startTimestep,
+  $timestep,
+  resetProgress,
+} from '../store/progress'
 import {$apiReady, $generating, $inferencePreview} from '../store/prompt'
 
 /** After 8 seconds of no activity, consider the connection dead */
 const DISCONNECT_TIMEOUT = 8 * 1000
 
+/** After 15 seconds of no activity, consider the generation to be stuck */
+const generationTimeouts: Record<string, number> = {
+  // more timeout when there is no denoising
+  P0: 30 * 1000,
+  P2: 20 * 1000,
+  P2B: 20 * 1000,
+  P3B: 20 * 1000,
+  P4: 20 * 1000,
+}
+
 // FIXME: uncomment this when the server is ready
-const EXHIBITION_ENDPOINT = 'wss://ruian-de-api.poom.dev/ws'
+// const EXHIBITION_ENDPOINT = 'wss://ruian-de-api.poom.dev/ws'
+const EXHIBITION_ENDPOINT = 'wss://live-lecture-v2.poom.dev/ws'
 const LIVE_LECTURE_ENDPOINT = 'wss://live-lecture-v2.poom.dev/ws'
 
 class SocketManager {
   sock: WebSocket
   disconnectTimer?: number
+  generationStuckTimer?: number
+
+  currentInferenceMessage?: string
 
   constructor() {
     this.sock = this.createWs()
@@ -44,7 +63,12 @@ class SocketManager {
     $generating.set(false)
     resetProgress()
 
+    this.clearGenerationStuckTimer()
     this.startDisconnectionTimer()
+  }
+
+  isExhibition() {
+    return $exhibitionMode.get()
   }
 
   startDisconnectionTimer() {
@@ -57,9 +81,67 @@ class SocketManager {
     }
   }
 
+  isInProgress() {
+    const progress = $progress.get()
+    const isInProgress = progress > 0 && progress < 98
+
+    return isInProgress
+  }
+
+  getProgramId(inferenceMessage?: string) {
+    const pid = inferenceMessage?.split(':')?.[0]
+    if (!pid || !pid.startsWith('P')) return
+
+    return pid
+  }
+
+  startGenerationStuckTimer(inferenceMessage?: string) {
+    // enable only when in exhibition, not in lecture
+    if (!this.isExhibition()) return
+
+    // enable only for valid inference messages
+    const programId = this.getProgramId(inferenceMessage)
+    if (!programId) return
+
+    const message = inferenceMessage ?? this.currentInferenceMessage
+
+    if (inferenceMessage) {
+      this.currentInferenceMessage = inferenceMessage
+    }
+
+    if (this.generationStuckTimer !== undefined) {
+      this.clearGenerationStuckTimer()
+    }
+
+    // skip if the timeout is not defined
+    const stuckTimeout = generationTimeouts[programId]
+    if (!stuckTimeout || stuckTimeout <= 0) return
+
+    console.log(`[watchdog] "${programId}" :: ${stuckTimeout}ms`)
+
+    this.generationStuckTimer = setTimeout(() => {
+      console.log(`[watchdog] "${message}" is stuck!`)
+
+      this.handleGenerationStuck()
+    }, stuckTimeout)
+  }
+
+  handleGenerationStuck() {
+    $generating.set(false)
+    $inferencePreview.set('')
+    resetProgress()
+
+    this.reconnectSoon('generation is stuck', 500, {shutup: true})
+  }
+
   clearDisconnectionTimer() {
     clearTimeout(this.disconnectTimer)
     this.disconnectTimer = undefined
+  }
+
+  clearGenerationStuckTimer() {
+    clearTimeout(this.generationStuckTimer)
+    this.generationStuckTimer = undefined
   }
 
   addListeners() {
@@ -89,6 +171,13 @@ class SocketManager {
     this.markAlive()
   }
 
+  generate = (message: string) => {
+    console.log(`[gen] sent "${message}"`)
+
+    this.sock.send(message)
+    this.startGenerationStuckTimer(message)
+  }
+
   onClose = () => {
     console.log('[ws] websocket closed')
 
@@ -108,6 +197,7 @@ class SocketManager {
 
       $inferencePreview.set(url)
 
+      this.startGenerationStuckTimer()
       console.log(`[ws] blob:`, blob.size)
     } else if (typeof data === 'string') {
       const res = data.trim()
@@ -126,7 +216,17 @@ class SocketManager {
             $startTimestep.set(t)
           }
         }
+
+        if (this.isInProgress()) {
+          // continue to monitor the generation
+          this.startGenerationStuckTimer()
+        } else {
+          this.clearGenerationStuckTimer()
+        }
       } else if (res === 'done') {
+        // generation is done, stop monitoring the generation
+        this.clearGenerationStuckTimer()
+
         $generating.set(false)
         resetProgress()
         console.log(`[ws] done!`)
@@ -169,3 +269,8 @@ class SocketManager {
 }
 
 export const socket = new SocketManager()
+
+if (typeof window !== 'undefined') {
+  // @ts-expect-error - please
+  window.socket = socket
+}

@@ -6,10 +6,8 @@ export async function generateFromPrompt(prompt: string) {
   const isGenerating = $generating.get()
 
   if (!isGenerating) {
-    console.log(`[GENERATING] ${prompt}`)
-
     try {
-      socket.sock.send(`P0:${prompt}`)
+      socket.generate(`P0:${prompt}`)
       $generating.set(true)
     } catch (err) {
       $apiReady.set(false)

@@ -22,6 +22,7 @@ import {resetAll} from './reset'
 import {disableRegen} from '../../store/regen'
 import {resetProgress} from '../../store/progress'
 import {$videoMode} from '../../store/exhibition'
+import {socket} from '../../manager/socket'
 
 export interface AutomatorContext {
   next(): void
@@ -161,9 +162,17 @@ export function runAutomationAction(
 
       $transcript.set({transcript: action.transcript, final: false})
     })
-    .with({action: 'cleanup-before-end'}, () => {
-      // disable regen and also reconnect to server.
-      disableRegen('cleanup before screening ends')
+    .with({action: 'reconnect'}, () => {
+      resetProgress()
+
+      // disable regen and reconnect to server.
+      const hasRegenEnabled = disableRegen('force reconnect to server')
+
+      if (!hasRegenEnabled) {
+        socket.reconnectSoon('force reconnect to server', 10, {
+          shutup: true,
+        })
+      }
     })
     .with({action: 'end'}, () => {
       $prompt.set('')
