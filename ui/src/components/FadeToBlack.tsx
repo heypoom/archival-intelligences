@@ -13,7 +13,7 @@ export const FadeToBlack = () => {
   const cannotFadeToBlack = mr({to: '/'}) || mr({to: '/transcript-tester'})
   const exhitionStatus = useStore($exhibitionStatus)
 
-  const isVisible = isVideo ? exhitionStatus.type !== 'active' : fadeStatus
+  const isVisible = isVideo ? exhitionStatus.type === 'active' : fadeStatus
 
   if (cannotFadeToBlack) return null
 
