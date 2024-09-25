@@ -157,6 +157,8 @@ export function SettingsRoute() {
 
           <div>set the page to full-screen</div>
         </div>
+
+        <div>version: September 25, 2024</div>
       </div>
     </div>
   )
