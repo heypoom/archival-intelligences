@@ -20,19 +20,19 @@ export function SettingsRoute() {
   }, [])
 
   // exhibition mode - program
-  function startExhibitionProgramLegacy() {
-    $exhibitionMode.set(true)
+  // function startExhibitionProgramLegacy() {
+  //   $exhibitionMode.set(true)
 
-    socket.clearDisconnectionTimer()
-    socket.reconnectSoon('program change - exhibition', 10)
+  //   socket.clearDisconnectionTimer()
+  //   socket.reconnectSoon('program change - exhibition', 10)
 
-    $videoMode.set(false)
-    $canPlay.set(true)
-    automator.sync({force: true})
-    fullscreen()
+  //   $videoMode.set(false)
+  //   $canPlay.set(true)
+  //   automator.sync({force: true})
+  //   fullscreen()
 
-    go({to: '/zero'})
-  }
+  //   go({to: '/zero'})
+  // }
 
   // exhibition mode - video
   function startExhibitionVideo() {
@@ -60,22 +60,22 @@ export function SettingsRoute() {
   }
 
   // performance lecture mode
-  function startLiveLecture() {
-    $exhibitionMode.set(false)
-    $videoMode.set(false)
+  // function startLiveLecture() {
+  //   $exhibitionMode.set(false)
+  //   $videoMode.set(false)
 
-    socket.clearDisconnectionTimer()
-    socket.reconnectSoon('program change - lecture', 10)
+  //   socket.clearDisconnectionTimer()
+  //   socket.reconnectSoon('program change - lecture', 10)
 
-    resetAll()
+  //   resetAll()
 
-    $canPlay.set(true)
-    automator.stopClock()
+  //   $canPlay.set(true)
+  //   automator.stopClock()
 
-    // NOTE: do not use fullscreen() here, as it will show "To exit full screen"
+  //   // NOTE: do not use fullscreen() here, as it will show "To exit full screen"
 
-    go({to: '/zero'})
-  }
+  //   go({to: '/zero'})
+  // }
 
   // debug: start exhibition from a fake time
   function setFakeTime() {

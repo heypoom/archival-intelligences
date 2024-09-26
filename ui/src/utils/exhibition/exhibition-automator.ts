@@ -17,7 +17,7 @@ import {
 import {secOf, timecodeOf, hhmmOf, hhmmssOf} from './timecode'
 
 import {
-  $disconnected,
+  // $disconnected,
   $exhibitionMode,
   $exhibitionStatus,
   $canPlay,
