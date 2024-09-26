@@ -20,7 +20,7 @@ export function SettingsRoute() {
   }, [])
 
   // exhibition mode - program
-  function startExhibitionProgram() {
+  function startExhibitionProgramLegacy() {
     $exhibitionMode.set(true)
 
     socket.clearDisconnectionTimer()
@@ -44,6 +44,16 @@ export function SettingsRoute() {
     socket.reconnectSoon('program change - video', 10)
 
     $videoMode.set(true)
+    $canPlay.set(true)
+    automator.sync({force: true})
+    fullscreen()
+  }
+  // exhibition mode - program video
+  function startExhibitionProgramVideo() {
+    go({to: '/program-video'})
+
+    $exhibitionMode.set(true)
+    $videoMode.set(false)
     $canPlay.set(true)
     automator.sync({force: true})
     fullscreen()
@@ -91,7 +101,7 @@ export function SettingsRoute() {
       }, 150)
     } else {
       automator.sync({force: true})
-      go({to: '/zero'})
+      go({to: '/program-video'})
     }
   }
 
@@ -104,22 +114,22 @@ export function SettingsRoute() {
           onClick={startExhibitionVideo}
           className="border border-yellow-300 text-yellow-300 px-4 py-2"
         >
-          exhibition - video screen
+          video screen
         </button>
 
         <button
-          onClick={startExhibitionProgram}
+          onClick={startExhibitionProgramVideo}
           className="border border-green-300 text-green-300 px-4 py-2"
         >
-          exhibition - program screen
+          program screen
         </button>
 
-        <button
+        {/* <button
           onClick={startLiveLecture}
           className="border border-blue-300 text-blue-300 px-4 py-2"
         >
           start live lecture
-        </button>
+        </button> */}
       </div>
 
       <h2 className="text-xl">testing options</h2>
@@ -158,7 +168,7 @@ export function SettingsRoute() {
           <div>set the page to full-screen</div>
         </div>
 
-        <div>version: September 25, 2024</div>
+        <div>version: September 27, 2024</div>
       </div>
     </div>
   )

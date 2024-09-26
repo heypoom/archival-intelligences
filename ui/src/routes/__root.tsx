@@ -6,7 +6,7 @@ import {CurrentProgramBadge} from '../components/CurrentProgramBadge'
 import FadeToBlack from '../components/FadeToBlack'
 import {ProgressBadge} from '../components/ProgressBadge'
 import {AnimatedNoise} from '../components/AnimatedNoise'
-import {ExhibitionFallbackVideo} from '../components/ExhibitionFallbackVideo'
+import {ExhibitionProgramVideo} from '../components/ExhibitionFallbackVideo'
 import {SettingsButton} from '../components/SettingsButton'
 import {ProgramErrorBoundary} from '../components/ErrorBoundary'
 import {WaitingRoomScreen} from '../components/WaitingScreen'
@@ -27,7 +27,6 @@ export const Route = createRootRoute({
 
       <WaitingRoomScreen />
       <ClosedScreen />
-      <ExhibitionFallbackVideo />
 
       <Outlet />
 

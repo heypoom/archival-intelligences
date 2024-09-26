@@ -50,9 +50,7 @@ export class ExhibitionAutomator {
   ipcId = nanoid()
 
   videoRef: HTMLVideoElement | null = null
-
-  // for emergency fallback video, when the GPU server crashes.
-  fallbackVideoRef: HTMLVideoElement | null = null
+  programVideoRef: HTMLVideoElement | null = null
 
   // allows emulation of time
   now = () => new Date(new Date().getTime() + this.timeDrift)
@@ -99,20 +97,18 @@ export class ExhibitionAutomator {
     this.videoRef = video
   }
 
-  initFallbackVideo(video: HTMLVideoElement) {
-    this.fallbackVideoRef = video
+  initProgramVideo(video: HTMLVideoElement) {
+    this.programVideoRef = video
 
     const isVideo = this.isVideo
 
     const shouldPlayFallbackVideo =
       $exhibitionMode.get() &&
       $exhibitionStatus.get().type === 'active' &&
-      !isVideo &&
-      $disconnected.get()
+      !isVideo
 
     if (shouldPlayFallbackVideo) {
-      console.log('[init fallback video]', shouldPlayFallbackVideo)
-      this.playFallbackVideo()
+      this.playProgramVideo()
     }
   }
 
@@ -418,6 +414,9 @@ export class ExhibitionAutomator {
     if (next.type === 'active') {
       this.configureStartTime(next.start)
     }
+    if (window.location.href.includes('/program-video')) {
+      return
+    }
 
     // HACK: is video??
     const isVideo = this.isVideo
@@ -475,8 +474,8 @@ export class ExhibitionAutomator {
     this.actionContext.navigate(route)
   }
 
-  playFallbackVideo = async () => {
-    const video = this.fallbackVideoRef
+  playProgramVideo = async () => {
+    const video = this.programVideoRef
     if (!video) return
 
     if (isVideoPlaying(video)) return
@@ -486,7 +485,7 @@ export class ExhibitionAutomator {
     try {
       await video.play()
     } catch (err) {
-      console.error(`[cannot play fallback video]`, err)
+      console.error(`[cannot play program video]`, err)
 
       // something is wrong with the auto-play policy
       $canPlay.set(false)

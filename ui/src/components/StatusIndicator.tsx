@@ -16,7 +16,7 @@ export const StatusIndicator = () => {
   const apiReady = useStore($apiReady)
   const generating = useStore($generating)
 
-  const isVideo = useIsVideo()
+  const isVideo = useIsVideo() || mr({to: '/program-video'})
   if (isVideo) return null
 
   const starting = status === 'starting'

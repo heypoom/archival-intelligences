@@ -1,10 +1,5 @@
-const videoSource =
-  'https://rui-an-fr-videos.poom.dev/rui-an-sep-24-fast-v2.mp4'
-
 export const EXHIBITION_VIDEO_SOURCES = {
-  // Main lecture video shown to the audience
-  lecture: videoSource,
+  lecture: 'https://rui-an-fr-videos.poom.dev/rui-an-sep-24-fast-v2.mp4',
 
-  // Emergency fallback video shown when the GPU server crashes
-  programFallback: videoSource,
+  programVideo: 'https://rui-an-fr-videos.poom.dev/rui-an-sep-24-fast-v2.mp4',
 } as const
