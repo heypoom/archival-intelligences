@@ -6,6 +6,7 @@ import {$exhibitionStatus} from '../store/exhibition'
 import {automator} from '../utils/exhibition/exhibition-automator'
 
 import {EXHIBITION_VIDEO_SOURCES} from '../constants/exhibition-videos'
+import {$programTimestamp} from '../store/timestamps'
 
 /**
  * When the GPU server crashes, we show a fallback video to the audience.
@@ -31,6 +32,8 @@ export const ExhibitionProgramVideo = () => {
           automator.programVideoRef.currentTime = expectedTime
           console.log(`[video] drift by ${drift}s`)
         }
+
+        $programTimestamp.set(Math.round(automator.programVideoRef.currentTime))
       }, 1000)
     }
 

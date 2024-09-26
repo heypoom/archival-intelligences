@@ -100,8 +100,8 @@ export function SettingsRoute() {
         }, 100)
       }, 150)
     } else {
-      automator.sync({force: true})
       go({to: '/program-video'})
+      automator.sync({force: true})
     }
   }
 

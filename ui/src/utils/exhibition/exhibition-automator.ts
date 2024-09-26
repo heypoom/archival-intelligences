@@ -414,7 +414,8 @@ export class ExhibitionAutomator {
     if (next.type === 'active') {
       this.configureStartTime(next.start)
     }
-    if (window.location.href.includes('/program-video')) {
+
+    if (window.location.href.includes('program-video')) {
       return
     }
 
@@ -428,7 +429,7 @@ export class ExhibitionAutomator {
         .with('closed', () => {})
         .with('active', () => {
           if (!this.isVideo) {
-            this.restoreRouteFromCue()
+            // this.restoreRouteFromCue()
           }
         })
         .exhaustive()
