@@ -2,19 +2,19 @@ import dayjs, {Dayjs} from 'dayjs'
 import {nanoid} from 'nanoid'
 import {
   AutomationCue,
-  PROGRAM_CUES,
-  PROGRAM_ZERO_END_TIME,
-  PROGRAM_ZERO_START_TIME,
+  // PROGRAM_CUES,
+  // PROGRAM_ZERO_END_TIME,
+  // PROGRAM_ZERO_START_TIME,
 } from '../../constants/exhibition-cues'
-import {loadTranscriptCue} from './cue-from-transcript'
-import {getCurrentCue} from './get-current-cue'
+// import {loadTranscriptCue} from './cue-from-transcript'
+// import {getCurrentCue} from './get-current-cue'
 import {
   AutomatorContext,
-  runAutomationAction,
+  // runAutomationAction,
   runScreeningStartTask,
 } from './run-automation-action'
 
-import {secOf, timecodeOf, hhmmOf, hhmmssOf} from './timecode'
+import {secOf, hhmmOf, hhmmssOf} from './timecode'
 
 import {
   // $disconnected,
@@ -26,12 +26,12 @@ import {
 } from '../../store/exhibition'
 import {getExhibitionStatus} from './get-exhibition-status'
 import {match} from 'ts-pattern'
-import {routeFromCue} from './route-from-cue'
+// import {routeFromCue} from './route-from-cue'
 import {IpcAction, IpcMessage, IpcMeta} from '../../store/window-ipc'
 import {resetAll} from './reset'
-import {compareTimecode} from './compare-timecode'
-import {transcriptWithinTimeRange} from './exclude-transcription-before'
-import {$programTimestamp} from '../../store/timestamps'
+// import {compareTimecode} from './compare-timecode'
+// import {transcriptWithinTimeRange} from './exclude-transcription-before'
+// import {$programTimestamp} from '../../store/timestamps'
 import {getServerTimeDrift} from './get-system-time-drift'
 
 export class ExhibitionAutomator {
@@ -258,7 +258,7 @@ export class ExhibitionAutomator {
 
     if (Math.abs(drift) > 1) {
       const from = this.currentCue
-      this.seekCue(timecodeOf(this.elapsed))
+      // this.seekCue(timecodeOf(this.elapsed))
 
       const to = this.currentCue
       const diff = to - from
@@ -338,7 +338,7 @@ export class ExhibitionAutomator {
     return this.elapsed >= nextCueTime
   }
 
-  seekCue(time: string) {
+  seekCue() {
     // const seq = getCurrentCue(time, this.cues)
     // if (!seq) {
     //   console.log('no cue found for', time)
