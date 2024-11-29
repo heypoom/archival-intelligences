@@ -20,8 +20,8 @@ const generationTimeouts: Record<string, number> = {
   P4: 20 * 1000,
 }
 
-const EXHIBITION_ENDPOINT = 'wss://live-lecture-v2.poom.dev/ws'
-const LIVE_LECTURE_ENDPOINT = 'wss://live-lecture-v2.poom.dev/ws'
+const EXHIBITION_ENDPOINT = 'wss://rui-an-sg-large.poom.dev/ws'
+const LIVE_LECTURE_ENDPOINT = 'wss://rui-an-sg-large.poom.dev/ws'
 
 class SocketManager {
   sock: WebSocket

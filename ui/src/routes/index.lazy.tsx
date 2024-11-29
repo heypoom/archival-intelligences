@@ -60,22 +60,22 @@ export function SettingsRoute() {
   }
 
   // performance lecture mode
-  // function startLiveLecture() {
-  //   $exhibitionMode.set(false)
-  //   $videoMode.set(false)
+  function startLiveLecture() {
+    $exhibitionMode.set(false)
+    $videoMode.set(false)
 
-  //   socket.clearDisconnectionTimer()
-  //   socket.reconnectSoon('program change - lecture', 10)
+    socket.clearDisconnectionTimer()
+    socket.reconnectSoon('program change - lecture', 10)
 
-  //   resetAll()
+    resetAll()
 
-  //   $canPlay.set(true)
-  //   automator.stopClock()
+    $canPlay.set(true)
+    automator.stopClock()
 
-  //   // NOTE: do not use fullscreen() here, as it will show "To exit full screen"
+    // NOTE: do not use fullscreen() here, as it will show "To exit full screen"
 
-  //   go({to: '/zero'})
-  // }
+    go({to: '/zero'})
+  }
 
   // debug: start exhibition from a fake time
   function setFakeTime() {
@@ -124,12 +124,12 @@ export function SettingsRoute() {
           program screen
         </button>
 
-        {/* <button
+        <button
           onClick={startLiveLecture}
           className="border border-blue-300 text-blue-300 px-4 py-2"
         >
           start live lecture
-        </button> */}
+        </button>
       </div>
 
       <h2 className="text-xl">testing options</h2>
