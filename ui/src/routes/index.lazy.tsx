@@ -123,13 +123,6 @@ export function SettingsRoute() {
         >
           program screen
         </button>
-
-        <button
-          onClick={startLiveLecture}
-          className="border border-blue-300 text-blue-300 px-4 py-2"
-        >
-          start live lecture
-        </button>
       </div>
 
       <h2 className="text-xl">testing options</h2>
@@ -168,7 +161,18 @@ export function SettingsRoute() {
           <div>set the page to full-screen</div>
         </div>
 
-        <div>version: September 27, 2024</div>
+        <div className="flex justify-start items-center gap-x-4 text-xs opacity-50">
+          <button
+            onClick={startLiveLecture}
+            className="border border-gray-300 text-gray-300 px-3 py-2 text-xs"
+          >
+            start lecture
+          </button>
+
+          <div>do not click this unless instructed</div>
+        </div>
+
+        <div>version: December 1, 2024</div>
       </div>
     </div>
   )
