@@ -161,10 +161,10 @@ export function SettingsRoute() {
           <div>set the page to full-screen</div>
         </div>
 
-        <div className="flex justify-start items-center gap-x-4 text-xs opacity-50">
+        <div className="flex justify-start items-center gap-x-4 text-xs text-black">
           <button
             onClick={startLiveLecture}
-            className="border border-gray-300 text-gray-300 px-3 py-2 text-xs"
+            className="border border-black text-black px-3 py-2 text-xs"
           >
             start lecture
           </button>
