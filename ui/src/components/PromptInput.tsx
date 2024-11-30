@@ -47,7 +47,6 @@ export const PromptInput = ({input, className}: Props) => {
         style={{
           fontFamily: 'Monaco',
           background: 'rgba(17, 17, 17, 0.5)',
-          backdropFilter: 'blur(10px)',
         }}
         className={cx(
           'text-white font-mono text-center w-full',
