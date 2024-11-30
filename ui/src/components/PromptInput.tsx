@@ -8,6 +8,28 @@ interface Props {
   className?: string
 }
 
+const E_MIN_WIDTH = 600
+const E_MAX_WIDTH = 1000
+const E_MIN_CHARS = 23
+const E_MAX_CHARS = 40
+
+function getExpandWidth(charactersTyped: number) {
+  // Return minimum width if below the threshold
+  if (charactersTyped < E_MIN_CHARS) {
+    return E_MIN_WIDTH
+  }
+
+  // Calculate how many pixels to add per character
+  const widthRange = E_MAX_WIDTH - E_MIN_WIDTH
+  const charactersRange = E_MAX_CHARS - E_MIN_CHARS
+  const widthPerChar = widthRange / charactersRange
+
+  // Calculate extra width based on characters past minimum
+  const extraChars = Math.min(charactersTyped - E_MIN_CHARS, charactersRange)
+
+  return Math.round(E_MIN_WIDTH + extraChars * widthPerChar)
+}
+
 export const PromptInput = ({input, className}: Props) => {
   const isExhibition = useStore($exhibitionMode)
 
@@ -15,29 +37,21 @@ export const PromptInput = ({input, className}: Props) => {
 
   useEffect(() => {
     if (textareaRef.current) {
+      const value = String(input?.value)
+      const newWidth = getExpandWidth(value.length)
+
+      textareaRef.current.style.width = `${newWidth}px`
+
       // Reset height to auto to get the correct scrollHeight
       textareaRef.current.style.height = 'auto'
 
-      // Set the height to match the content
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
-
-      const value = String(input?.value)
-
-      const initialWidth = 600
-      const maxWidth = 1000
-
-      // auto-expanding text
-      const charactersTyped = value.length
-      const widthRange = maxWidth - initialWidth
-      const maxChars = 23
-
-      const newWidth = Math.min(
-        maxWidth,
-        initialWidth +
-          (widthRange * Math.min(charactersTyped, maxChars)) / maxChars
-      )
-
-      textareaRef.current.style.width = `${newWidth}px`
+      if (value.length > E_MAX_CHARS) {
+        // Allow vertical expansion after max chars
+        textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
+      } else {
+        // Single line height otherwise
+        textareaRef.current.style.height = 'unset'
+      }
     }
   }, [input?.value])
 
@@ -47,6 +61,8 @@ export const PromptInput = ({input, className}: Props) => {
         style={{
           fontFamily: 'Monaco',
           background: 'rgba(17, 17, 17, 0.5)',
+          whiteSpace:
+            String(input?.value)?.length <= E_MAX_CHARS ? 'nowrap' : 'pre-wrap',
         }}
         className={cx(
           'text-white font-mono text-center w-full',
