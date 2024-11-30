@@ -1,5 +1,5 @@
 import cx from 'classnames'
-import {ComponentProps, useEffect, useRef} from 'react'
+import {ComponentProps, useEffect, useRef, useState} from 'react'
 import {$exhibitionMode} from '../store/exhibition'
 import {useStore} from '@nanostores/react'
 
@@ -34,6 +34,7 @@ export const PromptInput = ({input, className}: Props) => {
   const isExhibition = useStore($exhibitionMode)
 
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const [w, setW] = useState<number | null>(null)
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -41,6 +42,7 @@ export const PromptInput = ({input, className}: Props) => {
       const newWidth = getExpandWidth(value.length)
 
       textareaRef.current.style.width = `${newWidth}px`
+      setW(newWidth)
 
       // Reset height to auto to get the correct scrollHeight
       textareaRef.current.style.height = 'auto'
@@ -56,17 +58,26 @@ export const PromptInput = ({input, className}: Props) => {
   }, [input?.value])
 
   return (
-    <div className="flex items-center justify-center max-w-[1000px] w-full">
+    <div
+      className="flex items-center justify-center max-w-[1000px] w-full px-[20px]"
+      style={{
+        background: 'rgba(17, 17, 17, 0.5)',
+        width: `${w}px`,
+        boxSizing: 'content-box',
+      }}
+    >
       <textarea
         style={{
           fontFamily: 'Monaco',
-          background: 'rgba(17, 17, 17, 0.5)',
+          background: 'transparent',
+
           whiteSpace:
             String(input?.value)?.length <= E_MAX_CHARS ? 'nowrap' : 'pre-wrap',
         }}
         className={cx(
           'text-white font-mono text-center w-full',
           'resize-none overflow-hidden min-h-[40px]',
+          'outline-none',
 
           isExhibition
             ? 'text-2xl p-2 px-4 py-2'
