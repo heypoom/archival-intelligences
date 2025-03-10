@@ -24,14 +24,14 @@ const EXHIBITION_ENDPOINT = 'wss://rui-an-sg-large.poom.dev/ws'
 const LIVE_LECTURE_ENDPOINT = 'wss://rui-an-sg-large.poom.dev/ws'
 
 class SocketManager {
-  sock: WebSocket
+  sock?: WebSocket
   disconnectTimer?: number
   generationStuckTimer?: number
 
   currentInferenceMessage?: string
 
   constructor() {
-    this.sock = this.createWs()
+    // this.sock = this.createWs()
   }
 
   get url(): string {
@@ -43,13 +43,11 @@ class SocketManager {
   }
 
   createWs() {
-    const ws = new WebSocket(this.url)
-    this.startDisconnectionTimer()
-
-    this.sock = ws
-    this.addListeners()
-
-    return ws
+    // const ws = new WebSocket(this.url)
+    // this.startDisconnectionTimer()
+    // this.sock = ws
+    // this.addListeners()
+    // return ws
   }
 
   markDisconnect() {
@@ -256,7 +254,7 @@ class SocketManager {
     setTimeout(() => {
       console.log(`[ws] reconnecting due to "${reason}"`)
 
-      this.sock = this.createWs()
+      // this.sock = this.createWs()
     }, delay)
   }
 
