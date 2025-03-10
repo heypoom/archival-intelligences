@@ -164,7 +164,7 @@ class SocketManager {
   }
 
   onOpen = () => {
-    console.log(`[ws] websocket connected to "${this.sock.url}"`)
+    // console.log(`[ws] websocket connected to "${this.sock.url}"`)
 
     this.markAlive()
   }
