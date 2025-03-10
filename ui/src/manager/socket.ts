@@ -24,7 +24,7 @@ const EXHIBITION_ENDPOINT = 'wss://rui-an-sg-large.poom.dev/ws'
 const LIVE_LECTURE_ENDPOINT = 'wss://rui-an-sg-large.poom.dev/ws'
 
 class SocketManager {
-  sock?: WebSocket
+  // sock: WebSocket
   disconnectTimer?: number
   generationStuckTimer?: number
 
@@ -43,17 +43,19 @@ class SocketManager {
   }
 
   createWs() {
-    // const ws = new WebSocket(this.url)
-    // this.startDisconnectionTimer()
+    const ws = new WebSocket(this.url)
+    this.startDisconnectionTimer()
+
     // this.sock = ws
-    // this.addListeners()
-    // return ws
+    this.addListeners()
+
+    return ws
   }
 
   markDisconnect() {
-    if (this.sock) {
-      this.removeListeners()
-    }
+    // if (this.sock) {
+    //   this.removeListeners()
+    // }
 
     $apiReady.set(false)
     $generating.set(false)
@@ -141,17 +143,17 @@ class SocketManager {
   }
 
   addListeners() {
-    this.sock.addEventListener('error', this.onError)
-    this.sock.addEventListener('open', this.onOpen)
-    this.sock.addEventListener('close', this.onClose)
-    this.sock.addEventListener('message', this.onMessage)
+    // this.sock.addEventListener('error', this.onError)
+    // this.sock.addEventListener('open', this.onOpen)
+    // this.sock.addEventListener('close', this.onClose)
+    // this.sock.addEventListener('message', this.onMessage)
   }
 
   removeListeners() {
-    this.sock.removeEventListener('error', this.onError)
-    this.sock.removeEventListener('open', this.onOpen)
-    this.sock.removeEventListener('close', this.onClose)
-    this.sock.removeEventListener('message', this.onMessage)
+    // this.sock.removeEventListener('error', this.onError)
+    // this.sock.removeEventListener('open', this.onOpen)
+    // this.sock.removeEventListener('close', this.onClose)
+    // this.sock.removeEventListener('message', this.onMessage)
   }
 
   onError = (event: Event) => {
@@ -170,7 +172,7 @@ class SocketManager {
   generate = (message: string) => {
     console.log(`[gen] sent "${message}"`)
 
-    this.sock.send(message)
+    // this.sock.send(message)
     this.startGenerationStuckTimer(message)
   }
 
@@ -242,7 +244,7 @@ class SocketManager {
   }
 
   reconnectSoon(reason?: string, delay = 5000, flags?: {shutup?: boolean}) {
-    if (!this.sock) return
+    // if (!this.sock) return
 
     $apiReady.set(false)
 
@@ -259,7 +261,7 @@ class SocketManager {
   }
 
   close() {
-    this.sock.close()
+    // this.sock.close()
     this.markDisconnect()
   }
 }
