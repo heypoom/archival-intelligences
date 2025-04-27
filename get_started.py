@@ -1,5 +1,7 @@
 import io
+import os
 import random
+import time
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
 
@@ -136,10 +138,12 @@ class Inference:
         images = self.pipe(
             prompt,
             num_images_per_prompt=batch_size,
-            num_inference_steps=4,
+            num_inference_steps=10,
             guidance_scale=0.0,
             max_sequence_length=512,
             callback_on_step_end=step_callback,
+            width=1360,
+            height=768,
         ).images
 
         # Convert final images to bytes
@@ -154,7 +158,9 @@ class Inference:
         return image_output, preview_images
 
 
-@app.function()
+@app.function(
+    volumes={GENERATED_DIR: generated_vol},
+)
 @modal.asgi_app()
 def endpoint():
     from fastapi import FastAPI, WebSocket
@@ -170,6 +176,7 @@ def endpoint():
         await websocket.accept()
         while True:
             data = await websocket.receive_text()
+            run_id = int(time.time())
             await websocket.send_text(f"message text was: {data}")
 
             prompt = data.strip()
@@ -178,15 +185,18 @@ def endpoint():
             # Get both final images and preview images
             images, preview_images = inference.run.remote(prompt, batch_size=1)
 
+            run_output_path = Path(output_dir / f"run_{run_id}/")
+            run_output_path.mkdir(exist_ok=True)
+
             # Save preview images
             for i, preview_bytes in enumerate(preview_images):
-                preview_path = output_dir / f"preview_{i:02d}.png"
+                preview_path = run_output_path / f"preview_{i:02d}.png"
                 preview_path.write_bytes(preview_bytes)
                 await websocket.send_text(f"saved {preview_path}")
 
             # Save final images
             for i, image_bytes in enumerate(images):
-                output_path = output_dir / f"output_{i:02d}.png"
+                output_path = run_output_path / f"output_{i:02d}.png"
                 output_path.write_bytes(image_bytes)
                 await websocket.send_text(f"saved {output_path}")
 
