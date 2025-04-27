@@ -46,6 +46,7 @@ export function SettingsRoute() {
     automator.sync({force: true})
     fullscreen()
   }
+
   // exhibition mode - program video
   function startExhibitionProgramVideo() {
     go({to: '/zero'})
@@ -98,6 +99,7 @@ export function SettingsRoute() {
       }, 150)
     } else {
       go({to: '/zero'})
+
       automator.sync({force: true})
     }
   }

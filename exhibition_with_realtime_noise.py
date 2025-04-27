@@ -109,59 +109,40 @@ class Inference:
             nonlocal preview_count  # Modify the outer counter
             latents = callback_kwargs["latents"]
 
+            # Send progress update in the format expected by frontend
+            progress_msg = f"p:s={step_index}:t={timestep}"
+            try:
+                generation_queue.put(progress_msg)
+            except Exception as e:
+                print(f"Warning: Failed to put progress update on queue: {e}")
+
             # Decode the latents to a preview image (only for the first image in batch)
-            # Ensure decoding happens correctly without excessive memory use
             try:
                 with torch.no_grad():
-                    # Use float32 for VAE decoding if needed, potentially on CPU
-                    # Or decode directly on GPU if memory allows
-                    # Keep VAE on GPU but maybe use float32 temporarily?
-                    # vae_dtype = pipe.vae.dtype
-                    # pipe.vae.to(dtype=torch.float32) # This might be slow if done every step
-
-                    # Decode only the first latent in the batch for preview
                     latent_to_decode = latents[0:1]  # Keep batch dim
                     scaled_latents = latent_to_decode / pipe.vae.config.scaling_factor
                     image_tensor = pipe.vae.decode(
                         scaled_latents.to(pipe.vae.dtype), return_dict=False
-                    )[
-                        0
-                    ]  # Use VAE's dtype
-
-                    # pipe.vae.to(dtype=vae_dtype) # Restore original dtype if changed
+                    )[0]
 
                     # Process tensor to PIL Image
                     image = (image_tensor / 2 + 0.5).clamp(0, 1)
                     image = image.cpu().permute(0, 2, 3, 1).float().numpy()  # BHWC
                     image = (image * 255).round().astype("uint8")
 
-                    preview_image = Image.fromarray(
-                        image[0]
-                    )  # Get first image from batch
+                    preview_image = Image.fromarray(image[0])
 
                     # Save preview image to bytes
                     with io.BytesIO() as buf:
-                        preview_image.save(
-                            buf, format="JPEG", quality=75
-                        )  # Use JPEG for smaller previews
-                        preview_images.append(buf.getvalue())
-                        preview_count += 1
-
-                    # --- Send update via Queue ---
-                    if generation_queue is not None:
+                        preview_image.save(buf, format="JPEG", quality=75)
+                        preview_bytes = buf.getvalue()
                         try:
-                            print(f"putting preview count {preview_count} onto queue.")
-                            generation_queue.put(preview_count)
+                            generation_queue.put(preview_bytes)
                         except Exception as e:
-                            # Handle cases where queue might be full or other issues
-                            print(f"Warning: Failed to put update on queue: {e}")
-                    # -----------------------------
+                            print(f"Warning: Failed to put preview image on queue: {e}")
 
             except Exception as e:
                 print(f"Error during preview generation step {step_index}: {e}")
-                # Optionally, put an error marker or skip update
-                # if gen_queue is not None:
-                #     gen_queue.put({"error": str(e)})
 
             return callback_kwargs
 
@@ -212,6 +193,7 @@ class Inference:
     volumes={GENERATED_DIR: generated_vol},
     timeout=650,  # Slightly longer timeout for websocket handling
     min_containers=1,  # Keep one instance warm for faster websocket connections
+    max_containers=3,
 )
 @modal.asgi_app()
 def endpoint():
@@ -242,6 +224,12 @@ def endpoint():
         try:
             while True:
                 data = await websocket.receive_text()
+
+                # Handle ping message
+                if data == "ping":
+                    await websocket.send_text("pong")
+                    continue
+
                 run_id = int(time.time())
                 await websocket.send_text(
                     f"Received prompt: '{data}'. Starting generation (Run ID: {run_id})..."
@@ -293,13 +281,15 @@ def endpoint():
                     # This will block until inference.run completes and returns
                     images, preview_images = call.get()  # Retrieve result
                     print(f"inference result received for run {run_id}.")
-                    await websocket.send_text(f"len(images):", len(images))
-                    await websocket.send_text(
-                        "len(preview_images):", len(preview_images)
-                    )
-                    await websocket.send_text(
-                        f"inference result received for run {run_id}."
-                    )
+
+                    # Send completion signal
+                    await websocket.send_text("done")
+
+                    # Send final image
+                    if images:
+                        with io.BytesIO() as buf:
+                            images[0].save(buf, format="JPEG", quality=95)
+                            await websocket.send_bytes(buf.getvalue())
 
                 except Exception as e:
                     print(f"Error during inference execution: {e}")

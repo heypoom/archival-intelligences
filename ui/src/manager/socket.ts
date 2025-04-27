@@ -5,7 +5,12 @@ import {
   $timestep,
   resetProgress,
 } from '../store/progress'
-import {$apiReady, $generating, $inferencePreview} from '../store/prompt'
+import {
+  $apiReady,
+  $generating,
+  $inferencePreview,
+  $booting,
+} from '../store/prompt'
 
 /** After 8 seconds of no activity, consider the connection dead */
 const DISCONNECT_TIMEOUT = 8 * 1000
@@ -247,6 +252,9 @@ class SocketManager {
   onOpen(endpointType: EndpointType) {
     console.log(`[ws] websocket connected to "${endpointType}"`)
     this.markAlive(endpointType)
+
+    // ping the server once to check if it's ready
+    this.ping(endpointType)
   }
 
   generate(programId: ProgramId, message: string) {
@@ -271,6 +279,12 @@ class SocketManager {
     this.markAlive(endpointType)
 
     const data = event.data
+
+    // Handle ping/pong messages
+    if (typeof data === 'string' && data === 'pong') {
+      $booting.set(false)
+      return
+    }
 
     // binary data received - assume JPEG-encoded image
     if (data instanceof Blob) {
@@ -367,6 +381,14 @@ class SocketManager {
       this.clearDisconnectionTimer(endpointType)
       state.socket.close()
     })
+  }
+
+  ping(endpointType: EndpointType) {
+    const state = this.getEndpointState(endpointType)
+    if (!state) return
+
+    $booting.set(true)
+    state.socket.send('ping')
   }
 }
 

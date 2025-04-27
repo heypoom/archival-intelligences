@@ -3,14 +3,20 @@ import {$generating} from '../store/prompt'
 import {$progress} from '../store/progress'
 import {$regenActive} from '../store/regen'
 import {useIsVideo} from '../hooks/useIsVideo'
+import {useMatchRoute} from '@tanstack/react-router'
 
 export function ProgressBadge() {
   const generating = useStore($generating)
   const progress = useStore($progress)
   const regenActive = useStore($regenActive)
 
+  const mr = useMatchRoute()
   const isVideo = useIsVideo()
+
   if (isVideo) return null
+
+  // P0 is super fast no need for progress badge
+  if (mr({to: '/zero'})) return null
 
   if (!generating && !regenActive) return null
   if (progress === 0 && regenActive) return null

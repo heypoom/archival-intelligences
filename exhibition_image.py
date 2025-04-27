@@ -2,6 +2,7 @@ import io
 import os
 import random
 import time
+import asyncio
 from pathlib import Path
 
 import modal
@@ -122,6 +123,7 @@ class Inference:
     volumes={GENERATED_DIR: generated_vol},
     timeout=650,  # Slightly longer timeout for websocket handling
     min_containers=1,  # Keep one instance warm for faster websocket connections
+    max_containers=3,
 )
 @modal.asgi_app()
 def endpoint():
@@ -152,6 +154,12 @@ def endpoint():
         try:
             while True:
                 data = await websocket.receive_text()
+
+                # Handle ping message
+                if data == "ping":
+                    await websocket.send_text("pong")
+                    continue
+
                 run_id = int(time.time())
                 await websocket.send_text(
                     f"Received prompt: '{data}'. Starting generation (Run ID: {run_id})..."
@@ -179,18 +187,16 @@ def endpoint():
                 run_output_path = Path(output_dir / f"run_{run_id}/")
                 run_output_path.mkdir(exist_ok=True)
 
-                # Save final images and send the first one back via WebSocket (optional)
+                # Save final images and send them via WebSocket
                 for i, image_bytes in enumerate(images):
                     output_path = run_output_path / f"output_{i:02d}.png"
                     output_path.write_bytes(image_bytes)
-                    # await websocket.send_text(f"Saved final image: {output_path.name}")
 
-                    # Example: Send the first final image back as a data URL
-                    # if i == 0:
-                    #     import base64
+                    # Send the image as bytes
+                    await websocket.send_bytes(image_bytes)
 
-                    #     img_b64 = base64.b64encode(image_bytes).decode("utf-8")
-                    #     await websocket.send_text(f"data:image/png;base64,{img_b64}")
+                # Send completion message
+                await websocket.send_text("done")
 
         except WebSocketDisconnect:
             print("Client disconnected")

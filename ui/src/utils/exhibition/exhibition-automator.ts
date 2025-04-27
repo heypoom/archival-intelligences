@@ -2,19 +2,19 @@ import dayjs, {Dayjs} from 'dayjs'
 import {nanoid} from 'nanoid'
 import {
   AutomationCue,
-  // PROGRAM_CUES,
-  // PROGRAM_ZERO_END_TIME,
-  // PROGRAM_ZERO_START_TIME,
+  PROGRAM_CUES,
+  PROGRAM_ZERO_END_TIME,
+  PROGRAM_ZERO_START_TIME,
 } from '../../constants/exhibition-cues'
-// import {loadTranscriptCue} from './cue-from-transcript'
-// import {getCurrentCue} from './get-current-cue'
+import {loadTranscriptCue} from './cue-from-transcript'
+import {getCurrentCue} from './get-current-cue'
 import {
   AutomatorContext,
-  // runAutomationAction,
+  runAutomationAction,
   runScreeningStartTask,
 } from './run-automation-action'
 
-import {secOf, hhmmOf, hhmmssOf} from './timecode'
+import {secOf, hhmmOf, hhmmssOf, timecodeOf} from './timecode'
 
 import {
   // $disconnected,
@@ -26,13 +26,14 @@ import {
 } from '../../store/exhibition'
 import {getExhibitionStatus} from './get-exhibition-status'
 import {match} from 'ts-pattern'
-// import {routeFromCue} from './route-from-cue'
+import {routeFromCue} from './route-from-cue'
 import {IpcAction, IpcMessage, IpcMeta} from '../../store/window-ipc'
 import {resetAll} from './reset'
-// import {compareTimecode} from './compare-timecode'
-// import {transcriptWithinTimeRange} from './exclude-transcription-before'
-// import {$programTimestamp} from '../../store/timestamps'
+import {compareTimecode} from './compare-timecode'
+import {transcriptWithinTimeRange} from './exclude-transcription-before'
+import {$programTimestamp} from '../../store/timestamps'
 import {getServerTimeDrift} from './get-system-time-drift'
+import {socket} from '../../manager/socket'
 
 export class ExhibitionAutomator {
   timer: number | null = null
@@ -258,7 +259,7 @@ export class ExhibitionAutomator {
 
     if (Math.abs(drift) > 1) {
       const from = this.currentCue
-      // this.seekCue(timecodeOf(this.elapsed))
+      this.seekCue(timecodeOf(this.elapsed))
 
       const to = this.currentCue
       const diff = to - from
@@ -298,35 +299,35 @@ export class ExhibitionAutomator {
   }
 
   load = async () => {
-    // let transcriptCues = await loadTranscriptCue()
-    // const rangeFilter = transcriptWithinTimeRange(
-    //   PROGRAM_ZERO_START_TIME,
-    //   PROGRAM_ZERO_END_TIME
-    // )
-    // // exclude transcription cues before the program start time.
-    // transcriptCues = transcriptCues
-    //   .sort((a, b) => compareTimecode(a.time, b.time))
-    //   .filter(rangeFilter)
-    // this.cues = [...transcriptCues, ...PROGRAM_CUES]
-    // // make sure the cues are sorted by time!
-    // this.cues = this.cues.sort((a, b) => compareTimecode(a.time, b.time))
+    let transcriptCues = await loadTranscriptCue()
+    const rangeFilter = transcriptWithinTimeRange(
+      PROGRAM_ZERO_START_TIME,
+      PROGRAM_ZERO_END_TIME
+    )
+    // exclude transcription cues before the program start time.
+    transcriptCues = transcriptCues
+      .sort((a, b) => compareTimecode(a.time, b.time))
+      .filter(rangeFilter)
+    this.cues = [...transcriptCues, ...PROGRAM_CUES]
+    // make sure the cues are sorted by time!
+    this.cues = this.cues.sort((a, b) => compareTimecode(a.time, b.time))
   }
 
   tick() {
-    // if (this.canGo()) this.go()
-    // $programTimestamp.set(this.elapsed)
+    if (this.canGo()) this.go()
+    $programTimestamp.set(this.elapsed)
   }
 
   go() {
-    // this.currentCue++
-    // const action = this.cues[this.currentCue]
-    // console.log(`running action cue ${this.currentCue}:`, action)
-    // this.actionContext.cue = () => this.currentCue
-    // this.actionContext.elapsed = () => this.elapsed
-    // if (action.action === 'start') {
-    //   this.sendIpcAction({type: 'play', elapsed: this.elapsed})
-    // }
-    // runAutomationAction(action, this.actionContext)
+    this.currentCue++
+    const action = this.cues[this.currentCue]
+    console.log(`running action cue ${this.currentCue}:`, action)
+    this.actionContext.cue = () => this.currentCue
+    this.actionContext.elapsed = () => this.elapsed
+    if (action.action === 'start') {
+      this.sendIpcAction({type: 'play', elapsed: this.elapsed})
+    }
+    runAutomationAction(action, this.actionContext)
   }
 
   canGo(): boolean {
@@ -338,17 +339,17 @@ export class ExhibitionAutomator {
     return this.elapsed >= nextCueTime
   }
 
-  seekCue() {
-    // const seq = getCurrentCue(time, this.cues)
-    // if (!seq) {
-    //   console.log('no cue found for', time)
-    //   return
-    // }
-    // const [cue] = seq
-    // if (this.currentCue !== cue) {
-    //   this.currentCue = cue
-    //   console.log(`seeking to cue ${cue} | t=${time}`)
-    // }
+  seekCue(time: string) {
+    const seq = getCurrentCue(time, this.cues)
+    if (!seq) {
+      console.log('no cue found for', time)
+      return
+    }
+    const [cue] = seq
+    if (this.currentCue !== cue) {
+      this.currentCue = cue
+      console.log(`seeking to cue ${cue} | t=${time}`)
+    }
   }
 
   get elapsed(): number {
@@ -443,7 +444,7 @@ export class ExhibitionAutomator {
       this.startTime = null
     } else {
       resetAll()
-      // this.seekCue(timecodeOf(this.elapsed))
+      this.seekCue(timecodeOf(this.elapsed))
 
       // play cue zero
       if (this.currentCue === 0) {
@@ -457,7 +458,7 @@ export class ExhibitionAutomator {
   }
 
   restoreRouteFromCue() {
-    // if (this.isVideo) return
+    if (this.isVideo) return
     // const route = routeFromCue(this.currentCue, this.cues)
     // this.actionContext.navigate(route)
   }
