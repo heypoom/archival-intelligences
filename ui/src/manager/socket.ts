@@ -20,7 +20,7 @@ const RECONNECT_DELAY = 5000 // 5 seconds
 const STUCK_RECONNECT_DELAY = 500 // 0.5 seconds
 
 export type ProgramId = 'P0' | 'P2' | 'P2B' | 'P3' | 'P3B' | 'P4'
-export type EndpointType = 'textToImage' | 'imageToImage'
+export type EndpointType = 'textToImage'
 
 /** After 15 seconds of no activity, consider the generation to be stuck */
 const GENERATION_TIMEOUT_MAP: Record<ProgramId, number> = {
@@ -35,17 +35,16 @@ const GENERATION_TIMEOUT_MAP: Record<ProgramId, number> = {
 
 const ENDPOINT_URL_MAP = {
   textToImage: 'wss://heypoom--exhibition-text-to-image-endpoint.modal.run/ws',
-  imageToImage:
-    'wss://heypoom--exhibition-image-to-image-endpoint.modal.run/ws',
+  // imageToImage: 'wss://heypoom--exhibition-text-to-image-endpoint.modal.run/ws',
 } as const satisfies Record<EndpointType, string>
 
 const PROGRAM_ENDPOINT_MAP: Record<ProgramId, EndpointType> = {
-  P0: 'withNoise',
-  P2: 'imageToImage',
-  P2B: 'imageToImage',
-  P3: 'withNoise',
-  P3B: 'withNoise',
-  P4: 'withNoise',
+  P0: 'textToImage',
+  P2: 'textToImage',
+  P2B: 'textToImage',
+  P3: 'textToImage',
+  P3B: 'textToImage',
+  P4: 'textToImage',
 }
 
 interface EndpointState {
@@ -93,6 +92,8 @@ class SocketManager {
       currentInferenceMessage: undefined,
       programs: new Set(),
     }
+
+    console.log(`[ws] created endpoint "${endpointType}" using url "${url}"`)
 
     this.endpoints.set(endpointType, state)
     this.addListeners(endpointType)

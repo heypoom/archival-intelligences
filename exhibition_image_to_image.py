@@ -7,8 +7,8 @@ import asyncio
 
 import modal
 
-APP_NAME = "exhibition-text-to-image"
-MODEL_NAME = "stabilityai/stable-diffusion-3.5-large-turbo"
+APP_NAME = "exhibition-image-to-image"
+MODEL_NAME = "runwayml/stable-diffusion-v1-5"
 app = modal.App(APP_NAME)
 
 generation_queue = modal.Queue.from_name("generation_queue", create_if_missing=True)
@@ -32,18 +32,21 @@ image = (
 
 with image.imports():
     import torch
-    from diffusers import StableDiffusion3Pipeline
+    from diffusers import StableDiffusionImg2ImgPipeline
     from PIL import Image
 
-CACHE_DIR = "/cache/sd3-turbo"
-GENERATED_DIR = "/generated/with-noise"
+CACHE_DIR = "/cache/sd-v1-5"
+GENERATED_DIR = "/generated/image-to-image"
 
 cache_vol = modal.Volume.from_name("hf-hub-cache", create_if_missing=True)
 generated_vol = modal.Volume.from_name("generated", create_if_missing=True)
 
-# Constants for LORA
-LORA_WEIGHTS = "heypoom/chuamiatee-1"
-LORA_WEIGHT_NAME = "pytorch_lora_weights.safetensors"
+# Constants for image-to-image
+POEM_OF_MALAYA_SIZE = (960, 800)
+PROMPT_2 = "painting like an epic poem of malaya"
+PROMPT_2B = "crowd of people in a public space"
+GUIDANCE_SCALE_2B = 8.5
+STEPS = 50
 
 
 @app.cls(
@@ -52,21 +55,30 @@ LORA_WEIGHT_NAME = "pytorch_lora_weights.safetensors"
     volumes={CACHE_DIR: cache_vol, GENERATED_DIR: generated_vol},
     timeout=600,
     secrets=[modal.Secret.from_name("huggingface-secret")],
-    min_containers=1,
-    max_containers=3,
 )
 class Inference:
-    lora_loaded: bool = modal.parameter(default=False, init=False)
+    def __init__(self):
+        self.malaya_image = None
 
     @modal.enter()
     def initialize(self):
         print("initializing pipeline...")
-        self.pipe = StableDiffusion3Pipeline.from_pretrained(
+        self.pipe = StableDiffusionImg2ImgPipeline.from_pretrained(
             MODEL_NAME,
             cache_dir=CACHE_DIR,
             torch_dtype=torch.bfloat16,
         )
         print("pipeline initialized.")
+
+        # Load and resize the Malaya image
+        print("loading Malaya image...")
+        malaya_path = Path("/root/malaya.png")
+        if not malaya_path.exists():
+            raise FileNotFoundError("malaya.png not found in container")
+        self.malaya_image = (
+            Image.open(malaya_path).resize(POEM_OF_MALAYA_SIZE).convert("RGB")
+        )
+        print("Malaya image loaded and resized.")
 
     @modal.enter()
     def move_to_gpu(self):
@@ -77,36 +89,23 @@ class Inference:
         else:
             print("Pipeline not initialized, cannot move to GPU.")
 
-    def _ensure_lora_state(self, use_lora: bool):
-        if use_lora and not self.lora_loaded:
-            print("Loading LORA weights...")
-            self.pipe.load_lora_weights(LORA_WEIGHTS, weight_name=LORA_WEIGHT_NAME)
-            self.lora_loaded = True
-        elif not use_lora and self.lora_loaded:
-            print("Unloading LORA weights...")
-            self.pipe.unload_lora_weights()
-            self.lora_loaded = False
-
     @modal.method()
     def run(
         self,
         prompt: str,
-        batch_size: int = 1,
+        strength: float = 0.75,
+        guidance_scale: float = 7.5,
         seed: int = None,
-        width: int = 1360,
-        height: int = 768,
-        guidance_scale: float = 0.0,
-        num_inference_steps: int = 10,
-        use_lora: bool = False,
-        final_only: bool = False,
+        width: int = 960,
+        height: int = 800,
+        num_inference_steps: int = STEPS,
     ) -> tuple[list[bytes], list[bytes]]:
         if not self.pipe:
             raise RuntimeError("Pipeline not initialized or moved to GPU.")
         if self.pipe.device.type != "cuda":
             raise RuntimeError("Pipeline not on CUDA device.")
-
-        # Ensure LORA is in the correct state
-        self._ensure_lora_state(use_lora)
+        if not self.malaya_image:
+            raise RuntimeError("Malaya image not loaded.")
 
         seed = seed if seed is not None else random.randint(0, 2**32 - 1)
         print(f"running inference for: '{prompt}' with seed {seed}")
@@ -114,10 +113,6 @@ class Inference:
 
         # Callback function for real-time noise preview
         def step_callback(pipe, step_index, timestep, callback_kwargs):
-            # Skip preview for final_only mode
-            if final_only:
-                return callback_kwargs
-
             latents = callback_kwargs["latents"]
 
             # Send progress update
@@ -161,9 +156,10 @@ class Inference:
         try:
             images = self.pipe(
                 prompt=prompt,
-                num_images_per_prompt=batch_size,
-                num_inference_steps=num_inference_steps,
+                image=self.malaya_image,
+                strength=strength,
                 guidance_scale=guidance_scale,
+                num_inference_steps=num_inference_steps,
                 generator=generator,
                 callback_on_step_end=step_callback,
                 callback_on_step_end_tensor_inputs=["latents"],
@@ -220,54 +216,42 @@ def endpoint():
     @web_app.websocket("/ws")
     async def websocket_handler(websocket: WebSocket) -> None:
         await websocket.accept()
-        await websocket.send_text("pong")
+        await websocket.send_text("websocket connected!")
 
         try:
             while True:
                 data = await websocket.receive_text()
 
-                if data == "ping".strip():
+                if data == "ping":
                     await websocket.send_text("pong")
                     continue
 
                 run_id = int(time.time())
-                # await websocket.send_text(
-                #     f"Received prompt: '{data}'. Starting generation (Run ID: {run_id})..."
-                # )
+                await websocket.send_text(
+                    f"Received prompt: '{data}'. Starting generation (Run ID: {run_id})..."
+                )
 
                 # Parse the command and prepare prompt
                 prompt = data.strip()
-                use_lora = False
-                final_only = False
+                strength = 0.75
+                guidance_scale = 7.5
 
-                if data == "P3":
-                    prompt = " "
-                    use_lora = True
-                elif data.startswith("P3B:"):
-                    prompt = f"{data[4:]}, photorealistic"
-                    use_lora = True
-                elif data == "P4":
-                    prompt = " "
-                    final_only = False
-                elif data.startswith("P4:"):
-                    base_prompt = data[3:].strip()
-                    if base_prompt in [
-                        "data researcher",
-                        "crowdworker",
-                        "big tech ceo",
-                    ]:
-                        prompt = f"{base_prompt}, photorealistic"
-                    else:
-                        prompt = base_prompt
-                # program 0
-                else:
-                    final_only = True
+                if data == "P2":
+                    prompt = PROMPT_2
+                elif data.startswith("P2:"):
+                    prompt = data[3:].strip()
+                elif data == "P2B":
+                    prompt = PROMPT_2B
+                    guidance_scale = GUIDANCE_SCALE_2B
+                elif data.startswith("P2B:"):
+                    prompt = f"{data[4:]}, {PROMPT_2B}"
+                    guidance_scale = GUIDANCE_SCALE_2B
 
                 # Start inference in background
                 call = inference.run.spawn(
                     prompt=prompt,
-                    use_lora=use_lora,
-                    final_only=final_only,
+                    strength=strength,
+                    guidance_scale=guidance_scale,
                 )
 
                 print(f"submitted inference job for run {run_id}")
@@ -278,9 +262,9 @@ def endpoint():
                         try:
                             signal = generation_queue.get()
                             if signal is None:
-                                # await websocket.send_text(
-                                #     "preview generation finished."
-                                # )
+                                await websocket.send_text(
+                                    "preview generation finished."
+                                )
                                 break
                             elif isinstance(signal, str):
                                 await websocket.send_text(signal)
