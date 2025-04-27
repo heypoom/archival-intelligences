@@ -10,6 +10,10 @@ import {$apiReady, $generating, $inferencePreview} from '../store/prompt'
 /** After 8 seconds of no activity, consider the connection dead */
 const DISCONNECT_TIMEOUT = 8 * 1000
 
+/** After 15 seconds of no activity, consider the generation to be stuck */
+const RECONNECT_DELAY = 5000 // 5 seconds
+const STUCK_RECONNECT_DELAY = 500 // 0.5 seconds
+
 export type ProgramId = 'P0' | 'P2' | 'P2B' | 'P3' | 'P3B' | 'P4'
 export type EndpointType = 'simple' | 'withNoise'
 
@@ -40,11 +44,17 @@ const PROGRAM_ENDPOINT_MAP: Record<ProgramId, EndpointType> = {
 }
 
 interface EndpointState {
-  sock: WebSocket
+  socket: WebSocket
   disconnectTimer?: number
   generationStuckTimer?: number
   currentInferenceMessage?: string
   programs: Set<ProgramId>
+}
+
+interface ReconnectOptions {
+  reason?: string
+  delay?: number
+  shutup?: boolean
 }
 
 class SocketManager {
@@ -69,10 +79,10 @@ class SocketManager {
 
   private createEndpoint(endpointType: EndpointType) {
     const url = ENDPOINT_URL_MAP[endpointType]
-    const ws = new WebSocket(url)
+    const socket = new WebSocket(url)
 
     const state: EndpointState = {
-      sock: ws,
+      socket,
       disconnectTimer: undefined,
       generationStuckTimer: undefined,
       currentInferenceMessage: undefined,
@@ -98,7 +108,7 @@ class SocketManager {
     const state = this.getEndpointState(endpointType)
     if (!state) return
 
-    if (state.sock) {
+    if (state.socket) {
       this.removeListeners(endpointType)
     }
 
@@ -176,7 +186,11 @@ class SocketManager {
     $inferencePreview.set('')
     resetProgress()
 
-    this.reconnectSoon(endpointType, 'generation is stuck', 500, {shutup: true})
+    this.reconnectSoon(endpointType, {
+      reason: 'generation is stuck',
+      delay: STUCK_RECONNECT_DELAY,
+      shutup: true,
+    })
   }
 
   clearDisconnectionTimer(endpointType: EndpointType) {
@@ -199,12 +213,12 @@ class SocketManager {
     const state = this.getEndpointState(endpointType)
     if (!state) return
 
-    state.sock.addEventListener('error', (event) =>
+    state.socket.addEventListener('error', (event) =>
       this.onError(endpointType, event)
     )
-    state.sock.addEventListener('open', () => this.onOpen(endpointType))
-    state.sock.addEventListener('close', () => this.onClose(endpointType))
-    state.sock.addEventListener('message', (event) =>
+    state.socket.addEventListener('open', () => this.onOpen(endpointType))
+    state.socket.addEventListener('close', () => this.onClose(endpointType))
+    state.socket.addEventListener('message', (event) =>
       this.onMessage(endpointType, event)
     )
   }
@@ -213,12 +227,12 @@ class SocketManager {
     const state = this.getEndpointState(endpointType)
     if (!state) return
 
-    state.sock.removeEventListener('error', (event) =>
+    state.socket.removeEventListener('error', (event) =>
       this.onError(endpointType, event)
     )
-    state.sock.removeEventListener('open', () => this.onOpen(endpointType))
-    state.sock.removeEventListener('close', () => this.onClose(endpointType))
-    state.sock.removeEventListener('message', (event) =>
+    state.socket.removeEventListener('open', () => this.onOpen(endpointType))
+    state.socket.removeEventListener('close', () => this.onClose(endpointType))
+    state.socket.removeEventListener('message', (event) =>
       this.onMessage(endpointType, event)
     )
   }
@@ -227,7 +241,7 @@ class SocketManager {
     console.error(`[ws] websocket error for ${endpointType}`, event)
 
     this.markDisconnect(endpointType)
-    this.reconnectSoon(endpointType, 'websocket error')
+    this.reconnectSoon(endpointType, {reason: 'websocket error'})
   }
 
   onOpen(endpointType: EndpointType) {
@@ -242,7 +256,7 @@ class SocketManager {
 
     console.log(`[gen] sent "${message}" to ${programId}`)
 
-    state.sock.send(message)
+    state.socket.send(message)
     this.startGenerationStuckTimer(endpointType, message)
   }
 
@@ -250,7 +264,7 @@ class SocketManager {
     console.log(`[ws] websocket closed for ${endpointType}`)
 
     this.markDisconnect(endpointType)
-    this.reconnectSoon(endpointType, 'websocket closed', 5000)
+    this.reconnectSoon(endpointType, {reason: 'websocket closed'})
   }
 
   onMessage(endpointType: EndpointType, event: MessageEvent) {
@@ -313,39 +327,36 @@ class SocketManager {
     this.clearDisconnectionTimer(endpointType)
   }
 
-  reconnectSoon(
-    endpointType: EndpointType,
-    reason?: string,
-    delay = 5000,
-    flags?: {shutup?: boolean}
-  ) {
+  reconnectSoon(endpointType: EndpointType, options: ReconnectOptions = {}) {
     const state = this.getEndpointState(endpointType)
     if (!state) return
 
     $apiReady.set(false)
 
     // stop listening to inference events
-    if (flags?.shutup) {
+    if (options.shutup) {
       this.removeListeners(endpointType)
     }
 
     setTimeout(() => {
-      console.log(`[ws] reconnecting ${endpointType} due to "${reason}"`)
+      console.log(
+        `[ws] reconnecting ${endpointType} due to "${options.reason}"`
+      )
 
       this.createEndpoint(endpointType)
-    }, delay)
+    }, options.delay ?? RECONNECT_DELAY)
   }
 
   close() {
     this.endpoints.forEach((state, endpointType) => {
-      state.sock.close()
+      state.socket.close()
       this.markDisconnect(endpointType)
     })
   }
 
   forceReconnectAll(reason = 'force reconnect to server') {
     this.endpoints.forEach((_, endpointType) => {
-      this.reconnectSoon(endpointType, reason, 10)
+      this.reconnectSoon(endpointType, {reason, delay: 10})
     })
   }
 
@@ -354,7 +365,7 @@ class SocketManager {
     this.endpoints.forEach((state, endpointType) => {
       this.markDisconnect(endpointType)
       this.clearDisconnectionTimer(endpointType)
-      state.sock.close()
+      state.socket.close()
     })
   }
 }
