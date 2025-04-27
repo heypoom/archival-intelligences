@@ -39,9 +39,7 @@ export function SettingsRoute() {
     go({to: '/video'})
 
     $exhibitionMode.set(true)
-
-    socket.clearDisconnectionTimer()
-    socket.reconnectSoon('program change - video', 10)
+    socket.disconnectAll()
 
     $videoMode.set(true)
     $canPlay.set(true)
@@ -64,8 +62,7 @@ export function SettingsRoute() {
     $exhibitionMode.set(false)
     $videoMode.set(false)
 
-    socket.clearDisconnectionTimer()
-    socket.reconnectSoon('program change - lecture', 10)
+    socket.forceReconnectAll('program change - lecture')
 
     resetAll()
 

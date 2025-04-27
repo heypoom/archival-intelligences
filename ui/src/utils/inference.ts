@@ -1,10 +1,10 @@
-import {socket} from '../manager/socket'
+import {ProgramId, socket} from '../manager/socket'
 import {$apiReady, $generating, $prompt} from '../store/prompt'
 import {regen} from '../store/regen'
 
 interface Options {
   prompt?: string
-  command: string
+  command: ProgramId
   regenerate?: boolean | string
 }
 
@@ -20,8 +20,7 @@ export function startInference(options: Options) {
 
   $generating.set(true)
 
-  const sys = `${command}:${prompt}`
-  socket.generate(sys)
+  socket.generate(command, prompt)
 
   const shouldRegenerate =
     regenerate === true ||

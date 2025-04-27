@@ -58,7 +58,7 @@ export function useSceneSwitcher() {
     if (zero) {
       dictation.stop()
 
-      socket.reconnectSoon('program zero fade out', 1000, {shutup: true})
+      socket.reconnectSoon('P0', 'program zero fade out', 1000, {shutup: true})
 
       if (hasFadedBlack) {
         // remove the inference preview image from Program 0
