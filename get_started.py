@@ -4,10 +4,15 @@ import random
 import time
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
+import asyncio  # <-- Add asyncio import
 
 import modal
 
-app = modal.App("archival-intelligences-test")
+# Define the app name consistently
+APP_NAME = "archival-intelligences-test"
+app = modal.App(APP_NAME)
+
+generation_queue = modal.Queue.from_name("generation_queue", create_if_missing=True)
 
 image = (
     modal.Image.debian_slim(python_version="3.12")
@@ -20,6 +25,8 @@ image = (
         "torch==2.5.1",
         "torchvision==0.20.1",
         "transformers~=4.44.0",
+        "numpy",  # Explicitly add numpy, good practice
+        "Pillow",  # Explicitly add Pillow
     )
     .env({"HF_HUB_ENABLE_HF_TRANSFER": "1"})
 )
@@ -40,6 +47,11 @@ generated_vol = modal.Volume.from_name("generated", create_if_missing=True)
 # "adamo1139/stable-diffusion-3.5-large-turbo-ungated"
 # revision="9ad870ac0b0e5e48ced156bb02f85d324b7275d2"
 
+# Define a Queue specifically for this app to avoid potential conflicts
+# If you need multiple independent queues, you might structure this differently,
+# but for passing updates from one function call back, creating it dynamically works.
+# UpdateQueue = modal.Queue(app_name=APP_NAME) # No need for global queue here
+
 
 @app.cls(
     image=image,
@@ -49,102 +61,135 @@ generated_vol = modal.Volume.from_name("generated", create_if_missing=True)
     secrets=[modal.Secret.from_name("huggingface-secret")],
 )
 class Inference:
-    @modal.enter()
-    def initialize(self):
-        self.pipe = StableDiffusion3Pipeline.from_pretrained(
-            "stabilityai/stable-diffusion-3.5-large-turbo",
-            use_auth_token=os.environ["HF_TOKEN"],
-            cache_dir=CACHE_DIR,
-            torch_dtype=torch.bfloat16,
-        )
 
     @modal.enter()
+    def initialize(self):
+        print("initializing pipeline...")
+        # Ensure float32 for VAE on CPU if needed during callback preview
+        self.pipe = StableDiffusion3Pipeline.from_pretrained(
+            "stabilityai/stable-diffusion-3.5-large-turbo",
+            cache_dir=CACHE_DIR,
+            torch_dtype=torch.bfloat16,  # Keep bfloat16 for inference
+        )
+        # Move VAE temporarily to CPU with float32 for decoding previews if GPU memory is tight
+        # Or handle decoding carefully on GPU. Let's try keeping VAE on GPU first.
+        print("pipeline initialized.")
+
+    # Separating GPU move from initialization can sometimes help with Modal startup
+    @modal.enter()
     def move_to_gpu(self):
-        self.pipe.to("cuda")
+        if self.pipe:
+            print("Moving pipeline to GPU...")
+            self.pipe.to("cuda")
+            print("Pipeline on GPU.")
+        else:
+            print("Pipeline not initialized, cannot move to GPU.")
 
     @modal.method()
     def run(
-        self, prompt: str, batch_size: int = 4, seed: int = None
+        self,
+        prompt: str,
+        batch_size: int = 1,  # Start with batch_size 1 for simplicity with preview
+        seed: int = None,
     ) -> tuple[list[bytes], list[bytes]]:
+        if not self.pipe:
+            raise RuntimeError("Pipeline not initialized or moved to GPU.")
+        if self.pipe.device.type != "cuda":
+            raise RuntimeError("Pipeline not on CUDA device.")
+
         seed = seed if seed is not None else random.randint(0, 2**32 - 1)
-        print("seeding RNG with", seed)
-        torch.manual_seed(seed)
+        print(f"running inference for: '{prompt}' with seed {seed}")
+        generator = torch.Generator("cuda").manual_seed(seed)
 
-        # Store intermediate latent images and preview images
-        intermediate_latents = []
         preview_images = []
+        preview_count = 0  # Keep track separately for queue updates
 
-        # Callback function to save intermediate steps
+        # Callback function to save intermediate steps and send updates
         def step_callback(pipe, step_index, timestep, callback_kwargs):
-            # Get the current latents
+            nonlocal preview_count  # Modify the outer counter
             latents = callback_kwargs["latents"]
 
-            # Store a copy of the latents
-            intermediate_latents.append(latents.clone())
+            # Decode the latents to a preview image (only for the first image in batch)
+            # Ensure decoding happens correctly without excessive memory use
+            try:
+                with torch.no_grad():
+                    # Use float32 for VAE decoding if needed, potentially on CPU
+                    # Or decode directly on GPU if memory allows
+                    # Keep VAE on GPU but maybe use float32 temporarily?
+                    # vae_dtype = pipe.vae.dtype
+                    # pipe.vae.to(dtype=torch.float32) # This might be slow if done every step
 
-            # Decode the latents to an image
-            with torch.no_grad():
-                # Since SD3 uses a different architecture, we need to decode differently
-                if hasattr(pipe, "vae"):
-                    # Scale the latents by the scaling factor
-                    scaled_latents = latents / pipe.vae.config.scaling_factor
-                    # Decode using VAE
-                    image = pipe.vae.decode(scaled_latents).sample
-                    # Convert from tensor to PIL image
-                    image = (image / 2 + 0.5).clamp(0, 1)
-                    image = image.cpu()
+                    # Decode only the first latent in the batch for preview
+                    latent_to_decode = latents[0:1]  # Keep batch dim
+                    scaled_latents = latent_to_decode / pipe.vae.config.scaling_factor
+                    image_tensor = pipe.vae.decode(
+                        scaled_latents.to(pipe.vae.dtype), return_dict=False
+                    )[
+                        0
+                    ]  # Use VAE's dtype
 
-                    # Properly handle the batch dimension
-                    if len(image.shape) == 4:  # [batch, channels, height, width]
-                        image = image[0]  # Take first image from batch
+                    # pipe.vae.to(dtype=vae_dtype) # Restore original dtype if changed
 
-                    # Permute to [height, width, channels] and convert to numpy
-                    image = image.permute(1, 2, 0).float().numpy()
+                    # Process tensor to PIL Image
+                    image = (image_tensor / 2 + 0.5).clamp(0, 1)
+                    image = image.cpu().permute(0, 2, 3, 1).float().numpy()  # BHWC
+                    image = (image * 255).round().astype("uint8")
 
-                    # Handle potential 3D shapes
-                    if len(image.shape) == 3 and image.shape[2] == 3:
-                        # If it's already RGB
-                        image = (image * 255).round().astype("uint8")
-                    else:
-                        # If it's not RGB, visualize as grayscale
-                        image = image.mean(axis=-1) if len(image.shape) > 2 else image
-                        image = (image * 255).round().astype("uint8")
-                        # Convert to RGB for saving
-                        image = np.stack([image] * 3, axis=-1)
+                    preview_image = Image.fromarray(
+                        image[0]
+                    )  # Get first image from batch
 
-                    preview_image = Image.fromarray(image)
-                else:
-                    # Fallback: visualize latents directly as a heatmap
-                    latent_np = latents[0].cpu().numpy()
-                    # Normalize for visualization
-                    latent_vis = (latent_np - latent_np.min()) / (
-                        latent_np.max() - latent_np.min()
-                    )
-                    # Convert to RGB
-                    latent_vis = (latent_vis * 255).astype("uint8")
-                    # Take the first channel or average across channels
-                    if len(latent_vis.shape) > 2:
-                        latent_vis = latent_vis.mean(axis=0)
-                    preview_image = Image.fromarray(latent_vis, mode="L").convert("RGB")
+                    # Save preview image to bytes
+                    with io.BytesIO() as buf:
+                        preview_image.save(
+                            buf, format="JPEG", quality=75
+                        )  # Use JPEG for smaller previews
+                        preview_images.append(buf.getvalue())
+                        preview_count += 1
 
-                # Save preview image to bytes
-                with io.BytesIO() as buf:
-                    preview_image.save(buf, format="PNG")
-                    preview_images.append(buf.getvalue())
+                    # --- Send update via Queue ---
+                    if generation_queue is not None:
+                        try:
+                            print(f"putting preview count {preview_count} onto queue.")
+                            generation_queue.put(preview_count)
+                        except Exception as e:
+                            # Handle cases where queue might be full or other issues
+                            print(f"Warning: Failed to put update on queue: {e}")
+                    # -----------------------------
+
+            except Exception as e:
+                print(f"Error during preview generation step {step_index}: {e}")
+                # Optionally, put an error marker or skip update
+                # if gen_queue is not None:
+                #     gen_queue.put({"error": str(e)})
 
             return callback_kwargs
 
         # Run the pipeline with callback
-        images = self.pipe(
-            prompt,
-            num_images_per_prompt=batch_size,
-            num_inference_steps=10,
-            guidance_scale=0.0,
-            max_sequence_length=512,
-            callback_on_step_end=step_callback,
-            width=1360,
-            height=768,
-        ).images
+        try:
+            images = self.pipe(
+                prompt=prompt,
+                num_images_per_prompt=batch_size,
+                num_inference_steps=10,  # SD3 Turbo needs few steps
+                guidance_scale=0.0,  # SD3 Turbo uses 0.0
+                generator=generator,
+                callback_on_step_end=step_callback,
+                callback_on_step_end_tensor_inputs=[
+                    "latents"
+                ],  # Ensure latents are passed
+                width=1360,  # Adjust as needed
+                height=768,  # Adjust as needed
+            ).images
+            print("inference complete!")
+        finally:
+            # --- Signal completion via Queue ---
+            if generation_queue is not None:
+                try:
+                    print("putting completion signal (None) onto queue.")
+                    generation_queue.put(None)  # Use None as completion signal
+                except Exception as e:
+                    print(f"Warning: Failed to put completion signal on queue: {e}")
+            # ------------------------------------
 
         # Convert final images to bytes
         image_output = []
@@ -153,51 +198,223 @@ class Inference:
                 image.save(buf, format="PNG")
                 image_output.append(buf.getvalue())
 
-        torch.cuda.empty_cache()
+        # No need to explicitly empty cache here unless facing memory issues between runs
+        # torch.cuda.empty_cache()
 
+        print(
+            f"Inference complete. Generated {len(image_output)} final images and {len(preview_images)} previews."
+        )
         return image_output, preview_images
 
 
+# Separate function for the ASGI app
 @app.function(
     volumes={GENERATED_DIR: generated_vol},
+    timeout=650,  # Slightly longer timeout for websocket handling
+    min_containers=1,  # Keep one instance warm for faster websocket connections
 )
 @modal.asgi_app()
 def endpoint():
-    from fastapi import FastAPI, WebSocket
+    from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+    from fastapi.responses import HTMLResponse  # For a simple test page
 
-    app = FastAPI()
-
+    web_app = FastAPI()  # Use a different variable name
     output_dir = Path(GENERATED_DIR)
     output_dir.mkdir(exist_ok=True)
-    inference = Inference()
 
-    @app.websocket("/ws")
+    inference = Inference()  # Create an instance of the Inference class
+
+    # Simple HTML test page
+    html = """
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <title>Modal SD3 Turbo WebSocket Test</title>
+        </head>
+        <body>
+            <h1>WebSocket SD3 Turbo</h1>
+            <label for="prompt">Prompt:</label>
+            <input type="text" id="prompt" value="A cinematic shot of a futuristic cityscape at sunset"/>
+            <button onclick="sendMessage()">Generate Image</button>
+            <h2>Status:</h2>
+            <ul id='messages'>
+            </ul>
+            <h2>Previews:</h2>
+            <div id='previews'></div>
+            <h2>Final Image:</h2>
+            <div id='final_image'></div>
+            <script>
+                var ws = new WebSocket("wss://" + window.location.host + "/ws"); // Use wss for deployed apps
+                ws.onmessage = function(event) {
+                    var messages = document.getElementById('messages')
+                    var message = document.createElement('li')
+                    var content = document.createTextNode(event.data);
+
+                    // Check if it's a preview update message
+                    if (event.data.startsWith("Preview count:")) {
+                         message.appendChild(content);
+                    } else if (event.data.startsWith("data:image/")) {
+                        // Display final image (assuming only one for simplicity)
+                        var finalImageDiv = document.getElementById('final_image');
+                        finalImageDiv.innerHTML = ''; // Clear previous image
+                        var img = document.createElement('img');
+                        img.src = event.data;
+                        img.style.maxWidth = '512px'; // Limit display size
+                        finalImageDiv.appendChild(img);
+                        message.appendChild(document.createTextNode("Final image received."));
+                    } else {
+                         message.appendChild(content);
+                    }
+                    messages.appendChild(message);
+                };
+                function sendMessage() {
+                    var input = document.getElementById("prompt");
+                    var messages = document.getElementById('messages');
+                    messages.innerHTML = ''; // Clear previous messages
+                    var finalImageDiv = document.getElementById('final_image');
+                    finalImageDiv.innerHTML = ''; // Clear previous final image
+                    var previewDiv = document.getElementById('previews');
+                    previewDiv.innerHTML = ''; // Clear previous previews (we only show count now)
+                    ws.send(input.value);
+                    input.value = ''; // Clear input field
+                }
+            </script>
+        </body>
+    </html>
+    """
+
+    @web_app.get("/")
+    async def get():
+        return HTMLResponse(html)
+
+    @web_app.websocket("/ws")
     async def websocket_handler(websocket: WebSocket) -> None:
         await websocket.accept()
-        while True:
-            data = await websocket.receive_text()
-            run_id = int(time.time())
-            await websocket.send_text(f"message text was: {data}")
 
-            prompt = data.strip()
-            await websocket.send_text(f"running inference for prompt: {data}")
+        websocket.send_text("websocket connected!")
 
-            # Get both final images and preview images
-            images, preview_images = inference.run.remote(prompt, batch_size=1)
+        try:
+            while True:
+                data = await websocket.receive_text()
+                run_id = int(time.time())
+                await websocket.send_text(
+                    f"Received prompt: '{data}'. Starting generation (Run ID: {run_id})..."
+                )
 
-            run_output_path = Path(output_dir / f"run_{run_id}/")
-            run_output_path.mkdir(exist_ok=True)
+                prompt = data.strip()
 
-            # Save preview images
-            for i, preview_bytes in enumerate(preview_images):
-                preview_path = run_output_path / f"preview_{i:02d}.png"
-                preview_path.write_bytes(preview_bytes)
-                await websocket.send_text(f"saved {preview_path}")
+                # --- Task to listen for queue updates ---
+                async def listen_for_updates():
+                    while True:
+                        try:
+                            # Wait for the next update from the queue
+                            signal = generation_queue.get()
+                            if signal is None:  # Check for completion signal
+                                print("received completion signal from queue.")
+                                await websocket.send_text(
+                                    "preview generation finished."
+                                )
+                                break  # Exit the listener loop
+                            elif isinstance(signal, int):
+                                await websocket.send_text(f"preview count: {signal}")
+                            # Add handling for other message types (like errors) if needed
+                            # elif isinstance(update, dict) and 'error' in update:
+                            #     await websocket.send_text(f"Error during preview: {update['error']}")
 
-            # Save final images
-            for i, image_bytes in enumerate(images):
-                output_path = run_output_path / f"output_{i:02d}.png"
-                output_path.write_bytes(image_bytes)
-                await websocket.send_text(f"saved {output_path}")
+                        except WebSocketDisconnect:
+                            print("WebSocket disconnected while listening to queue.")
+                            break  # Stop listening if client disconnects
+                        except Exception as e:
+                            print(f"Error reading from queue or sending update: {e}")
+                            # Decide whether to break or continue based on error type
+                            await websocket.send_text(f"Error processing update: {e}")
+                            break  # Exit loop on unexpected errors
 
-    return app
+                # --- Start the inference in the background ---
+                # Use .spawn() to run remotely without blocking
+                call = inference.run.spawn(prompt, batch_size=1)
+
+                print(
+                    f"submitted inference job for run {run_id}. Call ID: {call.object_id}"
+                )
+
+                # --- Start the queue listener task ---
+                listener_task = asyncio.create_task(listen_for_updates())
+
+                # --- Wait for the main inference call to finish ---
+                try:
+                    print(f"Waiting for inference result for run {run_id}...")
+                    # This will block until inference.run completes and returns
+                    images, preview_images = call.get()  # Retrieve result
+                    print(f"inference result received for run {run_id}.")
+                    await websocket.send_text(
+                        f"inference result received for run {run_id}."
+                    )
+
+                except Exception as e:
+                    print(f"Error during inference execution: {e}")
+                    await websocket.send_text(f"Error during generation: {e}")
+                    # Ensure listener task is cancelled if main task fails
+                    listener_task.cancel()
+                    continue  # Skip saving if inference failed
+
+                # --- Ensure listener task finishes (it should exit on None) ---
+                try:
+                    await asyncio.wait_for(
+                        listener_task, timeout=10.0
+                    )  # Wait briefly for clean exit
+                    print("Listener task finished.")
+                except asyncio.TimeoutError:
+                    print(
+                        "Warning: Listener task did not finish quickly after completion signal."
+                    )
+                except asyncio.CancelledError:
+                    print("Listener task was cancelled.")
+
+                # --- Process and save final results ---
+                run_output_path = Path(output_dir / f"run_{run_id}/")
+                run_output_path.mkdir(exist_ok=True)
+
+                # Optionally save previews to disk (already sent count in real-time)
+                # for i, preview_bytes in enumerate(preview_images):
+                #     preview_path = run_output_path / f"preview_{i:02d}.jpg" # Save as jpg
+                #     preview_path.write_bytes(preview_bytes)
+                #     # Don't send text for each saved preview, clutters output
+                # await websocket.send_text(f"Saved {len(preview_images)} preview images to disk.")
+
+                # Save final images and send the first one back via WebSocket (optional)
+                for i, image_bytes in enumerate(images):
+                    output_path = run_output_path / f"output_{i:02d}.png"
+                    output_path.write_bytes(image_bytes)
+                    # await websocket.send_text(f"Saved final image: {output_path.name}")
+
+                    # Example: Send the first final image back as a data URL
+                    # if i == 0:
+                    #     import base64
+
+                    #     img_b64 = base64.b64encode(image_bytes).decode("utf-8")
+                    #     await websocket.send_text(f"data:image/png;base64,{img_b64}")
+
+        except WebSocketDisconnect:
+            print("Client disconnected")
+            # Clean up: cancel listener task if it's still running (though it should stop on disconnect)
+            if "listener_task" in locals() and not listener_task.done():
+                listener_task.cancel()
+                try:
+                    await listener_task  # Allow cancellation to propagate
+                except asyncio.CancelledError:
+                    print("Listener task cancelled due to client disconnect.")
+        except Exception as e:
+            print(f"An error occurred in the websocket handler: {e}")
+            # Try to inform the client before closing
+            try:
+                await websocket.send_text(f"Server error: {e}")
+                await websocket.close(code=1011)  # Internal Error
+            except Exception:
+                pass  # Ignore errors during close after another error
+        finally:
+            print("Websocket connection closed.")
+            # Ensure queue resources are potentially cleaned up (Modal might handle this)
+            # Explicitly delete or let garbage collection handle 'update_queue'
+
+    return web_app  # Return the FastAPI app instance
