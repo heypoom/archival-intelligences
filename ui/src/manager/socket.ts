@@ -20,7 +20,7 @@ const RECONNECT_DELAY = 5000 // 5 seconds
 const STUCK_RECONNECT_DELAY = 500 // 0.5 seconds
 
 export type ProgramId = 'P0' | 'P2' | 'P2B' | 'P3' | 'P3B' | 'P4'
-export type EndpointType = 'simple' | 'withNoise'
+export type EndpointType = 'textToImage' | 'imageToImage'
 
 /** After 15 seconds of no activity, consider the generation to be stuck */
 const GENERATION_TIMEOUT_MAP: Record<ProgramId, number> = {
@@ -34,15 +34,15 @@ const GENERATION_TIMEOUT_MAP: Record<ProgramId, number> = {
 }
 
 const ENDPOINT_URL_MAP = {
-  simple: 'wss://heypoom--exhibition-image-simple-endpoint.modal.run/ws',
-  withNoise:
-    'wss://heypoom--exhibition-with-realtime-noise-endpoint.modal.run/ws',
+  textToImage: 'wss://heypoom--exhibition-text-to-image-endpoint.modal.run/ws',
+  imageToImage:
+    'wss://heypoom--exhibition-image-to-image-endpoint.modal.run/ws',
 } as const satisfies Record<EndpointType, string>
 
 const PROGRAM_ENDPOINT_MAP: Record<ProgramId, EndpointType> = {
-  P0: 'simple',
-  P2: 'withNoise',
-  P2B: 'withNoise',
+  P0: 'withNoise',
+  P2: 'imageToImage',
+  P2B: 'imageToImage',
   P3: 'withNoise',
   P3B: 'withNoise',
   P4: 'withNoise',
@@ -262,10 +262,14 @@ class SocketManager {
     const state = this.getEndpointState(endpointType)
     if (!state) return
 
-    console.log(`[gen] sent "${message}" to ${programId}`)
+    // Format the message with program ID prefix
+    const formattedMessage =
+      programId === 'P0' ? message : `${programId}:${message}`
 
-    state.socket.send(message)
-    this.startGenerationStuckTimer(endpointType, message)
+    console.log(`[gen] sent "${formattedMessage}" to ${programId}`)
+
+    state.socket.send(formattedMessage)
+    this.startGenerationStuckTimer(endpointType, formattedMessage)
   }
 
   onClose(endpointType: EndpointType) {
