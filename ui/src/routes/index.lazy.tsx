@@ -20,19 +20,18 @@ export function SettingsRoute() {
   }, [])
 
   // exhibition mode - program
-  // function startExhibitionProgramLegacy() {
-  //   $exhibitionMode.set(true)
+  function startExhibitionProgramReal() {
+    $exhibitionMode.set(true)
 
-  //   socket.clearDisconnectionTimer()
-  //   socket.reconnectSoon('program change - exhibition', 10)
+    socket.forceReconnectAll('program change - exhibition')
 
-  //   $videoMode.set(false)
-  //   $canPlay.set(true)
-  //   automator.sync({force: true})
-  //   fullscreen()
+    $videoMode.set(false)
+    $canPlay.set(true)
+    automator.sync({force: true})
+    fullscreen()
 
-  //   go({to: '/zero'})
-  // }
+    go({to: '/zero'})
+  }
 
   // exhibition mode - video
   function startExhibitionVideo() {
@@ -117,7 +116,7 @@ export function SettingsRoute() {
         </button>
 
         <button
-          onClick={startExhibitionProgramVideo}
+          onClick={startExhibitionProgramReal}
           className="border border-green-300 text-green-300 px-4 py-2"
         >
           program screen
