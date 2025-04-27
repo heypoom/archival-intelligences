@@ -54,7 +54,7 @@ interface EndpointState {
 interface ReconnectOptions {
   reason?: string
   delay?: number
-  shutup?: boolean
+  removeListener?: boolean
 }
 
 class SocketManager {
@@ -189,7 +189,7 @@ class SocketManager {
     this.reconnectSoon(endpointType, {
       reason: 'generation is stuck',
       delay: STUCK_RECONNECT_DELAY,
-      shutup: true,
+      removeListener: true,
     })
   }
 
@@ -334,7 +334,7 @@ class SocketManager {
     $apiReady.set(false)
 
     // stop listening to inference events
-    if (options.shutup) {
+    if (options.removeListener) {
       this.removeListeners(endpointType)
     }
 

@@ -12,7 +12,7 @@ export async function generateFromPrompt(prompt: string) {
     } catch (err) {
       $apiReady.set(false)
       $generating.set(false)
-      socket.reconnectSoon('P0', 'socket send error')
+      socket.reconnectSoon('simple', {reason: 'socket send error'})
     }
   }
 }

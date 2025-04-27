@@ -48,7 +48,7 @@ export function SettingsRoute() {
   }
   // exhibition mode - program video
   function startExhibitionProgramVideo() {
-    go({to: '/program-video'})
+    go({to: '/zero'})
 
     $exhibitionMode.set(true)
     $videoMode.set(false)
@@ -97,7 +97,7 @@ export function SettingsRoute() {
         }, 100)
       }, 150)
     } else {
-      go({to: '/program-video'})
+      go({to: '/zero'})
       automator.sync({force: true})
     }
   }
@@ -127,10 +127,10 @@ export function SettingsRoute() {
       <div className="space-y-4">
         <div className="flex justify-start items-center gap-x-4 text-xs">
           <button
-            onClick={() => setFakeExhibitionOpenTime('10:59:55')}
+            onClick={() => setFakeExhibitionOpenTime('11:12:00')}
             className="border border-gray-300 text-gray-300 px-3 py-2 text-xs"
           >
-            set time to 10:59:55
+            set time to 11:12:00
           </button>
 
           <div>simulate when the first screening round is opening</div>

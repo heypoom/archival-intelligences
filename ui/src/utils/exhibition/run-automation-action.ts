@@ -169,8 +169,10 @@ export function runAutomationAction(
       const hasRegenEnabled = disableRegen('force reconnect to server')
 
       if (!hasRegenEnabled) {
-        socket.reconnectSoon('P0', 'force reconnect to server', 10, {
-          shutup: true,
+        socket.reconnectSoon('simple', {
+          reason: 'force reconnect to server',
+          removeListener: true,
+          delay: 10,
         })
       }
     })
