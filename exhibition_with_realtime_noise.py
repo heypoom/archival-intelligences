@@ -3,13 +3,12 @@ import os
 import random
 import time
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Union
-import asyncio  # <-- Add asyncio import
+import asyncio
 
 import modal
 
-# Define the app name consistently
-APP_NAME = "archival-intelligences-test"
+APP_NAME = "exhibition-with-realtime-noise"
+MODEL_NAME = ("stabilityai/stable-diffusion-3.5-large-turbo",)
 app = modal.App(APP_NAME)
 
 generation_queue = modal.Queue.from_name("generation_queue", create_if_missing=True)
@@ -39,8 +38,9 @@ with image.imports():
     import numpy as np
     from PIL import Image
 
-CACHE_DIR = "/cache"
-GENERATED_DIR = "/generated"
+CACHE_DIR = "/cache/sd3-turbo"
+GENERATED_DIR = "/generated/with-noise"
+
 cache_vol = modal.Volume.from_name("hf-hub-cache", create_if_missing=True)
 generated_vol = modal.Volume.from_name("generated", create_if_missing=True)
 
@@ -67,7 +67,7 @@ class Inference:
         print("initializing pipeline...")
         # Ensure float32 for VAE on CPU if needed during callback preview
         self.pipe = StableDiffusion3Pipeline.from_pretrained(
-            "stabilityai/stable-diffusion-3.5-large-turbo",
+            MODEL_NAME,
             cache_dir=CACHE_DIR,
             torch_dtype=torch.bfloat16,  # Keep bfloat16 for inference
         )
@@ -216,7 +216,7 @@ class Inference:
 @modal.asgi_app()
 def endpoint():
     from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-    from fastapi.responses import HTMLResponse  # For a simple test page
+    from fastapi.responses import JSONResponse
 
     web_app = FastAPI()  # Use a different variable name
     output_dir = Path(GENERATED_DIR)
@@ -224,68 +224,14 @@ def endpoint():
 
     inference = Inference()  # Create an instance of the Inference class
 
-    # Simple HTML test page
-    html = """
-    <!DOCTYPE html>
-    <html>
-        <head>
-            <title>Modal SD3 Turbo WebSocket Test</title>
-        </head>
-        <body>
-            <h1>WebSocket SD3 Turbo</h1>
-            <label for="prompt">Prompt:</label>
-            <input type="text" id="prompt" value="A cinematic shot of a futuristic cityscape at sunset"/>
-            <button onclick="sendMessage()">Generate Image</button>
-            <h2>Status:</h2>
-            <ul id='messages'>
-            </ul>
-            <h2>Previews:</h2>
-            <div id='previews'></div>
-            <h2>Final Image:</h2>
-            <div id='final_image'></div>
-            <script>
-                var ws = new WebSocket("wss://" + window.location.host + "/ws"); // Use wss for deployed apps
-                ws.onmessage = function(event) {
-                    var messages = document.getElementById('messages')
-                    var message = document.createElement('li')
-                    var content = document.createTextNode(event.data);
-
-                    // Check if it's a preview update message
-                    if (event.data.startsWith("Preview count:")) {
-                         message.appendChild(content);
-                    } else if (event.data.startsWith("data:image/")) {
-                        // Display final image (assuming only one for simplicity)
-                        var finalImageDiv = document.getElementById('final_image');
-                        finalImageDiv.innerHTML = ''; // Clear previous image
-                        var img = document.createElement('img');
-                        img.src = event.data;
-                        img.style.maxWidth = '512px'; // Limit display size
-                        finalImageDiv.appendChild(img);
-                        message.appendChild(document.createTextNode("Final image received."));
-                    } else {
-                         message.appendChild(content);
-                    }
-                    messages.appendChild(message);
-                };
-                function sendMessage() {
-                    var input = document.getElementById("prompt");
-                    var messages = document.getElementById('messages');
-                    messages.innerHTML = ''; // Clear previous messages
-                    var finalImageDiv = document.getElementById('final_image');
-                    finalImageDiv.innerHTML = ''; // Clear previous final image
-                    var previewDiv = document.getElementById('previews');
-                    previewDiv.innerHTML = ''; // Clear previous previews (we only show count now)
-                    ws.send(input.value);
-                    input.value = ''; // Clear input field
-                }
-            </script>
-        </body>
-    </html>
-    """
-
     @web_app.get("/")
     async def get():
-        return HTMLResponse(html)
+        return JSONResponse(
+            {
+                "status": "ok",
+                "timestamp": int(time.time()),
+            }
+        )
 
     @web_app.websocket("/ws")
     async def websocket_handler(websocket: WebSocket) -> None:
@@ -347,6 +293,10 @@ def endpoint():
                     # This will block until inference.run completes and returns
                     images, preview_images = call.get()  # Retrieve result
                     print(f"inference result received for run {run_id}.")
+                    await websocket.send_text(f"len(images):", len(images))
+                    await websocket.send_text(
+                        "len(preview_images):", len(preview_images)
+                    )
                     await websocket.send_text(
                         f"inference result received for run {run_id}."
                     )
