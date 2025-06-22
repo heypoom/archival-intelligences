@@ -3,6 +3,12 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "analyze": "bun run process.ts",
+    "generate": "bun run generate.ts",
+    "generate-force": "bun run generate.ts --force",
+    "stats": "bun run batch-generator.ts --stats-only"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },

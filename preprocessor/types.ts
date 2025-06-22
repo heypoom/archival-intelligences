@@ -1,3 +1,12 @@
+export type ProgramId = 'P0' | 'P2' | 'P2B' | 'P3' | 'P3B' | 'P4'
+
+export interface GladiaWord {
+  word: string
+  start: number
+  end: number
+  confidence: number
+}
+
 export type AutomationAction =
   | {action: 'start'} // start the program
   | {action: 'next'} // go to the next program
