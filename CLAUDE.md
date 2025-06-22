@@ -102,3 +102,10 @@ This is an AI-powered art installation with three main components:
 - Frontend: React, TypeScript, Vite, TanStack Router, Zustand for state management
 - Backend: Python, FastAPI, Modal.com, HuggingFace, PyTorch
 - Infrastructure: WebSockets, Cloudflare R2 for object storage
+
+### How to get the latest cue for the preprocessor
+
+1. Search for `this.cues = [...transcriptCues, ...PROGRAM_CUES]` in the codebase
+2. Add that as `window.cues = ...`
+3. Do `copy(JSON.stringify(window.cues))` in the console
+4. Copy that in the preprocessor

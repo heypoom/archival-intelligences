@@ -311,6 +311,8 @@ export class ExhibitionAutomator {
     this.cues = [...transcriptCues, ...PROGRAM_CUES]
     // make sure the cues are sorted by time!
     this.cues = this.cues.sort((a, b) => compareTimecode(a.time, b.time))
+
+    window.cues = this.cues
   }
 
   tick() {
