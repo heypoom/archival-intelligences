@@ -71,8 +71,34 @@ The backend implementation is largely incomplete and not very well written to su
 
 The LoRA implementation and the image-to-image pipeline is possibly broken as we have updated the AI model to newer versions, and I haven't tested those programs yet. Solutions include rebuilding the LoRA against the latest modal, or downgrading to the last model (which is not bad as we pre-generate statically anyway).
 
-## Technology Stack
+## Project Structure Understanding
 
-- Frontend: React
-- Backend: Python, HuggingFace, Pytorch
-- AI Hosting: Modal.com (Serverless AI Hosting)
+This is an AI-powered art installation with three main components:
+
+### Frontend (`/ui/`)
+
+- React/TypeScript application with Vite build system
+- Multiple program routes (zero.lazy.tsx, one.lazy.tsx, two.lazy.tsx, etc.) corresponding to different performance sections
+- Exhibition automation system with cue-based timing and scheduling
+- WebSocket integration for real-time image generation
+- Audio dictation support for live speech-to-text
+- Image display components with cross-fade animations
+
+### Backend (`/api/`)
+
+- Python FastAPI server with WebSocket support
+- Modal.com integration for serverless AI hosting
+- Multiple program implementations (p0.py, p2.py, p3.py) for different image generation pipelines
+- LoRA model support for fine-tuned image generation
+- Pipeline management utilities for different AI models
+
+### Exhibition Scripts
+
+- `exhibition_image_to_image.py` and `exhibition_text_to_image.py` for pre-generating image sets
+- Static generation mode to avoid live inference during exhibitions
+
+### Key Technologies
+
+- Frontend: React, TypeScript, Vite, TanStack Router, Zustand for state management
+- Backend: Python, FastAPI, Modal.com, HuggingFace, PyTorch
+- Infrastructure: WebSockets, Cloudflare R2 for object storage
