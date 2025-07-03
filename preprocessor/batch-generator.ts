@@ -214,17 +214,18 @@ export class BatchGenerator {
     // Determine which Modal endpoint to use based on program
     const endpoint = this.getModalEndpoint(task.program)
     
-    // Prepare request payload
+    // Prepare request payload for shared pipeline API
     const payload = {
       action_id: task.actionId,
       set_id: setId,
       program: task.program,
       prompt: task.prompt,
       override_prompt: task.overridePrompt,
-      guidance_scale: task.guidanceScale || 7.5,
+      guidance_scale: task.guidanceScale,
       num_inference_steps: task.numInferenceSteps,
-      return_intermediates: true, // Get all preview steps
-      upload_to_r2: true // Upload directly from Modal
+      strength: task.program.startsWith('P2') ? 0.8 : undefined,
+      upload_to_r2: true,
+      upload_previews: true
     }
 
     try {
@@ -247,12 +248,13 @@ export class BatchGenerator {
       }
 
       // Validate response has expected structure
-      if (!result.metadata || !result.r2_urls) {
-        throw new Error('Invalid response format from Modal endpoint')
+      if (!result.success) {
+        throw new Error(result.error || 'Generation failed')
       }
 
       const totalTime = ((Date.now() - startTime) / 1000).toFixed(1)
-      console.log(`🖼️  Generated ${task.actionId}/set_${setId} in ${totalTime}s (${result.r2_urls.length} images)`)
+      const imageCount = result.preview_urls?.length || 0
+      console.log(`🖼️  Generated ${task.actionId}/set_${setId} in ${totalTime}s (${imageCount} images)`)
 
     } catch (error) {
       console.error(`❌ Error generating ${task.actionId}/set_${setId}:`, error)
@@ -261,19 +263,8 @@ export class BatchGenerator {
   }
 
   private getModalEndpoint(program: ProgramId): string {
-    // Map programs to their respective Modal endpoints
-    switch (program) {
-      case 'P0':
-      case 'P3':
-      case 'P3B':
-      case 'P4':
-        return '/generate-text-to-image-batch'
-      case 'P2':
-      case 'P2B':
-        return '/generate-image-to-image-batch'
-      default:
-        return '/generate-text-to-image-batch'
-    }
+    // All programs now use the unified single set endpoint
+    return '/generate-single-set'
   }
 
   private async saveManifest(): Promise<void> {
