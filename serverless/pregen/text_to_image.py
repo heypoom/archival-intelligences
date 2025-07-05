@@ -115,29 +115,26 @@ class Inference:
         # Ensure LORA is in the correct state
         self._ensure_lora_state(use_lora)
 
-        # Process prompt based on program key
-        if program_key == "P3":
-            processed_prompt = " "  # Empty prompt for P3 with LoRA
-        elif program_key == "P3B":
-            processed_prompt = f"{prompt}, photorealistic"
+        # Modify prompt based on program key
+        if program_key == "P3B":
+            modified_prompt = f"{prompt}, photorealistic"
         elif program_key == "P4":
-            # Handle specific P4 prompts
             if prompt.strip() in ["data researcher", "crowdworker", "big tech ceo"]:
-                processed_prompt = f"{prompt}, photorealistic"
+                modified_prompt = f"{prompt}, photorealistic"
             else:
-                processed_prompt = prompt
-        else:  # P0 or other
-            processed_prompt = prompt
+                modified_prompt = prompt
+        else:
+            modified_prompt = prompt
 
         seed = seed if seed is not None else random.randint(0, 2**32 - 1)
-        print(f"running inference for program {program_key}: '{processed_prompt}' with seed {seed}")
+        print(f"running inference for program {program_key}: '{modified_prompt}' with seed {seed}")
         generator = torch.Generator("cuda").manual_seed(seed)
 
         start_time = time.time()
 
         # Run the pipeline
         images = self.pipe(
-            prompt=processed_prompt,
+            prompt=modified_prompt,
             num_images_per_prompt=1,
             num_inference_steps=num_inference_steps,
             guidance_scale=guidance_scale,
