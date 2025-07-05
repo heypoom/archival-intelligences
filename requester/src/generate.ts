@@ -16,9 +16,9 @@ const MODAL_ENDPOINT =
 
 const CONCURRENT_REQUESTS = 3
 
-const REQUESTER_CUES_KEY = `requester/${PREGEN_VERSION_ID}/cues`
-const REQUESTER_PROMPTS_KEY = `requester/${PREGEN_VERSION_ID}/prompts`
 const REQUESTER_DURATIONS_KEY = `requester/${PREGEN_VERSION_ID}/durations`
+const REQUESTER_R2_KEY = `requester/${PREGEN_VERSION_ID}/r2`
+const REQUESTER_ERRORS_KEY = `requester/${PREGEN_VERSION_ID}/errors`
 
 interface GenerationRequest {
   cue_id: string
@@ -44,9 +44,11 @@ class GenerationRequester {
   }
 
   async generateImage(request: GenerationRequest): Promise<void> {
+    const REQ_ID = `${request.cue_id}_${request.variant_id}`
+
     try {
       console.log(
-        `Generating image for cue ${request.cue_id} with program ${request.program_key}`
+        `😶 fetch: cue ${request.cue_id}, var ${request.variant_id}, pgm ${request.program_key}`
       )
 
       const start = performance.now()
@@ -68,29 +70,24 @@ class GenerationRequester {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
-      const output = await response.json()
-      console.log(`Response for ${request.cue_id}:`, output)
-      console.log(`✓ Generated image for cue ${request.cue_id}`)
-
+      const output = (await response.json()) as {status: string; r2_key: string}
       const duration = (performance.now() - start).toFixed(2)
-      console.log(`Time taken: ${duration} ms`)
 
-      // Mark as processed in Valkey
-      await this.vk.hmset(REQUESTER_CUES_KEY, [request.cue_id, '1'])
-
-      // Log the prompt for reference
-      await this.vk.hmset(REQUESTER_PROMPTS_KEY, [
-        request.cue_id,
-        request.prompt,
-      ])
-
-      // Log the durations for reference
-      await this.vk.hmset(REQUESTER_DURATIONS_KEY, [request.cue_id, duration])
-    } catch (error) {
-      console.error(
-        `Failed to generate image for cue ${request.cue_id}:`,
-        error
+      console.log(
+        `✨ Done: ${request.cue_id}. r2_key: ${output.r2_key}, time: ${duration}ms`
       )
+
+      await this.vk.hmset(REQUESTER_DURATIONS_KEY, [REQ_ID, duration])
+
+      if (output.r2_key) {
+        await this.vk.hmset(REQUESTER_R2_KEY, [REQ_ID, output.r2_key])
+      }
+    } catch (error) {
+      console.error(`⚠️ Failed to generate image for ${REQ_ID}:`, error)
+
+      // Flag any errors in Valkey
+      await this.vk.hmset(REQUESTER_ERRORS_KEY, [REQ_ID, String(error)])
+
       throw error
     }
   }
@@ -127,30 +124,52 @@ class GenerationRequester {
         // For transcript cues, we'll use P0 as default program
         const program_key = 'P0'
 
+        const localStart = performance.now()
+        let localComplete = 0
+
+        let requestIds = []
+
         for (
           let variant_id = 1;
           variant_id <= MAX_VARIANT_COUNT;
           variant_id++
         ) {
-          const [status] = await this.vk.hmget(PREGEN_UPLOAD_STATUS_KEY, [
-            `${cue_id}_${variant_id}`,
-          ])
+          requestIds.push(`${cue_id}_${variant_id}`)
+        }
+
+        const statuses = await this.vk.hmget(
+          PREGEN_UPLOAD_STATUS_KEY,
+          requestIds
+        )
+
+        for (
+          let variant_id = 1;
+          variant_id <= requestIds.length;
+          variant_id++
+        ) {
+          const status = statuses[variant_id - 1]
 
           if (!status || status === '0') {
-            console.log(
-              `📚 Queuing an image: cue=${cue_id}, var=${variant_id}, prom=${prompt}, stat=${status}`
-            )
-
+            // This variant needs to be generated
             allRequests.push({
               cue_id,
               prompt,
               program_key,
               variant_id,
             })
+
+            process.stdout.write('+')
           } else {
+            process.stdout.write('.')
+
+            // This variant has already been generated
             skippedCount++
+            localComplete++
           }
         }
+
+        const localDuration = (performance.now() - localStart).toFixed(2)
+        console.log(` ${cue_id} (${localComplete} ~ ${localDuration}ms)`)
       }
     }
 
