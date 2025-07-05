@@ -24,8 +24,8 @@ DEFAULT_NUM_INFERENCE_STEPS = 10
 # Example: different transcripts, model versions, or other significant changes.
 PREGEN_VERSION_ID = 1
 
-# Valkey key that tracks variant counts
 PREGEN_VARIANT_COUNT_KEY = f"pregen/{PREGEN_VERSION_ID}/cues_variant_count"
+VARIANT_UPLOAD_STATUS_KEY = f"pregen/{PREGEN_VERSION_ID}/variant_upload_status"
 
 image = (
     modal.Image.debian_slim(python_version="3.12")
@@ -170,6 +170,7 @@ class Inference:
         program_key: str,
         cue_id: str,
         seed: Optional[int] = None,
+        variant_id: Optional[int] = None,
         width: int = DEFAULT_WIDTH,
         height: int = DEFAULT_HEIGHT,
         guidance_scale: float = DEFAULT_GUIDANCE_SCALE,
@@ -225,19 +226,23 @@ class Inference:
 
         print(f"Generated image for program {program_key}. Size: {len(image_bytes)} bytes.")
 
-        # Get the current variant id
-        variant_count_byte = self.vk.hget(PREGEN_VARIANT_COUNT_KEY, cue_id)
-
-        # If no variant count exists, initialize it
-        if variant_count_byte is None:
-            variant_count = 0
+        # Use provided variant_id or get the next variant id
+        if variant_id is not None:
+            next_variant_id = variant_id
         else:
-            variant_count = int(variant_count_byte.decode("utf-8"))
-        
-        next_variant_id = variant_count + 1
+            # Get the current variant id
+            variant_count_byte = self.vk.hget(PREGEN_VARIANT_COUNT_KEY, cue_id)
 
-        # Increment valkey identifier
-        self.vk.hincrby(PREGEN_VARIANT_COUNT_KEY, cue_id, 1)
+            # If no variant count exists, initialize it
+            if variant_count_byte is None:
+                variant_count = 0
+            else:
+                variant_count = int(variant_count_byte.decode("utf-8"))
+            
+            next_variant_id = variant_count + 1
+
+            # Increment valkey identifier
+            self.vk.hincrby(PREGEN_VARIANT_COUNT_KEY, cue_id, 1)
 
         # Save the final image
         r2_key = f"foigoi/{PREGEN_VERSION_ID}/cues/{cue_id}/{next_variant_id}/final.png"
@@ -247,6 +252,9 @@ class Inference:
             print(f"Image uploaded to R2: {r2_key}")
         else:
             print(f"Failed to upload image to R2: {r2_key}")
+        
+        # Mark whether the upload was successful in Valkey
+        self.vk.hset(VARIANT_UPLOAD_STATUS_KEY, f"{cue_id}_{next_variant_id}", str(upload_success))
 
         return r2_key
 
@@ -270,6 +278,7 @@ def endpoint():
         prompt: str
         cue_id: str
         seed: Optional[int] = None
+        variant_id: Optional[int] = None
         width: int = DEFAULT_WIDTH
         height: int = DEFAULT_HEIGHT
         guidance_scale: float = DEFAULT_GUIDANCE_SCALE
@@ -306,6 +315,7 @@ def endpoint():
                 program_key=request.program_key,
                 cue_id=request.cue_id,
                 seed=request.seed,
+                variant_id=request.variant_id,
                 width=request.width,
                 height=request.height,
                 guidance_scale=request.guidance_scale,

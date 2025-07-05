@@ -19,10 +19,14 @@ const REQUESTER_CUES_KEY = `requester/${PREGEN_VERSION_ID}/cues`
 const REQUESTER_PROMPTS_KEY = `requester/${PREGEN_VERSION_ID}/prompts`
 const REQUESTER_DURATIONS_KEY = `requester/${PREGEN_VERSION_ID}/durations`
 
+// Set by text_to_image.py when uploading images
+const PREGEN_UPLOAD_STATUS_KEY = `pregen/${PREGEN_VERSION_ID}/variant_upload_status`
+
 interface GenerationRequest {
   cue_id: string
   prompt: string
   program_key: string
+  variant_id: number
 }
 
 class GenerationRequester {
@@ -73,6 +77,7 @@ class GenerationRequester {
           prompt: request.prompt,
           program_key: request.program_key,
           cue_id: request.cue_id,
+          variant_id: request.variant_id,
         }),
       })
 
@@ -80,7 +85,8 @@ class GenerationRequester {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
-      await response.json()
+      const output = await response.json()
+      console.log(`Response for ${request.cue_id}:`, output)
       console.log(`✓ Generated image for cue ${request.cue_id}`)
 
       const duration = (performance.now() - start).toFixed(2)
@@ -139,38 +145,38 @@ class GenerationRequester {
           '_'
         )}`
 
-        // Check current variant count for this cue
-        let currentVariantCount = 0
-        if (processedCues.has(cue_id)) {
-          const values = await this.vk.hmget(REQUESTER_CUES_KEY, [cue_id])
-          console.log(`Current variant count for cue ${cue_id}:`, values)
-          currentVariantCount = Number(values[0] ?? 0)
-        }
-
-        if (currentVariantCount >= MAX_VARIANT_COUNT) {
-          skippedCount++
-          console.log(
-            `Skipping cue ${cue_id} - already processed ${currentVariantCount}/${MAX_VARIANT_COUNT} variants`
-          )
-          continue
-        }
-
         // For transcript cues, we'll use P0 as default program
         const program_key = 'P0'
 
         // Generate multiple variants up to MAX_VARIANT_COUNT
-        const variantsToGenerate = MAX_VARIANT_COUNT - currentVariantCount
 
-        console.log(
-          `Generating ${variantsToGenerate} variants for cue ${cue_id} (currently has ${currentVariantCount})`
-        )
+        for (
+          let variant_id = 1;
+          variant_id <= MAX_VARIANT_COUNT;
+          variant_id++
+        ) {
+          const [status] = await this.vk.hmget(PREGEN_UPLOAD_STATUS_KEY, [
+            `${cue_id}_${variant_id}`,
+          ])
 
-        for (let i = 0; i < variantsToGenerate; i++) {
-          allRequests.push({
-            cue_id,
-            prompt,
-            program_key,
-          })
+          if (!status || status === 'false') {
+            console.log(
+              `📚 Queuing new image for cue=${cue_id}, variant=${variant_id}, prompt=${prompt}, vk_status=${status}`
+            )
+
+            allRequests.push({
+              cue_id,
+              prompt,
+              program_key,
+              variant_id,
+            })
+          } else {
+            // console.log(
+            //   `✅ Skipping already generated cue: ${cue_id}, variant: ${variant_id}.`
+            // )
+
+            skippedCount++
+          }
         }
       }
     }
