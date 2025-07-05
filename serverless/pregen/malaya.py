@@ -191,7 +191,7 @@ def endpoint():
 
         try:
             # Call inference
-            image_bytes = inference.run(
+            image_bytes = inference.run.remote(
                 prompt=request.prompt,
                 program_key=request.program_key,
                 seed=request.seed,

@@ -20,6 +20,7 @@ image = (
         "torch==2.5.1",
         "torchvision==0.20.1",
         "transformers~=4.44.0",
+        "peft",
         "numpy",
         "Pillow",
     )
@@ -186,7 +187,7 @@ def endpoint():
 
         try:
             # Call inference
-            image_bytes = inference.run(
+            image_bytes = inference.run.remote(
                 prompt=request.prompt,
                 program_key=request.program_key,
                 seed=request.seed,
