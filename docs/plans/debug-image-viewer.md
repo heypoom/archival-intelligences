@@ -8,17 +8,17 @@ Build a debug image viewer route into the frontend, where I can view the images 
 
   - Frontend already has the cues.json parsed.
   - See how the image paths can be derived in generate.ts.
-  - Example of path format: `transcript_375_01_12_50/1/final.png`, where 375 is the cue number and 01:12:50 is the timecode. 1 is the variation id.
+  - Example of path format: `transcript_375_01_12_50/1/final.png`, where 375 is the cue number and 01:12:50 is the timecode. 1 is the variant_id.
   - The images are stored on <https://images.poom.dev/foigoi/PATH> where path is described above.
   - Example: `https://images.poom.dev/foigoi/cues/transcript_375_01_12_50/1/final.png`
 
 - Make an image viewer that lets you view these images quickly.
 
   - Left/Right arrow: move across transcript folder (~100ish).
-  - Up/Down arrow: move across variations of the same cue (1 - 10).
+  - Up/Down arrow: move across variations of the same cue (1 - 30).
   - Any images could be missing. You must show a "missing image" if any image failed to load. Do not crash the viewer.
 
-- Show the timecode, program key (fow now all of them is P0 since we should load just the transcript cue first), text prompt and variation id (1 - 10) for each image on screen.
+- Show the timecode, program key (fow now all of them is P0 since we should load just the transcript cue first), text prompt and variant_id (1 - 30) for each image on screen.
 
   - Show the keybinds guide too.
 
@@ -53,7 +53,7 @@ Minimal debug image viewer implemented as a single React route at `/image-viewer
 #### 3. Navigation System
 
 - **Left/Right arrows**: Navigate between cues (~100 images) with wrap-around
-- **Up/Down arrows**: Navigate between variants (1-10) of same cue with wrap-around
+- **Up/Down arrows**: Navigate between variants (1-30) of same cue with wrap-around
 - **State Management**: Simple React useState for cueIndex and variantIndex
 
 #### 4. UI Components
@@ -62,7 +62,7 @@ Minimal debug image viewer implemented as a single React route at `/image-viewer
 - **Metadata Overlay**: Top-left corner showing:
   - Cue number (current/total)
   - Timecode
-  - Variant number (1-10)
+  - Variant number (1-30)
   - Program (P0 for transcript cues)
   - Text prompt (transcript content)
 - **Keyboard Guide**: Top-right corner with navigation instructions
@@ -87,7 +87,7 @@ Minimal debug image viewer implemented as a single React route at `/image-viewer
 
 ```typescript
 const [cueIndex, setCueIndex] = useState(0) // Current cue (0-based)
-const [variantIndex, setVariantIndex] = useState(1) // Current variant (1-10)
+const [variantIndex, setVariantIndex] = useState(1) // Current variant (1-30)
 const [imageError, setImageError] = useState(false) // Error state
 ```
 
@@ -103,7 +103,7 @@ const imagePath = `https://images.poom.dev/foigoi/${versionId}/cues/${cueId}/${v
 #### Keyboard Event Handling
 
 - **ArrowLeft/Right**: Navigate cues with bounds checking and wrap-around
-- **ArrowUp/Down**: Navigate variants (1-10) with wrap-around
+- **ArrowUp/Down**: Navigate variants (1-30) with wrap-around
 - **Automatic Error Reset**: Clears error state when navigating to new image
 
 ### Future Extensibility
