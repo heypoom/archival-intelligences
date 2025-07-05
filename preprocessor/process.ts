@@ -16,6 +16,7 @@ const imageGenerationCuesToGenerate = cues.filter(
 const moveSliderCuesToGenerate = cues.filter(
   (cue) => cue.action === 'move-slider'
 )
+
 console.log('transcript cues to generate:', transcriptCuesToGenerate.length)
 console.log('image generation cues:', imageGenerationCuesToGenerate.length)
 console.log('move slider cues:', moveSliderCuesToGenerate.length)
