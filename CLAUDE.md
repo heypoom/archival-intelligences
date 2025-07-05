@@ -124,3 +124,4 @@ To update cues from transcript, follow process in README.md section "How to get 
 - **Plan Files**: Create planning documents in `docs/plans/` directory before starting implementation
 - **Purpose**: Allows for easy editing and review of implementation plans
 - **Format**: Markdown files with clear goals, tasks, and design specifications
+- **Workflow**: Always update plan files first when changes are needed, then proceed with implementation
