@@ -1,6 +1,9 @@
+import sys
 import boto3
 import os
-from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def upload_to_r2(file_data: bytes, key: str, bucket_name: str) -> bool:
     """
@@ -52,12 +55,20 @@ def upload_to_r2(file_data: bytes, key: str, bucket_name: str) -> bool:
         return False
 
 def main():
-    # Example usage
-    sample_data = b"Hello, Cloudflare R2!"
-    bucket_name = "your-r2-bucket-name"
-    key = "test-file.txt"
+    if len(sys.argv) < 2:
+        print("Usage: python upload.py <content>")
+        return
+
+    content = sys.argv[1].encode('utf-8')
+
+    if not content:
+        print("No content provided for upload")
+        return
+
+    bucket_name = "poom-images"
+    key = "test-r2.txt"
     
-    success = upload_to_r2(sample_data, key, bucket_name)
+    success = upload_to_r2(content, key, bucket_name)
     
     if success:
         print("Upload completed successfully")
