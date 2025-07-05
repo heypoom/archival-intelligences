@@ -118,3 +118,9 @@ Cues are stored in `ui/src/constants/exhibition-cues.ts` and drive automated act
 - Transcription control
 
 To update cues from transcript, follow process in README.md section "How to get the latest cue for the preprocessor".
+
+## Planning Process
+
+- **Plan Files**: Create planning documents in `docs/plans/` directory before starting implementation
+- **Purpose**: Allows for easy editing and review of implementation plans
+- **Format**: Markdown files with clear goals, tasks, and design specifications
