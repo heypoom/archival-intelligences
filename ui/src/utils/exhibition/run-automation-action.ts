@@ -169,7 +169,7 @@ export function runAutomationAction(
       const hasRegenEnabled = disableRegen('force reconnect to server')
 
       if (!hasRegenEnabled) {
-        socket.reconnectSoon('simple', {
+        socket.reconnectSoon('textToImage', {
           reason: 'force reconnect to server',
           removeListener: true,
           delay: 10,

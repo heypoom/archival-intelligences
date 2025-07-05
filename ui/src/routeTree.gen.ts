@@ -25,6 +25,7 @@ const ThreeBLazyImport = createFileRoute('/three-b')()
 const ThreeLazyImport = createFileRoute('/three')()
 const ProgramVideoLazyImport = createFileRoute('/program-video')()
 const OneLazyImport = createFileRoute('/one')()
+const ImageViewerLazyImport = createFileRoute('/image-viewer')()
 const FourBLazyImport = createFileRoute('/four-b')()
 const FourLazyImport = createFileRoute('/four')()
 const IndexLazyImport = createFileRoute('/')()
@@ -71,6 +72,11 @@ const OneLazyRoute = OneLazyImport.update({
   getParentRoute: () => rootRoute,
 } as any).lazy(() => import('./routes/one.lazy').then((d) => d.Route))
 
+const ImageViewerLazyRoute = ImageViewerLazyImport.update({
+  path: '/image-viewer',
+  getParentRoute: () => rootRoute,
+} as any).lazy(() => import('./routes/image-viewer.lazy').then((d) => d.Route))
+
 const FourBLazyRoute = FourBLazyImport.update({
   path: '/four-b',
   getParentRoute: () => rootRoute,
@@ -109,6 +115,10 @@ declare module '@tanstack/react-router' {
     }
     '/four-b': {
       preLoaderRoute: typeof FourBLazyImport
+      parentRoute: typeof rootRoute
+    }
+    '/image-viewer': {
+      preLoaderRoute: typeof ImageViewerLazyImport
       parentRoute: typeof rootRoute
     }
     '/one': {
@@ -153,6 +163,7 @@ export const routeTree = rootRoute.addChildren([
   TranscriptTesterRoute,
   FourLazyRoute,
   FourBLazyRoute,
+  ImageViewerLazyRoute,
   OneLazyRoute,
   ProgramVideoLazyRoute,
   ThreeLazyRoute,

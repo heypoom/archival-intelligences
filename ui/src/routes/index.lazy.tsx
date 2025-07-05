@@ -46,16 +46,6 @@ export function SettingsRoute() {
     fullscreen()
   }
 
-  // exhibition mode - program video
-  function startExhibitionProgramVideo() {
-    go({to: '/zero'})
-
-    $exhibitionMode.set(true)
-    $videoMode.set(false)
-    $canPlay.set(true)
-    automator.sync({force: true})
-    fullscreen()
-  }
 
   // performance lecture mode
   function startLiveLecture() {

@@ -20,6 +20,9 @@ export const StatusIndicator = () => {
   const isVideo = useIsVideo() || mr({to: '/program-video'})
   if (isVideo) return null
 
+  const shouldHideFromRoute = mr({to: '/image-viewer'})
+  if (shouldHideFromRoute) return null
+
   const starting = status === 'starting'
   const listening = status === 'listening'
   const stopped = status === 'stopped'

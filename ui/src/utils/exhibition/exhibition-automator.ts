@@ -26,14 +26,12 @@ import {
 } from '../../store/exhibition'
 import {getExhibitionStatus} from './get-exhibition-status'
 import {match} from 'ts-pattern'
-import {routeFromCue} from './route-from-cue'
 import {IpcAction, IpcMessage, IpcMeta} from '../../store/window-ipc'
 import {resetAll} from './reset'
 import {compareTimecode} from './compare-timecode'
 import {transcriptWithinTimeRange} from './exclude-transcription-before'
 import {$programTimestamp} from '../../store/timestamps'
 import {getServerTimeDrift} from './get-system-time-drift'
-import {socket} from '../../manager/socket'
 
 export class ExhibitionAutomator {
   timer: number | null = null
@@ -312,7 +310,7 @@ export class ExhibitionAutomator {
     // make sure the cues are sorted by time!
     this.cues = this.cues.sort((a, b) => compareTimecode(a.time, b.time))
 
-    window.cues = this.cues
+    ;(window as any).cues = this.cues
   }
 
   tick() {
