@@ -2,17 +2,16 @@ import PQueue from 'p-queue'
 import _cues from '../data/cues.json'
 import type {AutomationCue} from './types'
 import {RedisClient} from 'bun'
+import {
+  MAX_VARIANT_COUNT,
+  PREGEN_UPLOAD_STATUS_KEY,
+  PREGEN_VERSION_ID,
+  VALKEY_URL,
+} from './constants'
 
 const cues = _cues as AutomationCue[]
 
 const CONCURRENT_REQUESTS = 10
-const MAX_VARIANT_COUNT = 10
-const PREGEN_VERSION_ID = 1
-
-const VALKEY_URL = 'redis://raya.poom.dev:6379'
-
-// Set by text_to_image.py when uploading images
-const PREGEN_UPLOAD_STATUS_KEY = `pregen/${PREGEN_VERSION_ID}/variant_upload_status`
 
 interface ValidationResult {
   url: string

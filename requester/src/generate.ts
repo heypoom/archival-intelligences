@@ -2,25 +2,23 @@ import {RedisClient} from 'bun'
 import PQueue from 'p-queue'
 import _cues from '../data/cues.json'
 import type {AutomationCue} from './types'
+import {
+  MAX_VARIANT_COUNT,
+  PREGEN_VERSION_ID,
+  VALKEY_URL,
+  PREGEN_UPLOAD_STATUS_KEY,
+} from './constants'
 
 const cues = _cues as AutomationCue[]
 
 const MODAL_ENDPOINT =
   'https://heypoom--exhibition-pregen-text-to-image-endpoint.modal.run/generate'
-const VALKEY_URL = 'redis://raya.poom.dev:6379'
+
 const CONCURRENT_REQUESTS = 3
-
-// generate up to 10 variations per cue :)
-const MAX_VARIANT_COUNT = 10
-
-const PREGEN_VERSION_ID = 1 // static pregen version ID
 
 const REQUESTER_CUES_KEY = `requester/${PREGEN_VERSION_ID}/cues`
 const REQUESTER_PROMPTS_KEY = `requester/${PREGEN_VERSION_ID}/prompts`
 const REQUESTER_DURATIONS_KEY = `requester/${PREGEN_VERSION_ID}/durations`
-
-// Set by text_to_image.py when uploading images
-const PREGEN_UPLOAD_STATUS_KEY = `pregen/${PREGEN_VERSION_ID}/variant_upload_status`
 
 interface GenerationRequest {
   cue_id: string
