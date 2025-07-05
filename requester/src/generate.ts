@@ -45,21 +45,6 @@ class GenerationRequester {
     console.log(`Concurrent requests: ${CONCURRENT_REQUESTS}`)
   }
 
-  async getProcessedCues(): Promise<Set<string>> {
-    try {
-      const processedCues = await this.vk.hgetall(REQUESTER_CUES_KEY)
-      const cueIds = new Set(processedCues ? Object.keys(processedCues) : [])
-      console.log(`Found ${cueIds.size} already processed cues in Valkey`)
-      console.log(`Processed Cues:`, cueIds)
-
-      return cueIds
-    } catch (error) {
-      console.warn('Failed to read processed cues from Valkey:', error)
-      console.log('Assuming fresh start (no processed cues)')
-      return new Set()
-    }
-  }
-
   async generateImage(request: GenerationRequest): Promise<void> {
     try {
       console.log(
@@ -115,8 +100,6 @@ class GenerationRequester {
   async processTranscriptCues(): Promise<void> {
     console.log('Processing transcript cues...')
 
-    const processedCues = await this.getProcessedCues()
-
     const transcriptCuesToGenerate = cues.filter(
       (cue) => cue.action === 'transcript' && cue.generate
     )
@@ -135,10 +118,8 @@ class GenerationRequester {
 
     for (const cue of transcriptCuesToGenerate) {
       if (cue.action === 'transcript' && cue.transcript) {
-        // Use the transcript as the prompt
         const prompt = cue.transcript
 
-        // Generate a unique cue_id based on the cue's time or index
         const cueIndex = cues.indexOf(cue)
         const cue_id = `transcript_${cueIndex}_${cue.time.replace(
           /[:.]/g,
@@ -148,7 +129,6 @@ class GenerationRequester {
         // For transcript cues, we'll use P0 as default program
         const program_key = 'P0'
 
-        // Generate multiple variants up to MAX_VARIANT_COUNT
         for (
           let variant_id = 1;
           variant_id <= MAX_VARIANT_COUNT;
@@ -199,84 +179,21 @@ class GenerationRequester {
     }
   }
 
-  async processImageGenerationCues(): Promise<void> {
-    console.log('Processing image generation cues...')
-
-    const imageGenerationCues = cues.filter((cue) => cue.action === 'prompt')
-
-    console.log(`Found ${imageGenerationCues.length} image generation cues`)
-
-    if (imageGenerationCues.length === 0) {
-      console.log('No image generation cues to process')
-      return
-    }
-
-    const requests: GenerationRequest[] = []
-
-    for (const cue of imageGenerationCues) {
-      if (cue.action === 'prompt' && cue.prompt) {
-        const prompt = cue.prompt
-        const cueIndex = cues.indexOf(cue)
-        const cue_id = `prompt_${cueIndex}_${cue.time.replace(/[:.]/g, '_')}`
-        const program_key = cue.program || 'P0'
-
-        requests.push({
-          cue_id,
-          prompt,
-          program_key,
-        })
-      }
-    }
-
-    console.log(`Queuing ${requests.length} image generation requests...`)
-
-    const promises = requests.map((request) =>
-      this.queue.add(() => this.generateImage(request))
-    )
-
-    try {
-      await Promise.all(promises)
-      console.log('All image generation cues processed successfully')
-    } catch (error) {
-      console.error('Some requests failed:', error)
-    }
-  }
-
   async run(): Promise<void> {
     await this.init()
 
-    // Check current state for resumption status
-    const processedCues = await this.getProcessedCues()
     const transcriptCuesToGenerate = cues.filter(
       (cue) => cue.action === 'transcript' && cue.generate
     )
 
     const totalTranscriptCues = transcriptCuesToGenerate.length
-    const alreadyProcessed = transcriptCuesToGenerate.filter((cue) => {
-      const cueIndex = cues.indexOf(cue)
-      const cue_id = `transcript_${cueIndex}_${cue.time.replace(/[:.]/g, '_')}`
-      return processedCues.has(cue_id)
-    }).length
-
-    const remaining = totalTranscriptCues - alreadyProcessed
 
     console.log('=== Generation Status ===')
     console.log(`Total transcript cues: ${totalTranscriptCues}`)
-    console.log(`Already processed: ${alreadyProcessed}`)
-    console.log(`Remaining to process: ${remaining}`)
 
-    if (alreadyProcessed > 0) {
-      console.log('🔄 RESUMING previous session')
-    } else {
-      console.log('🆕 FRESH START - no previous progress found')
-    }
     console.log('========================')
 
-    // Process transcript cues first (as requested in README)
     await this.processTranscriptCues()
-
-    // Optionally process image generation cues too
-    // await this.processImageGenerationCues()
 
     console.log('✅ Generation requester finished')
   }
