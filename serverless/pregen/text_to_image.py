@@ -13,6 +13,12 @@ app = modal.App(APP_NAME)
 SUPPORTED_PROGRAMS = ["P0", "P3", "P3B", "P4"]
 CHUAMIATEE_PROGRAMS = ["P3", "P3B"]
 
+# Default generation parameters
+DEFAULT_WIDTH = 1360
+DEFAULT_HEIGHT = 768
+DEFAULT_GUIDANCE_SCALE = 3.5
+DEFAULT_NUM_INFERENCE_STEPS = 25
+
 image = (
     modal.Image.debian_slim(python_version="3.12")
     .pip_install(
@@ -93,10 +99,10 @@ class Inference:
         prompt: str,
         program_key: str,
         seed: Optional[int] = None,
-        width: int = 1360,
-        height: int = 768,
-        guidance_scale: float = 3.5,
-        num_inference_steps: int = 28,
+        width: int = DEFAULT_WIDTH,
+        height: int = DEFAULT_HEIGHT,
+        guidance_scale: float = DEFAULT_GUIDANCE_SCALE,
+        num_inference_steps: int = DEFAULT_NUM_INFERENCE_STEPS,
     ) -> bytes:
         if not self.pipe:
             raise RuntimeError("Pipeline not initialized or moved to GPU.")
@@ -171,10 +177,10 @@ def endpoint():
         program_key: str
         prompt: str
         seed: Optional[int] = None
-        width: int = 1360
-        height: int = 768
-        guidance_scale: float = 3.5
-        num_inference_steps: int = 50
+        width: int = DEFAULT_WIDTH
+        height: int = DEFAULT_HEIGHT
+        guidance_scale: float = DEFAULT_GUIDANCE_SCALE
+        num_inference_steps: int = DEFAULT_NUM_INFERENCE_STEPS
 
     @web_app.get("/")
     async def get():
