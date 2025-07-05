@@ -1,4 +1,5 @@
 import io
+import os
 import random
 import time
 from typing import Optional
@@ -32,14 +33,14 @@ image = (
 
 with image.imports():
     import torch
-    from diffusers import FluxPipeline
+    from diffusers.pipelines.flux.pipeline_flux import FluxPipeline
     from PIL import Image
 
 CACHE_DIR = "/cache/flux-dev"
 cache_vol = modal.Volume.from_name("hf-hub-cache", create_if_missing=True)
 
 # Constants for LORA
-LORA_WEIGHTS = "heypoom/chuamiatee"
+LORA_WEIGHTS = "heypoom/chuamiatee-flux-lora"
 LORA_WEIGHT_NAME = "flux-lora.safetensors"
 
 
@@ -58,10 +59,12 @@ class Inference:
     @modal.enter()
     def initialize(self):
         print("initializing pipeline...")
+
         self.pipe = FluxPipeline.from_pretrained(
             MODEL_NAME,
             cache_dir=CACHE_DIR,
             torch_dtype=torch.bfloat16,
+            token=os.environ["HF_TOKEN"]
         )
         print("pipeline initialized.")
 
@@ -77,7 +80,7 @@ class Inference:
     def _ensure_lora_state(self, use_lora: bool):
         if use_lora and not self.lora_loaded:
             print("Loading LORA weights...")
-            self.pipe.load_lora_weights(LORA_WEIGHTS, weight_name=LORA_WEIGHT_NAME)
+            self.pipe.load_lora_weights(LORA_WEIGHTS, weight_name=LORA_WEIGHT_NAME, token=os.environ["HF_TOKEN"])
             self.lora_loaded = True
         elif not use_lora and self.lora_loaded:
             print("Unloading LORA weights...")
