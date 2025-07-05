@@ -6,7 +6,8 @@ export const Route = createLazyFileRoute('/image-viewer')({
   component: ImageViewer,
 })
 
-const versionId = 1 // static pregen version ID
+const PREGEN_VERSION_ID = 1 // static pregen version ID
+const MAX_VARIANT_COUNT = 30
 
 function ImageViewer() {
   // Filter transcript cues that have generation enabled
@@ -15,7 +16,7 @@ function ImageViewer() {
   )
 
   const [cueIndex, setCueIndex] = useState(0)
-  const [variantIndex, setVariantIndex] = useState(1) // 1-10
+  const [variantIndex, setVariantIndex] = useState(1)
   const [imageError, setImageError] = useState(false)
   const [isReady, setIsReady] = useState(false)
 
@@ -26,7 +27,7 @@ function ImageViewer() {
   const generateImagePath = useCallback((cue: any, variant: number) => {
     const allCueIndex = automator.cues.indexOf(cue)
     const cueId = `transcript_${allCueIndex}_${cue.time.replace(/[:.]/g, '_')}`
-    return `https://images.poom.dev/foigoi/${versionId}/cues/${cueId}/${variant}/final.png`
+    return `https://images.poom.dev/foigoi/${PREGEN_VERSION_ID}/cues/${cueId}/${variant}/final.png`
   }, [])
 
   const currentImagePath = currentCue
@@ -67,12 +68,12 @@ function ImageViewer() {
           break
         case 'ArrowUp':
           e.preventDefault()
-          setVariantIndex((prev) => (prev < 10 ? prev + 1 : 1))
+          setVariantIndex((prev) => (prev < MAX_VARIANT_COUNT ? prev + 1 : 1))
           setImageError(false)
           break
         case 'ArrowDown':
           e.preventDefault()
-          setVariantIndex((prev) => (prev > 1 ? prev - 1 : 10))
+          setVariantIndex((prev) => (prev > 1 ? prev - 1 : MAX_VARIANT_COUNT))
           setImageError(false)
           break
       }
@@ -137,7 +138,8 @@ function ImageViewer() {
           <span className="text-gray-400">Time:</span> {currentCue.time}
         </div>
         <div className="mb-2">
-          <span className="text-gray-400">Variant:</span> {variantIndex}/10
+          <span className="text-gray-400">Variant:</span> {variantIndex}/
+          {MAX_VARIANT_COUNT}
         </div>
         <div className="mb-2">
           <span className="text-gray-400">Program:</span> P0
