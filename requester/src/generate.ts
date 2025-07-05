@@ -143,6 +143,7 @@ class GenerationRequester {
         let currentVariantCount = 0
         if (processedCues.has(cue_id)) {
           const values = await this.vk.hmget(REQUESTER_CUES_KEY, [cue_id])
+          console.log(`Current variant count for cue ${cue_id}:`, values)
           currentVariantCount = Number(values[0] ?? 0)
         }
 
