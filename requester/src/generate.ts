@@ -135,6 +135,11 @@ class GenerationRequester {
         // Check if this cue has already been processed
         if (processedCues.has(cue_id)) {
           skippedCount++
+
+          console.log(
+            `Skipping already processed cue: ${cue_id} (time: ${cue.time})`
+          )
+
           continue
         }
 
