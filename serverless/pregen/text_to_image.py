@@ -6,7 +6,7 @@ from typing import Optional
 import modal
 
 APP_NAME = "exhibition-pregen-text-to-image"
-MODEL_NAME = "stabilityai/stable-diffusion-3.5-large-turbo"
+MODEL_NAME = "black-forest-labs/FLUX.1-dev"
 app = modal.App(APP_NAME)
 
 SUPPORTED_PROGRAMS = ["P0", "P3", "P3B", "P4"]
@@ -32,15 +32,15 @@ image = (
 
 with image.imports():
     import torch
-    from diffusers import StableDiffusion3Pipeline
+    from diffusers import FluxPipeline
     from PIL import Image
 
-CACHE_DIR = "/cache/sd3-turbo"
+CACHE_DIR = "/cache/flux-dev"
 cache_vol = modal.Volume.from_name("hf-hub-cache", create_if_missing=True)
 
 # Constants for LORA
-LORA_WEIGHTS = "heypoom/chuamiatee-1"
-LORA_WEIGHT_NAME = "pytorch_lora_weights.safetensors"
+LORA_WEIGHTS = "heypoom/chuamiatee"
+LORA_WEIGHT_NAME = "flux-lora.safetensors"
 
 
 @app.cls(
@@ -58,7 +58,7 @@ class Inference:
     @modal.enter()
     def initialize(self):
         print("initializing pipeline...")
-        self.pipe = StableDiffusion3Pipeline.from_pretrained(
+        self.pipe = FluxPipeline.from_pretrained(
             MODEL_NAME,
             cache_dir=CACHE_DIR,
             torch_dtype=torch.bfloat16,
@@ -92,8 +92,8 @@ class Inference:
         seed: Optional[int] = None,
         width: int = 1360,
         height: int = 768,
-        guidance_scale: float = 0.0,
-        num_inference_steps: int = 10,
+        guidance_scale: float = 3.5,
+        num_inference_steps: int = 50,
     ) -> bytes:
         if not self.pipe:
             raise RuntimeError("Pipeline not initialized or moved to GPU.")
@@ -124,6 +124,8 @@ class Inference:
         print(f"running inference for program {program_key}: '{processed_prompt}' with seed {seed}")
         generator = torch.Generator("cuda").manual_seed(seed)
 
+        start_time = time.time()
+
         # Run the pipeline
         images = self.pipe(
             prompt=processed_prompt,
@@ -136,6 +138,7 @@ class Inference:
         ).images
         
         print("inference complete!")
+        print(f"Time taken for inference: {time.time() - start_time:.2f} seconds")
 
         # Convert final image to bytes
         image = images[0]
@@ -167,8 +170,8 @@ def endpoint():
         seed: Optional[int] = None
         width: int = 1360
         height: int = 768
-        guidance_scale: float = 0.0
-        num_inference_steps: int = 10
+        guidance_scale: float = 3.5
+        num_inference_steps: int = 50
 
     @web_app.get("/")
     async def get():
