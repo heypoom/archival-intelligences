@@ -134,8 +134,8 @@ class Inference:
         print("initializing pipeline...")
 
         self.pipe = StableDiffusion3Pipeline.from_pretrained(
-            FLUX_MODEL_NAME,
-            cache_dir=FLUX_CACHE_DIR,
+            SD3_TURBO_MODEL_NAME,
+            cache_dir=SD3_TURBO_CACHE_DIR,
             torch_dtype=torch.bfloat16,
             token=os.environ["HF_TOKEN"]
         )
