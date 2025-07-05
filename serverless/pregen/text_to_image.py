@@ -33,6 +33,7 @@ image = (
         "peft",
         "numpy",
         "Pillow",
+        "valkey[libvalkey]"
     )
     .env({"HF_HUB_ENABLE_HF_TRANSFER": "1"})
 )
