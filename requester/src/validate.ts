@@ -50,29 +50,22 @@ class ImageValidator {
     variant_id: number
   ): Promise<ValidationResult> {
     const url = `https://images.poom.dev/foigoi/${PREGEN_VERSION_ID}/cues/${cue_id}/${variant_id}/final.png`
+    const requestId = `${cue_id}_${variant_id}`
 
     const exists = await this.checkImageExists(url)
 
     if (exists) {
-      console.log(
-        `✅ Image exists: ${url} (CUE_ID: ${cue_id}, VARIANT_ID: ${variant_id})`
-      )
+      process.stdout.write('.')
 
       // Mark whether the upload was successful in Valkey
-      await this.vk.hmset(PREGEN_UPLOAD_STATUS_KEY, [
-        `${cue_id}_${variant_id}`,
-        '1',
-      ])
+      await this.vk.hmset(PREGEN_UPLOAD_STATUS_KEY, [requestId, '1'])
     } else {
       console.warn(
-        `❌ Image missing: ${url} (CUE_ID: ${cue_id}, VARIANT_ID: ${variant_id})`
+        `\n😰 Image missing: ${url} (CUE_ID: ${cue_id}, VARIANT_ID: ${variant_id})`
       )
 
       // Mark that the upload was not successful in Valkey
-      await this.vk.hmset(PREGEN_UPLOAD_STATUS_KEY, [
-        `${cue_id}_${variant_id}`,
-        '0',
-      ])
+      await this.vk.hmset(PREGEN_UPLOAD_STATUS_KEY, [requestId, '0'])
     }
 
     return {
@@ -104,6 +97,7 @@ class ImageValidator {
     for (const cue of transcriptCuesToValidate) {
       if (cue.action === 'transcript' && cue.transcript) {
         const cueIndex = cues.indexOf(cue)
+
         const cue_id = `transcript_${cueIndex}_${cue.time.replace(
           /[:.]/g,
           '_'

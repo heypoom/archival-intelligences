@@ -36,13 +36,6 @@ class GenerationRequester {
     this.vk = new RedisClient(VALKEY_URL)
   }
 
-  async init() {
-    console.log('Initializing Generation Requester...')
-    console.log(`Using Modal endpoint: ${MODAL_ENDPOINT}`)
-    console.log(`Using Valkey at: ${VALKEY_URL}`)
-    console.log(`Concurrent requests: ${CONCURRENT_REQUESTS}`)
-  }
-
   async generateImage(request: GenerationRequest): Promise<void> {
     const REQ_ID = `${request.cue_id}_${request.variant_id}`
 
@@ -95,82 +88,66 @@ class GenerationRequester {
   async processTranscriptCues(): Promise<void> {
     console.log('Processing transcript cues...')
 
-    const transcriptCuesToGenerate = cues.filter(
-      (cue) => cue.action === 'transcript' && cue.generate
-    )
-
-    console.log(
-      `Found ${transcriptCuesToGenerate.length} transcript cues to generate`
-    )
-
-    if (transcriptCuesToGenerate.length === 0) {
-      console.log('No transcript cues to process')
-      return
-    }
-
     const allRequests: GenerationRequest[] = []
     let skippedCount = 0
 
-    for (const cue of transcriptCuesToGenerate) {
-      if (cue.action === 'transcript' && cue.transcript) {
-        const prompt = cue.transcript
+    for (const cueIndex in cues) {
+      const cue = cues[cueIndex]
 
-        const cueIndex = cues.indexOf(cue)
-        const cue_id = `transcript_${cueIndex}_${cue.time.replace(
-          /[:.]/g,
-          '_'
-        )}`
+      if (!cue || cue.action !== 'transcript' || !cue.generate) {
+        continue
+      }
 
-        // For transcript cues, we'll use P0 as default program
-        const program_key = 'P0'
+      const prompt = cue.transcript
 
-        const localStart = performance.now()
-        let localComplete = 0
+      const cue_id = `transcript_${cueIndex}_${cue.time.replace(/[:.]/g, '_')}`
 
-        let requestIds = []
+      // For transcript cues, we'll use P0 as default program
+      const program_key = 'P0'
 
-        for (
-          let variant_id = 1;
-          variant_id <= MAX_VARIANT_COUNT;
-          variant_id++
-        ) {
-          requestIds.push(`${cue_id}_${variant_id}`)
-        }
+      const localStart = performance.now()
+      let localComplete = 0
 
-        const statuses = await this.vk.hmget(
-          PREGEN_UPLOAD_STATUS_KEY,
-          requestIds
+      let requestIds = []
+
+      for (let variant_id = 1; variant_id <= MAX_VARIANT_COUNT; variant_id++) {
+        requestIds.push(`${cue_id}_${variant_id}`)
+      }
+
+      const statuses = await this.vk.hmget(PREGEN_UPLOAD_STATUS_KEY, requestIds)
+
+      if (statuses.length !== requestIds.length) {
+        console.warn(
+          `⚠️ Warning: expected ${requestIds.length} statuses for cue ${cue_id}, but got ${statuses.length}`
         )
 
-        for (
-          let variant_id = 1;
-          variant_id <= requestIds.length;
-          variant_id++
-        ) {
-          const status = statuses[variant_id - 1]
-
-          if (!status || status === '0') {
-            // This variant needs to be generated
-            allRequests.push({
-              cue_id,
-              prompt,
-              program_key,
-              variant_id,
-            })
-
-            process.stdout.write('+')
-          } else {
-            process.stdout.write('.')
-
-            // This variant has already been generated
-            skippedCount++
-            localComplete++
-          }
-        }
-
-        const localDuration = (performance.now() - localStart).toFixed(2)
-        console.log(` ${cue_id} (${localComplete} ~ ${localDuration}ms)`)
+        process.exit(1)
       }
+
+      for (let variant_id = 1; variant_id <= requestIds.length; variant_id++) {
+        const status = statuses[variant_id - 1]
+
+        if (!status || status === '0') {
+          // This variant needs to be generated
+          allRequests.push({
+            cue_id,
+            prompt,
+            program_key,
+            variant_id,
+          })
+
+          process.stdout.write('+')
+        } else {
+          process.stdout.write('.')
+
+          // This variant has already been generated
+          skippedCount++
+          localComplete++
+        }
+      }
+
+      const localDuration = (performance.now() - localStart).toFixed(2)
+      console.log(` ${cue_id} (${localComplete} ~ ${localDuration}ms)`)
     }
 
     console.log(`Skipping ${skippedCount} fully generated cues`)
@@ -197,18 +174,9 @@ class GenerationRequester {
   }
 
   async run(): Promise<void> {
-    await this.init()
-
-    const transcriptCuesToGenerate = cues.filter(
-      (cue) => cue.action === 'transcript' && cue.generate
-    )
-
-    const totalTranscriptCues = transcriptCuesToGenerate.length
-
-    console.log('=== Generation Status ===')
-    console.log(`Total transcript cues: ${totalTranscriptCues}`)
-
-    console.log('========================')
+    console.log(`Using Modal endpoint: ${MODAL_ENDPOINT}`)
+    console.log(`Using Valkey at: ${VALKEY_URL}`)
+    console.log(`Concurrent requests: ${CONCURRENT_REQUESTS}`)
 
     await this.processTranscriptCues()
 
