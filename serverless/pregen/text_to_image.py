@@ -19,6 +19,13 @@ DEFAULT_HEIGHT = 768
 DEFAULT_GUIDANCE_SCALE = 3.5
 DEFAULT_NUM_INFERENCE_STEPS = 25
 
+# Static pregen version ID. Use in case of future changes to the generation.
+# Example: different transcripts, model versions, or other significant changes.
+PREGEN_VERSION_ID = 1
+
+# Valkey key that tracks variant counts
+PREGEN_VARIANT_COUNT_KEY = f"pregen/{PREGEN_VERSION_ID}/cues_variant_count"
+
 image = (
     modal.Image.debian_slim(python_version="3.12")
     .pip_install(
@@ -218,7 +225,7 @@ class Inference:
         print(f"Generated image for program {program_key}. Size: {len(image_bytes)} bytes.")
 
         # Get the current variant id
-        variant_count_byte = self.vk.hget(f"cues/{cue_id}", "variant_count")
+        variant_count_byte = self.vk.hget(PREGEN_VARIANT_COUNT_KEY, cue_id)
 
         # If no variant count exists, initialize it
         if variant_count_byte is None:
@@ -229,10 +236,10 @@ class Inference:
         next_variant_id = variant_count + 1
 
         # Increment valkey identifier
-        self.vk.hincrby(f"cues/{cue_id}", "variant_count", 1)
+        self.vk.hincrby(PREGEN_VARIANT_COUNT_KEY, cue_id, 1)
 
         # Save the final image
-        r2_key = f"foigoi/cues/{cue_id}/{next_variant_id}/final.png"
+        r2_key = f"foigoi/{PREGEN_VERSION_ID}/cues/{cue_id}/{next_variant_id}/final.png"
         
         upload_success = upload_to_r2(image_bytes, r2_key)
         if upload_success:

@@ -47,6 +47,7 @@ Minimal debug image viewer implemented as a single React route at `/image-viewer
   ```typescript
   transcript_${allCueIndex}_${time.replace(/[:.]/g, '_')}/${variant}/final.png
   ```
+
 - **Base URL**: `https://images.poom.dev/foigoi/cues/`
 
 #### 3. Navigation System
@@ -93,9 +94,10 @@ const [imageError, setImageError] = useState(false) // Error state
 #### Image Path Logic
 
 ```typescript
+const versionId = 1 // static pregen version id
 const allCueIndex = PROGRAM_CUES.indexOf(cue)
 const cueId = `transcript_${allCueIndex}_${cue.time.replace(/[:.]/g, '_')}`
-const imagePath = `https://images.poom.dev/foigoi/cues/${cueId}/${variant}/final.png`
+const imagePath = `https://images.poom.dev/foigoi/${versionId}/cues/${cueId}/${variant}/final.png`
 ```
 
 #### Keyboard Event Handling
