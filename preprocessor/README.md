@@ -1,6 +1,6 @@
 # Preprocessor - Mode B Batch Generator
 
-This directory contains the batch generation system for Mode B (pre-randomized image generation) of the Archival Intelligences project.
+This directory contains the batch generation system for Mode B (pre-randomized image generation) of the Grounds of Intelligences project.
 
 ## Overview
 
@@ -18,11 +18,13 @@ The preprocessor analyzes automation cues from the exhibition system and generat
 ## Setup
 
 1. **Install dependencies:**
+
    ```bash
    bun install
    ```
 
 2. **Configure environment:**
+
    ```bash
    cp .env.example .env
    # Edit .env with your Modal and R2 credentials
@@ -38,12 +40,15 @@ The preprocessor analyzes automation cues from the exhibition system and generat
 ## Usage
 
 ### Analyze Cues
+
 ```bash
 bun run analyze
 ```
+
 Shows statistics about transcript and prompt cues that need image generation.
 
 ### Generate Image Sets
+
 ```bash
 # Interactive mode (asks for confirmation)
 bun run generate
@@ -56,7 +61,9 @@ RESUME_FROM_ACTION=transcript_042 bun run generate
 ```
 
 ### Generation Statistics
+
 The generator will show:
+
 - Total tasks to process
 - Total image sets to generate
 - Total individual images
@@ -66,6 +73,7 @@ The generator will show:
 ## Environment Variables
 
 ### Required
+
 - `MODAL_ENDPOINT` - Your Modal app endpoint URL
 - `R2_ACCOUNT_ID` - Cloudflare R2 account ID
 - `R2_ACCESS_KEY_ID` - R2 access key
@@ -73,6 +81,7 @@ The generator will show:
 - `R2_BUCKET_NAME` - R2 bucket name
 
 ### Optional
+
 - `SETS_PER_ACTION=5` - Number of randomized sets per action
 - `DEFAULT_INFERENCE_STEPS=20` - Default inference steps
 - `PARALLEL_GENERATIONS=3` - Concurrent generations
@@ -82,6 +91,7 @@ The generator will show:
 ## Output Structure
 
 Images are uploaded to R2 with this structure:
+
 ```
 r2://your-bucket/
 ├── actions/
@@ -111,7 +121,7 @@ r2://your-bucket/
 ## Programs Supported
 
 - **P0**: Text-to-image from transcript (20 steps)
-- **P2/P2B**: Image-to-image with Malaya painting (15 steps) 
+- **P2/P2B**: Image-to-image with Malaya painting (15 steps)
 - **P3/P3B**: Text-to-image with Chua Mia Tee LoRA (20 steps)
 - **P4**: Text-to-image for people generation (20 steps)
 
@@ -125,6 +135,7 @@ r2://your-bucket/
 ## Monitoring
 
 During generation, the system shows:
+
 - Real-time progress updates
 - Completion percentage
 - Time elapsed and remaining
@@ -134,6 +145,7 @@ During generation, the system shows:
 ## Next Steps
 
 After batch generation completes:
+
 1. Verify `manifest.json` contains all expected actions
 2. Test R2 storage accessibility
 3. Implement frontend static image provider
