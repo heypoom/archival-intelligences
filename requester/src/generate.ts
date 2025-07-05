@@ -13,6 +13,12 @@ const CONCURRENT_REQUESTS = 3
 // generate up to 10 variations per cue :)
 const MAX_VARIANT_COUNT = 10
 
+const PREGEN_VERSION_ID = 1 // static pregen version ID
+
+const REQUESTER_CUES_KEY = `requester/${PREGEN_VERSION_ID}/cues`
+const REQUESTER_PROMPTS_KEY = `requester/${PREGEN_VERSION_ID}/prompts`
+const REQUESTER_DURATIONS_KEY = `requester/${PREGEN_VERSION_ID}/durations`
+
 interface GenerationRequest {
   cue_id: string
   prompt: string
@@ -21,11 +27,11 @@ interface GenerationRequest {
 
 class GenerationRequester {
   private queue: PQueue
-  private valkey: RedisClient
+  private vk: RedisClient
 
   constructor() {
     this.queue = new PQueue({concurrency: CONCURRENT_REQUESTS})
-    this.valkey = new RedisClient(VALKEY_URL)
+    this.vk = new RedisClient(VALKEY_URL)
   }
 
   async init() {
@@ -37,7 +43,7 @@ class GenerationRequester {
 
   async getProcessedCues(): Promise<Set<string>> {
     try {
-      const processedCues = await this.valkey.hgetall('requests/cues')
+      const processedCues = await this.vk.hgetall(REQUESTER_CUES_KEY)
       const cueIds = new Set(processedCues ? Object.keys(processedCues) : [])
       console.log(`Found ${cueIds.size} already processed cues in Valkey`)
       console.log(`Processed Cues:`, cueIds)
@@ -81,19 +87,16 @@ class GenerationRequester {
       console.log(`Time taken: ${duration} ms`)
 
       // Mark as processed in Valkey
-      await this.valkey.hincrby('requests/cues', request.cue_id, 1)
+      await this.vk.hincrby(REQUESTER_CUES_KEY, request.cue_id, 1)
 
       // Log the prompt for reference
-      await this.valkey.hmset('requests/cue/prompts', [
+      await this.vk.hmset(REQUESTER_PROMPTS_KEY, [
         request.cue_id,
         request.prompt,
       ])
 
-      // Log the duration for reference
-      await this.valkey.hmset('requests/cue/duration', [
-        request.cue_id,
-        duration,
-      ])
+      // Log the durations for reference
+      await this.vk.hmset(REQUESTER_DURATIONS_KEY, [request.cue_id, duration])
     } catch (error) {
       console.error(
         `Failed to generate image for cue ${request.cue_id}:`,
@@ -139,7 +142,8 @@ class GenerationRequester {
         // Check current variant count for this cue
         let currentVariantCount = 0
         if (processedCues.has(cue_id)) {
-          const values = await this.valkey.hmget('requests/cues', [cue_id])
+          const values = await this.vk.hmget(REQUESTER_CUES_KEY, [cue_id])
+          console.log(`Current variant count for cue ${cue_id}:`, values)
           currentVariantCount = Number(values[0] ?? 0)
         }
 

@@ -6,6 +6,8 @@ export const Route = createLazyFileRoute('/image-viewer')({
   component: ImageViewer,
 })
 
+const versionId = 1 // static pregen version ID
+
 function ImageViewer() {
   // Filter transcript cues that have generation enabled
   const transcriptCues = automator.cues.filter(
@@ -24,7 +26,7 @@ function ImageViewer() {
   const generateImagePath = useCallback((cue: any, variant: number) => {
     const allCueIndex = automator.cues.indexOf(cue)
     const cueId = `transcript_${allCueIndex}_${cue.time.replace(/[:.]/g, '_')}`
-    return `https://images.poom.dev/foigoi/cues/${cueId}/${variant}/final.png`
+    return `https://images.poom.dev/foigoi/${versionId}/cues/${cueId}/${variant}/final.png`
   }, [])
 
   const currentImagePath = currentCue
