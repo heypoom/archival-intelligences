@@ -46,7 +46,7 @@ with image.imports():
     from PIL import Image
     import boto3
 
-CACHE_DIR = "/cache/flux-dev"
+FLUX_CACHE_DIR = "/cache/flux-dev"
 cache_vol = modal.Volume.from_name("hf-hub-cache", create_if_missing=True)
 
 # Constants for LORA
@@ -109,7 +109,7 @@ def upload_to_r2(file_data: bytes, key: str) -> bool:
 @app.cls(
     image=image,
     gpu="H100",
-    volumes={CACHE_DIR: cache_vol},
+    volumes={FLUX_CACHE_DIR: cache_vol},
     timeout=600,
     secrets=[
         modal.Secret.from_name("huggingface-secret"),
@@ -127,7 +127,7 @@ class Inference:
 
         self.pipe = FluxPipeline.from_pretrained(
             MODEL_NAME,
-            cache_dir=CACHE_DIR,
+            cache_dir=FLUX_CACHE_DIR,
             torch_dtype=torch.bfloat16,
             token=os.environ["HF_TOKEN"]
         )

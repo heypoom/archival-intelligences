@@ -10,6 +10,9 @@ const MODAL_ENDPOINT =
 const VALKEY_URL = 'redis://raya.poom.dev:6379'
 const CONCURRENT_REQUESTS = 3
 
+// generate up to 10 variations per cue :)
+const MAX_VARIANT_COUNT = 10
+
 interface GenerationRequest {
   cue_id: string
   prompt: string
@@ -37,6 +40,8 @@ class GenerationRequester {
       const processedCues = await this.valkey.hgetall('requests/cues')
       const cueIds = new Set(processedCues ? Object.keys(processedCues) : [])
       console.log(`Found ${cueIds.size} already processed cues in Valkey`)
+      console.log(`Processed Cues:`, cueIds)
+
       return cueIds
     } catch (error) {
       console.warn('Failed to read processed cues from Valkey:', error)
@@ -101,7 +106,6 @@ class GenerationRequester {
   async processTranscriptCues(): Promise<void> {
     console.log('Processing transcript cues...')
 
-    // Get already processed cues first
     const processedCues = await this.getProcessedCues()
 
     const transcriptCuesToGenerate = cues.filter(
@@ -132,30 +136,42 @@ class GenerationRequester {
           '_'
         )}`
 
-        // Check if this cue has already been processed
+        // Check current variant count for this cue
+        let currentVariantCount = 0
         if (processedCues.has(cue_id)) {
+          const values = await this.valkey.hmget('requests/cues', [cue_id])
+          currentVariantCount = Number(values[0] ?? 0)
+        }
+
+        if (currentVariantCount >= MAX_VARIANT_COUNT) {
           skippedCount++
-
           console.log(
-            `Skipping already processed cue: ${cue_id} (time: ${cue.time})`
+            `Skipping cue ${cue_id} - already processed ${currentVariantCount}/${MAX_VARIANT_COUNT} variants`
           )
-
           continue
         }
 
         // For transcript cues, we'll use P0 as default program
-        // You might want to adjust this based on your specific requirements
         const program_key = 'P0'
 
-        allRequests.push({
-          cue_id,
-          prompt,
-          program_key,
-        })
+        // Generate multiple variants up to MAX_VARIANT_COUNT
+        const variantsToGenerate = MAX_VARIANT_COUNT - currentVariantCount
+
+        console.log(
+          `Generating ${variantsToGenerate} variants for cue ${cue_id} (currently has ${currentVariantCount})`
+        )
+
+        for (let i = 0; i < variantsToGenerate; i++) {
+          allRequests.push({
+            cue_id,
+            prompt,
+            program_key,
+          })
+        }
       }
     }
 
-    console.log(`Skipping ${skippedCount} already processed cues`)
+    console.log(`Skipping ${skippedCount} fully generated cues`)
     console.log(`Queuing ${allRequests.length} new generation requests...`)
 
     if (allRequests.length === 0) {
