@@ -1,5 +1,5 @@
 import {createLazyFileRoute} from '@tanstack/react-router'
-import {useState, useEffect, useCallback, useRef} from 'react'
+import {useState, useEffect, useCallback} from 'react'
 import {automator} from '../utils/exhibition/exhibition-automator'
 
 export const Route = createLazyFileRoute('/image-viewer')({
