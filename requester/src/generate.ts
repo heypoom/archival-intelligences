@@ -93,7 +93,7 @@ class GenerationRequester {
       console.log(`Time taken: ${duration} ms`)
 
       // Mark as processed in Valkey
-      await this.vk.hincrby(REQUESTER_CUES_KEY, request.cue_id, 1)
+      await this.vk.hmset(REQUESTER_CUES_KEY, [request.cue_id, '1'])
 
       // Log the prompt for reference
       await this.vk.hmset(REQUESTER_PROMPTS_KEY, [
@@ -158,7 +158,7 @@ class GenerationRequester {
             `${cue_id}_${variant_id}`,
           ])
 
-          if (!status || status === 'false') {
+          if (!status || status === '0') {
             console.log(
               `📚 Queuing an image: cue=${cue_id}, var=${variant_id}, prom=${prompt}, stat=${status}`
             )

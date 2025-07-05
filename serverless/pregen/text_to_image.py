@@ -235,7 +235,8 @@ class Inference:
             print(f"Failed to upload image to R2: {r2_key}")
         
         # Mark whether the upload was successful in Valkey
-        self.vk.hset(PREGEN_UPLOAD_STATUS_KEY, f"{cue_id}_{variant_id}", str(upload_success))
+        status_flag = "1" if upload_success else "0"
+        self.vk.hset(PREGEN_UPLOAD_STATUS_KEY, f"{cue_id}_{variant_id}", status_flag)
 
         return r2_key
 

@@ -62,7 +62,7 @@ class ImageValidator {
       // Mark whether the upload was successful in Valkey
       await this.vk.hmset(PREGEN_UPLOAD_STATUS_KEY, [
         `${cue_id}_${variant_id}`,
-        'true',
+        '1',
       ])
     } else {
       console.warn(
@@ -72,7 +72,7 @@ class ImageValidator {
       // Mark that the upload was not successful in Valkey
       await this.vk.hmset(PREGEN_UPLOAD_STATUS_KEY, [
         `${cue_id}_${variant_id}`,
-        'false',
+        '0',
       ])
     }
 
