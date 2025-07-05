@@ -51,6 +51,8 @@ class GenerationRequester {
         `Generating image for cue ${request.cue_id} with program ${request.program_key}`
       )
 
+      const start = performance.now()
+
       const response = await fetch(MODAL_ENDPOINT, {
         method: 'POST',
         headers: {
@@ -70,12 +72,22 @@ class GenerationRequester {
       await response.json()
       console.log(`✓ Generated image for cue ${request.cue_id}`)
 
+      const duration = (performance.now() - start).toFixed(2)
+      console.log(`Time taken: ${duration} ms`)
+
       // Mark as processed in Valkey
       await this.valkey.hincrby('requests/cues', request.cue_id, 1)
 
+      // Log the prompt for reference
       await this.valkey.hmset('requests/cue/prompts', [
         request.cue_id,
         request.prompt,
+      ])
+
+      // Log the duration for reference
+      await this.valkey.hmset('requests/cue/duration', [
+        request.cue_id,
+        duration,
       ])
     } catch (error) {
       console.error(
@@ -153,7 +165,9 @@ class GenerationRequester {
 
     try {
       await Promise.all(promises)
-      console.log(`✓ All ${allRequests.length} transcript cues processed successfully`)
+      console.log(
+        `✓ All ${allRequests.length} transcript cues processed successfully`
+      )
     } catch (error) {
       console.error('✗ Some requests failed:', error)
     }
@@ -210,21 +224,21 @@ class GenerationRequester {
     const transcriptCuesToGenerate = cues.filter(
       (cue) => cue.action === 'transcript' && cue.generate
     )
-    
+
     const totalTranscriptCues = transcriptCuesToGenerate.length
-    const alreadyProcessed = transcriptCuesToGenerate.filter(cue => {
+    const alreadyProcessed = transcriptCuesToGenerate.filter((cue) => {
       const cueIndex = cues.indexOf(cue)
       const cue_id = `transcript_${cueIndex}_${cue.time.replace(/[:.]/g, '_')}`
       return processedCues.has(cue_id)
     }).length
-    
+
     const remaining = totalTranscriptCues - alreadyProcessed
-    
+
     console.log('=== Generation Status ===')
     console.log(`Total transcript cues: ${totalTranscriptCues}`)
     console.log(`Already processed: ${alreadyProcessed}`)
     console.log(`Remaining to process: ${remaining}`)
-    
+
     if (alreadyProcessed > 0) {
       console.log('🔄 RESUMING previous session')
     } else {
