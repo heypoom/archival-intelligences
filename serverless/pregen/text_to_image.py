@@ -7,7 +7,8 @@ from typing import Optional
 import modal
 
 APP_NAME = "exhibition-pregen-text-to-image"
-MODEL_NAME = "black-forest-labs/FLUX.1-dev"
+FLUX_MODEL_NAME = "black-forest-labs/FLUX.1-dev"
+SD3_TURBO_MODEL_NAME = "stabilityai/stable-diffusion-3.5-large-turbo"
 app = modal.App(APP_NAME)
 
 SUPPORTED_PROGRAMS = ["P0", "P3", "P3B", "P4"]
@@ -16,8 +17,8 @@ CHUAMIATEE_PROGRAMS = ["P3", "P3B"]
 # Default generation parameters
 DEFAULT_WIDTH = 1360
 DEFAULT_HEIGHT = 768
-DEFAULT_GUIDANCE_SCALE = 3.5
-DEFAULT_NUM_INFERENCE_STEPS = 25
+DEFAULT_GUIDANCE_SCALE = 0.0
+DEFAULT_NUM_INFERENCE_STEPS = 10
 
 # Static pregen version ID. Use in case of future changes to the generation.
 # Example: different transcripts, model versions, or other significant changes.
@@ -48,12 +49,12 @@ image = (
 
 with image.imports():
     import torch
-    from diffusers.pipelines.flux.pipeline_flux import FluxPipeline
+    from diffusers.pipelines.stable_diffusion_3.pipeline_stable_diffusion_3 import StableDiffusion3Pipeline
     from valkey import Valkey
-    from PIL import Image
     import boto3
 
 FLUX_CACHE_DIR = "/cache/flux-dev"
+SD3_TURBO_CACHE_DIR = "/cache/sd3-turbo"
 cache_vol = modal.Volume.from_name("hf-hub-cache", create_if_missing=True)
 
 # Constants for LORA
@@ -132,8 +133,8 @@ class Inference:
     def initialize(self):
         print("initializing pipeline...")
 
-        self.pipe = FluxPipeline.from_pretrained(
-            MODEL_NAME,
+        self.pipe = StableDiffusion3Pipeline.from_pretrained(
+            FLUX_MODEL_NAME,
             cache_dir=FLUX_CACHE_DIR,
             torch_dtype=torch.bfloat16,
             token=os.environ["HF_TOKEN"]
@@ -279,8 +280,10 @@ def endpoint():
         return {
             "status": "ok",
             "service": "exhibition-pregen-text-to-image",
+            "pregenVersion": PREGEN_VERSION_ID,
+            "model": SD3_TURBO_MODEL_NAME,
             "timestamp": int(time.time()),
-            "supported_programs": SUPPORTED_PROGRAMS,
+            "supportedPrograms": SUPPORTED_PROGRAMS,
         }
 
     @web_app.post("/generate")
