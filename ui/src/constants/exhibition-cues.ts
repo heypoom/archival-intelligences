@@ -1,3 +1,4 @@
+import {ProgramId} from '../manager/socket'
 import {GladiaWord} from '../types/gladia-transcript'
 
 export const PROGRAM_ZERO_START_TIME = '00:06:47'
@@ -22,7 +23,7 @@ export type AutomationAction =
       prompt: string
       override?: string
       delay?: {base?: number; variance?: number}
-      program: string
+      program: ProgramId
       enter?: {regen: boolean}
       commit?: boolean
       guidance?: number

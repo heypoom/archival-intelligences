@@ -1,5 +1,5 @@
 import {atom} from 'nanostores'
-import {socket} from '../manager/socket'
+import {ProgramId, socket} from '../manager/socket'
 import {$generating} from './prompt'
 import {$progress} from './progress'
 
@@ -14,7 +14,7 @@ export const $regenCount = atom(0)
 export const $regenEnabled = atom(false)
 export const $regenActive = atom(false)
 
-export function regen(command: string, prompt: string, origin = true) {
+export function regen(command: ProgramId, prompt: string, origin = true) {
   if (origin) {
     $regenEnabled.set(true)
     $regenActive.set(true)
@@ -40,7 +40,7 @@ export function regen(command: string, prompt: string, origin = true) {
         `[gen] progress at ${progress}% is not complete yet, we wait.`
       )
     } else {
-      socket.generate(`${command}:${prompt}`)
+      socket.generate(command, prompt)
       $generating.set(true)
 
       const gen = $regenCount.get()
@@ -64,7 +64,7 @@ export function disableRegen(reason?: string) {
   $regenActive.set(false)
   clearTimeout(regenerateTimer)
 
-  socket.reconnectSoon(reason, 10, {shutup: true})
+  socket.forceReconnectAll(reason)
 
   return true
 }

@@ -7,13 +7,12 @@ export async function generateFromPrompt(prompt: string) {
 
   if (!isGenerating) {
     try {
-      socket.generate(`P0:${prompt}`)
+      socket.generate('P0', prompt)
       $generating.set(true)
     } catch (err) {
       $apiReady.set(false)
       $generating.set(false)
-
-      socket.reconnectSoon('P0 socket send error')
+      socket.reconnectSoon('textToImage', {reason: 'socket send error'})
     }
   }
 }

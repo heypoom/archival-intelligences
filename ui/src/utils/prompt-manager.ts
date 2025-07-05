@@ -55,13 +55,13 @@ export async function onPromptCommitted(options: PromptKeyChangeOptions) {
   console.log(`[program] c=${command}, g=${guidance}`)
 
   if (command === 'P2') {
-    socket.generate(`P2:${(guidance / 100).toFixed(2)}`)
+    socket.generate('P2', `${(guidance / 100).toFixed(2)}`)
   } else if (command === 'P2B') {
-    socket.generate(`P2B:${(guidance / 100).toFixed(2)}`)
+    socket.generate('P2B', `${(guidance / 100).toFixed(2)}`)
   } else if (command === 'P3B') {
-    socket.generate(`P3B:${input}`)
+    socket.generate('P3B', input)
   } else {
-    socket.generate(command)
+    socket.generate('P0', input)
   }
 }
 
@@ -78,8 +78,8 @@ export async function onGuidanceCommitted(options: GuidanceChangeOptions) {
   $generating.set(true)
 
   if (command === 'P2') {
-    socket.generate(`P2:${(value / 100).toFixed(2)}`)
+    socket.generate('P2', `${(value / 100).toFixed(2)}`)
   } else if (command === 'P2B') {
-    socket.generate(`P2B:${(value / 100).toFixed(2)}`)
+    socket.generate('P2B', `${(value / 100).toFixed(2)}`)
   }
 }

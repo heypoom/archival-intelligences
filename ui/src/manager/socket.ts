@@ -5,75 +5,139 @@ import {
   $timestep,
   resetProgress,
 } from '../store/progress'
-import {$apiReady, $generating, $inferencePreview} from '../store/prompt'
+import {
+  $apiReady,
+  $generating,
+  $inferencePreview,
+  $booting,
+} from '../store/prompt'
 
 /** After 8 seconds of no activity, consider the connection dead */
 const DISCONNECT_TIMEOUT = 8 * 1000
 
 /** After 15 seconds of no activity, consider the generation to be stuck */
-const generationTimeouts: Record<string, number> = {
+const RECONNECT_DELAY = 5000 // 5 seconds
+const STUCK_RECONNECT_DELAY = 500 // 0.5 seconds
+
+export type ProgramId = 'P0' | 'P2' | 'P2B' | 'P3' | 'P3B' | 'P4'
+export type EndpointType = 'textToImage'
+
+/** After 15 seconds of no activity, consider the generation to be stuck */
+const GENERATION_TIMEOUT_MAP: Record<ProgramId, number> = {
   // more timeout when there is no denoising
   P0: 30 * 1000,
   P2: 20 * 1000,
   P2B: 20 * 1000,
+  P3: 20 * 1000,
   P3B: 20 * 1000,
   P4: 20 * 1000,
 }
 
-const EXHIBITION_ENDPOINT = 'wss://rui-an-sg-large.poom.dev/ws'
-const LIVE_LECTURE_ENDPOINT = 'wss://rui-an-sg-large.poom.dev/ws'
+const ENDPOINT_URL_MAP = {
+  textToImage: 'wss://heypoom--exhibition-text-to-image-endpoint.modal.run/ws',
+  // imageToImage: 'wss://heypoom--exhibition-text-to-image-endpoint.modal.run/ws',
+} as const satisfies Record<EndpointType, string>
 
-class SocketManager {
-  // sock: WebSocket
+const PROGRAM_ENDPOINT_MAP: Record<ProgramId, EndpointType> = {
+  P0: 'textToImage',
+  P2: 'textToImage',
+  P2B: 'textToImage',
+  P3: 'textToImage',
+  P3B: 'textToImage',
+  P4: 'textToImage',
+}
+
+interface EndpointState {
+  socket: WebSocket
   disconnectTimer?: number
   generationStuckTimer?: number
-
   currentInferenceMessage?: string
+  programs: Set<ProgramId>
+}
+
+interface ReconnectOptions {
+  reason?: string
+  delay?: number
+  removeListener?: boolean
+}
+
+class SocketManager {
+  private endpoints: Map<EndpointType, EndpointState>
 
   constructor() {
-    // this.sock = this.createWs()
+    this.endpoints = new Map()
+    this.initializeEndpoints()
   }
 
-  get url(): string {
-    if ($exhibitionMode.get()) {
-      return EXHIBITION_ENDPOINT
-    } else {
-      return LIVE_LECTURE_ENDPOINT
+  private initializeEndpoints() {
+    Object.values(ENDPOINT_URL_MAP).forEach((url) => {
+      const endpointType = Object.entries(ENDPOINT_URL_MAP).find(
+        ([, value]) => value === url
+      )?.[0] as EndpointType
+
+      if (endpointType) {
+        this.createEndpoint(endpointType)
+      }
+    })
+  }
+
+  private createEndpoint(endpointType: EndpointType) {
+    const url = ENDPOINT_URL_MAP[endpointType]
+    const socket = new WebSocket(url)
+
+    const state: EndpointState = {
+      socket,
+      disconnectTimer: undefined,
+      generationStuckTimer: undefined,
+      currentInferenceMessage: undefined,
+      programs: new Set(),
     }
+
+    console.log(`[ws] created endpoint "${endpointType}" using url "${url}"`)
+
+    this.endpoints.set(endpointType, state)
+    this.addListeners(endpointType)
+    this.startDisconnectionTimer(endpointType)
   }
 
-  createWs() {
-    const ws = new WebSocket(this.url)
-    this.startDisconnectionTimer()
-
-    // this.sock = ws
-    this.addListeners()
-
-    return ws
+  private getEndpointState(
+    endpointType: EndpointType
+  ): EndpointState | undefined {
+    return this.endpoints.get(endpointType)
   }
 
-  markDisconnect() {
-    // if (this.sock) {
-    //   this.removeListeners()
-    // }
+  private getEndpointType(programId: ProgramId): EndpointType {
+    return PROGRAM_ENDPOINT_MAP[programId]
+  }
+
+  markDisconnect(endpointType: EndpointType) {
+    const state = this.getEndpointState(endpointType)
+    if (!state) return
+
+    if (state.socket) {
+      this.removeListeners(endpointType)
+    }
 
     $apiReady.set(false)
     $generating.set(false)
     resetProgress()
 
-    this.clearGenerationStuckTimer()
-    this.startDisconnectionTimer()
+    this.clearGenerationStuckTimer(endpointType)
+    this.startDisconnectionTimer(endpointType)
   }
 
   isExhibition() {
     return $exhibitionMode.get()
   }
 
-  startDisconnectionTimer() {
-    if (this.disconnectTimer === undefined) {
-      this.disconnectTimer = setTimeout(() => {
+  startDisconnectionTimer(endpointType: EndpointType) {
+    const state = this.getEndpointState(endpointType)
+    if (!state) return
+
+    if (state.disconnectTimer === undefined) {
+      state.disconnectTimer = setTimeout(() => {
         // connection is dead
-        console.log(`[ws] websocket connection dead`)
+        console.log(`[ws] websocket connection dead for ${endpointType}`)
         $disconnected.set(true)
       }, DISCONNECT_TIMEOUT)
     }
@@ -86,107 +150,146 @@ class SocketManager {
     return isInProgress
   }
 
-  getProgramId(inferenceMessage?: string) {
-    const pid = inferenceMessage?.split(':')?.[0]
-    if (!pid || !pid.startsWith('P')) return
+  startGenerationStuckTimer(
+    endpointType: EndpointType,
+    inferenceMessage?: string
+  ) {
+    const state = this.getEndpointState(endpointType)
+    if (!state) return
 
-    return pid
-  }
-
-  startGenerationStuckTimer(inferenceMessage?: string) {
     // enable only when in exhibition, not in lecture
     if (!this.isExhibition()) return
 
-    // enable only for valid inference messages
-    const programId = this.getProgramId(inferenceMessage)
-    if (!programId) return
-
-    const message = inferenceMessage ?? this.currentInferenceMessage
+    const message = inferenceMessage ?? state.currentInferenceMessage
 
     if (inferenceMessage) {
-      this.currentInferenceMessage = inferenceMessage
+      state.currentInferenceMessage = inferenceMessage
     }
 
-    if (this.generationStuckTimer !== undefined) {
-      this.clearGenerationStuckTimer()
+    if (state.generationStuckTimer !== undefined) {
+      this.clearGenerationStuckTimer(endpointType)
     }
 
     // skip if the timeout is not defined
-    const stuckTimeout = generationTimeouts[programId]
+    const stuckTimeout = Math.max(
+      ...Array.from(state.programs).map(
+        (programId: ProgramId) => GENERATION_TIMEOUT_MAP[programId]
+      )
+    )
     if (!stuckTimeout || stuckTimeout <= 0) return
 
-    console.log(`[watchdog] "${programId}" :: ${stuckTimeout}ms`)
+    console.log(`[watchdog] "${endpointType}" :: ${stuckTimeout}ms`)
 
-    this.generationStuckTimer = setTimeout(() => {
+    state.generationStuckTimer = setTimeout(() => {
       console.log(`[watchdog] "${message}" is stuck!`)
 
-      this.handleGenerationStuck()
+      this.handleGenerationStuck(endpointType)
     }, stuckTimeout)
   }
 
-  handleGenerationStuck() {
+  handleGenerationStuck(endpointType: EndpointType) {
     $generating.set(false)
     $inferencePreview.set('')
     resetProgress()
 
-    this.reconnectSoon('generation is stuck', 500, {shutup: true})
+    this.reconnectSoon(endpointType, {
+      reason: 'generation is stuck',
+      delay: STUCK_RECONNECT_DELAY,
+      removeListener: true,
+    })
   }
 
-  clearDisconnectionTimer() {
-    clearTimeout(this.disconnectTimer)
-    this.disconnectTimer = undefined
+  clearDisconnectionTimer(endpointType: EndpointType) {
+    const state = this.getEndpointState(endpointType)
+    if (!state) return
+
+    clearTimeout(state.disconnectTimer)
+    state.disconnectTimer = undefined
   }
 
-  clearGenerationStuckTimer() {
-    clearTimeout(this.generationStuckTimer)
-    this.generationStuckTimer = undefined
+  clearGenerationStuckTimer(endpointType: EndpointType) {
+    const state = this.getEndpointState(endpointType)
+    if (!state) return
+
+    clearTimeout(state.generationStuckTimer)
+    state.generationStuckTimer = undefined
   }
 
-  addListeners() {
-    // this.sock.addEventListener('error', this.onError)
-    // this.sock.addEventListener('open', this.onOpen)
-    // this.sock.addEventListener('close', this.onClose)
-    // this.sock.addEventListener('message', this.onMessage)
+  addListeners(endpointType: EndpointType) {
+    const state = this.getEndpointState(endpointType)
+    if (!state) return
+
+    state.socket.addEventListener('error', (event) =>
+      this.onError(endpointType, event)
+    )
+    state.socket.addEventListener('open', () => this.onOpen(endpointType))
+    state.socket.addEventListener('close', () => this.onClose(endpointType))
+    state.socket.addEventListener('message', (event) =>
+      this.onMessage(endpointType, event)
+    )
   }
 
-  removeListeners() {
-    // this.sock.removeEventListener('error', this.onError)
-    // this.sock.removeEventListener('open', this.onOpen)
-    // this.sock.removeEventListener('close', this.onClose)
-    // this.sock.removeEventListener('message', this.onMessage)
+  removeListeners(endpointType: EndpointType) {
+    const state = this.getEndpointState(endpointType)
+    if (!state) return
+
+    state.socket.removeEventListener('error', (event) =>
+      this.onError(endpointType, event)
+    )
+    state.socket.removeEventListener('open', () => this.onOpen(endpointType))
+    state.socket.removeEventListener('close', () => this.onClose(endpointType))
+    state.socket.removeEventListener('message', (event) =>
+      this.onMessage(endpointType, event)
+    )
   }
 
-  onError = (event: Event) => {
-    console.error('[ws] websocket error', event)
+  onError(endpointType: EndpointType, event: Event) {
+    console.error(`[ws] websocket error for ${endpointType}`, event)
 
-    this.markDisconnect()
-    this.reconnectSoon('websocket error')
+    this.markDisconnect(endpointType)
+    this.reconnectSoon(endpointType, {reason: 'websocket error'})
   }
 
-  onOpen = () => {
-    // console.log(`[ws] websocket connected to "${this.sock.url}"`)
+  onOpen(endpointType: EndpointType) {
+    console.log(`[ws] websocket connected to "${endpointType}"`)
+    this.markAlive(endpointType)
 
-    this.markAlive()
+    // ping the server once to check if it's ready
+    this.ping(endpointType)
   }
 
-  generate = (message: string) => {
-    console.log(`[gen] sent "${message}"`)
+  generate(programId: ProgramId, message: string) {
+    const endpointType = this.getEndpointType(programId)
+    const state = this.getEndpointState(endpointType)
+    if (!state) return
 
-    // this.sock.send(message)
-    this.startGenerationStuckTimer(message)
+    // Format the message with program ID prefix
+    const formattedMessage =
+      programId === 'P0' ? message : `${programId}:${message}`
+
+    console.log(`[gen] sent "${formattedMessage}" to ${programId}`)
+
+    state.socket.send(formattedMessage)
+    this.startGenerationStuckTimer(endpointType, formattedMessage)
   }
 
-  onClose = () => {
-    console.log('[ws] websocket closed')
+  onClose(endpointType: EndpointType) {
+    console.log(`[ws] websocket closed for ${endpointType}`)
 
-    this.markDisconnect()
-    this.reconnectSoon('websocket closed', 5000)
+    this.markDisconnect(endpointType)
+    this.reconnectSoon(endpointType, {reason: 'websocket closed'})
   }
 
-  onMessage = (event: MessageEvent) => {
-    this.markAlive()
+  onMessage(endpointType: EndpointType, event: MessageEvent) {
+    this.markAlive(endpointType)
 
     const data = event.data
+
+    // Handle ping/pong messages
+    if (typeof data === 'string' && data === 'pong') {
+      $booting.set(false)
+      return
+    }
 
     // binary data received - assume JPEG-encoded image
     if (data instanceof Blob) {
@@ -195,7 +298,7 @@ class SocketManager {
 
       $inferencePreview.set(url)
 
-      this.startGenerationStuckTimer()
+      this.startGenerationStuckTimer(endpointType)
       console.log(`[ws] blob:`, blob.size)
     } else if (typeof data === 'string') {
       const res = data.trim()
@@ -217,13 +320,13 @@ class SocketManager {
 
         if (this.isInProgress()) {
           // continue to monitor the generation
-          this.startGenerationStuckTimer()
+          this.startGenerationStuckTimer(endpointType)
         } else {
-          this.clearGenerationStuckTimer()
+          this.clearGenerationStuckTimer(endpointType)
         }
       } else if (res === 'done') {
         // generation is done, stop monitoring the generation
-        this.clearGenerationStuckTimer()
+        this.clearGenerationStuckTimer(endpointType)
 
         $generating.set(false)
         resetProgress()
@@ -236,39 +339,62 @@ class SocketManager {
     }
   }
 
-  markAlive() {
+  markAlive(endpointType: EndpointType) {
     $apiReady.set(true)
     $disconnected.set(false)
 
-    this.clearDisconnectionTimer()
+    this.clearDisconnectionTimer(endpointType)
   }
 
-  reconnectSoon(reason?: string, delay = 5000, flags?: {shutup?: boolean}) {
-    // if (!this.sock) return
+  reconnectSoon(endpointType: EndpointType, options: ReconnectOptions = {}) {
+    const state = this.getEndpointState(endpointType)
+    if (!state) return
 
     $apiReady.set(false)
 
     // stop listening to inference events
-    if (flags?.shutup) {
-      this.removeListeners()
+    if (options.removeListener) {
+      this.removeListeners(endpointType)
     }
 
     setTimeout(() => {
-      console.log(`[ws] reconnecting due to "${reason}"`)
+      console.log(
+        `[ws] reconnecting ${endpointType} due to "${options.reason}"`
+      )
 
-      // this.sock = this.createWs()
-    }, delay)
+      this.createEndpoint(endpointType)
+    }, options.delay ?? RECONNECT_DELAY)
   }
 
   close() {
-    // this.sock.close()
-    this.markDisconnect()
+    this.endpoints.forEach((state, endpointType) => {
+      state.socket.close()
+      this.markDisconnect(endpointType)
+    })
+  }
+
+  forceReconnectAll(reason = 'force reconnect to server') {
+    this.endpoints.forEach((_, endpointType) => {
+      this.reconnectSoon(endpointType, {reason, delay: 10})
+    })
+  }
+
+  disconnectAll() {
+    // close all the sockets
+    this.endpoints.forEach((state, endpointType) => {
+      this.markDisconnect(endpointType)
+      this.clearDisconnectionTimer(endpointType)
+      state.socket.close()
+    })
+  }
+
+  ping(endpointType: EndpointType) {
+    const state = this.getEndpointState(endpointType)
+    if (!state) return
+
+    $booting.set(true)
+    state.socket.send('ping')
   }
 }
 
 export const socket = new SocketManager()
-
-if (typeof window !== 'undefined') {
-  // @ts-expect-error - please
-  window.socket = socket
-}

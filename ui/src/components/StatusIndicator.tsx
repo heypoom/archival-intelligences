@@ -3,7 +3,7 @@ import {useStore} from '@nanostores/react'
 import {useMatchRoute} from '@tanstack/react-router'
 
 import {$dictationState} from '../store/dictation'
-import {$apiReady, $generating} from '../store/prompt'
+import {$apiReady, $generating, $booting} from '../store/prompt'
 import {$exhibitionMode} from '../store/exhibition'
 import {useIsVideo} from '../hooks/useIsVideo'
 
@@ -15,9 +15,13 @@ export const StatusIndicator = () => {
   const status = useStore($dictationState)
   const apiReady = useStore($apiReady)
   const generating = useStore($generating)
+  const booting = useStore($booting)
 
   const isVideo = useIsVideo() || mr({to: '/program-video'})
   if (isVideo) return null
+
+  const shouldHideFromRoute = mr({to: '/image-viewer'})
+  if (shouldHideFromRoute) return null
 
   const starting = status === 'starting'
   const listening = status === 'listening'
@@ -29,8 +33,9 @@ export const StatusIndicator = () => {
       <div
         className={cn(
           'w-3 h-3 rounded-full',
-          apiReady && 'bg-green-400',
-          !apiReady && 'animate-pulse bg-red-400'
+          apiReady && !booting && 'bg-green-400',
+          !apiReady && 'animate-pulse bg-red-400',
+          booting && 'animate-pulse bg-orange-400'
         )}
       />
 
@@ -50,7 +55,8 @@ export const StatusIndicator = () => {
         className={cn(
           'w-3 h-3 rounded-full',
           generating ? 'bg-green-400 animate-pulse' : 'bg-gray-600',
-          !apiReady && 'animate-pulse bg-red-400'
+          !apiReady && 'animate-pulse bg-red-400',
+          booting && 'animate-pulse bg-orange-400'
         )}
       />
     </div>

@@ -10,7 +10,10 @@ export const AnimatedNoise = () => {
 
   // these routes are no-noise routes
   const isNoNoiseRoute =
-    mr({to: '/'}) || mr({to: '/zero'}) || mr({to: '/video'})
+    mr({to: '/'}) ||
+    mr({to: '/zero'}) ||
+    mr({to: '/video'}) ||
+    mr({to: '/image-viewer'})
 
   const paint = useCallback(() => {
     if (isNoNoiseRoute) return

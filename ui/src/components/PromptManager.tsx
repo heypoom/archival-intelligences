@@ -18,12 +18,13 @@ import {
   onPromptCommitted,
   onPromptKeyChangeStart,
 } from '../utils/prompt-manager'
+import {ProgramId} from '../manager/socket'
 
 const MIN_KEYWORD_TRIGGER = 2
 
 interface Props {
   keyword?: string
-  command: string
+  command: ProgramId
   regenerate?: true | string
 }
 

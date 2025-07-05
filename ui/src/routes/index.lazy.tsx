@@ -20,52 +20,39 @@ export function SettingsRoute() {
   }, [])
 
   // exhibition mode - program
-  // function startExhibitionProgramLegacy() {
-  //   $exhibitionMode.set(true)
+  function startExhibitionProgramReal() {
+    $exhibitionMode.set(true)
 
-  //   socket.clearDisconnectionTimer()
-  //   socket.reconnectSoon('program change - exhibition', 10)
+    socket.forceReconnectAll('program change - exhibition')
 
-  //   $videoMode.set(false)
-  //   $canPlay.set(true)
-  //   automator.sync({force: true})
-  //   fullscreen()
+    $videoMode.set(false)
+    $canPlay.set(true)
+    automator.sync({force: true})
+    fullscreen()
 
-  //   go({to: '/zero'})
-  // }
+    go({to: '/zero'})
+  }
 
   // exhibition mode - video
   function startExhibitionVideo() {
     go({to: '/video'})
 
     $exhibitionMode.set(true)
-
-    socket.clearDisconnectionTimer()
-    socket.reconnectSoon('program change - video', 10)
+    socket.disconnectAll()
 
     $videoMode.set(true)
     $canPlay.set(true)
     automator.sync({force: true})
     fullscreen()
   }
-  // exhibition mode - program video
-  function startExhibitionProgramVideo() {
-    go({to: '/program-video'})
 
-    $exhibitionMode.set(true)
-    $videoMode.set(false)
-    $canPlay.set(true)
-    automator.sync({force: true})
-    fullscreen()
-  }
 
   // performance lecture mode
   function startLiveLecture() {
     $exhibitionMode.set(false)
     $videoMode.set(false)
 
-    socket.clearDisconnectionTimer()
-    socket.reconnectSoon('program change - lecture', 10)
+    socket.forceReconnectAll('program change - lecture')
 
     resetAll()
 
@@ -100,7 +87,8 @@ export function SettingsRoute() {
         }, 100)
       }, 150)
     } else {
-      go({to: '/program-video'})
+      go({to: '/zero'})
+
       automator.sync({force: true})
     }
   }
@@ -118,7 +106,7 @@ export function SettingsRoute() {
         </button>
 
         <button
-          onClick={startExhibitionProgramVideo}
+          onClick={startExhibitionProgramReal}
           className="border border-green-300 text-green-300 px-4 py-2"
         >
           program screen
@@ -130,10 +118,10 @@ export function SettingsRoute() {
       <div className="space-y-4">
         <div className="flex justify-start items-center gap-x-4 text-xs">
           <button
-            onClick={() => setFakeExhibitionOpenTime('10:59:55')}
+            onClick={() => setFakeExhibitionOpenTime('11:12:00')}
             className="border border-gray-300 text-gray-300 px-3 py-2 text-xs"
           >
-            set time to 10:59:55
+            set time to 11:12:00
           </button>
 
           <div>simulate when the first screening round is opening</div>

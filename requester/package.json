@@ -1,0 +1,19 @@
+{
+  "name": "preprocessor",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "cue-check": "bun run cli/cue-check.ts",
+    "generate": "bun run src/generate.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "p-queue": "^8.1.0"
+  }
+}
