@@ -2,7 +2,6 @@ import io
 import os
 import random
 import time
-import uuid
 from typing import Optional
 
 import modal
@@ -43,6 +42,7 @@ image = (
 with image.imports():
     import torch
     from diffusers.pipelines.flux.pipeline_flux import FluxPipeline
+    from valkey import Valkey
     from PIL import Image
     import boto3
 
@@ -131,6 +131,9 @@ class Inference:
             torch_dtype=torch.bfloat16,
             token=os.environ["HF_TOKEN"]
         )
+
+        self.vk = Valkey("raya.poom.dev")
+
         print("pipeline initialized.")
 
     @modal.enter()
@@ -157,6 +160,7 @@ class Inference:
         self,
         prompt: str,
         program_key: str,
+        cue_id: str,
         seed: Optional[int] = None,
         width: int = DEFAULT_WIDTH,
         height: int = DEFAULT_HEIGHT,
@@ -213,9 +217,22 @@ class Inference:
 
         print(f"Generated image for program {program_key}. Size: {len(image_bytes)} bytes.")
 
-        # Generate random ID and upload to R2
-        random_id = str(uuid.uuid4())
-        r2_key = f"gen-test/{random_id}.png"
+        # Get the current variant id
+        variant_count_byte = self.vk.hget(f"cues/{cue_id}", "variant_count")
+
+        # If no variant count exists, initialize it
+        if variant_count_byte is None:
+            variant_count = 0
+        else:
+            variant_count = int(str(variant_count_byte))
+        
+        next_variant_id = variant_count + 1
+
+        # Increment valkey identifier
+        self.vk.hincrby(f"cues/{cue_id}", "variant_count", 1)
+
+        # Save the final image
+        r2_key = f"foigoi/cues/{cue_id}/{next_variant_id}/final.png"
         
         upload_success = upload_to_r2(image_bytes, r2_key)
         if upload_success:
@@ -243,6 +260,7 @@ def endpoint():
     class GenerateRequest(BaseModel):
         program_key: str
         prompt: str
+        cue_id: str
         seed: Optional[int] = None
         width: int = DEFAULT_WIDTH
         height: int = DEFAULT_HEIGHT
@@ -266,12 +284,19 @@ def endpoint():
                 status_code=400, 
                 detail=f"Unsupported program key: {request.program_key}. Supported: P0, P3, P3B, P4"
             )
+        
+        if not request.cue_id:
+            raise HTTPException(
+                status_code=400, 
+                detail="cue_id is required for saving the image"
+            )
 
         try:
             # Call inference
             image_bytes = inference.run.remote(
                 prompt=request.prompt,
                 program_key=request.program_key,
+                cue_id=request.cue_id,
                 seed=request.seed,
                 width=request.width,
                 height=request.height,
