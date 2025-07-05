@@ -93,7 +93,7 @@ class Inference:
         width: int = 1360,
         height: int = 768,
         guidance_scale: float = 3.5,
-        num_inference_steps: int = 50,
+        num_inference_steps: int = 28,
     ) -> bytes:
         if not self.pipe:
             raise RuntimeError("Pipeline not initialized or moved to GPU.")
