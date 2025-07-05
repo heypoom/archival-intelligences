@@ -224,7 +224,7 @@ class Inference:
         if variant_count_byte is None:
             variant_count = 0
         else:
-            variant_count = int(str(variant_count_byte))
+            variant_count = int(variant_count_byte.decode("utf-8"))
         
         next_variant_id = variant_count + 1
 
