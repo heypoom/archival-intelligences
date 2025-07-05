@@ -190,7 +190,7 @@ class Inference:
 @app.function(
     volumes={GENERATED_DIR: generated_vol},
     timeout=650,
-    min_containers=1,
+    min_containers=0,
     max_containers=3,
 )
 @modal.asgi_app()

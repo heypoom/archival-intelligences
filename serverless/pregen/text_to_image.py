@@ -115,7 +115,7 @@ def upload_to_r2(file_data: bytes, key: str) -> bool:
         modal.Secret.from_name("huggingface-secret"),
         modal.Secret.from_name("r2-secret"),
     ],
-    min_containers=1,
+    min_containers=0,
     max_containers=3,
 )
 class Inference:
@@ -245,7 +245,7 @@ class Inference:
 
 @app.function(
     timeout=650,
-    min_containers=1,
+    min_containers=0,
     max_containers=3,
 )
 @modal.asgi_app()

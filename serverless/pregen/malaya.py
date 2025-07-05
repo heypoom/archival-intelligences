@@ -49,7 +49,7 @@ STEPS = 50
     volumes={CACHE_DIR: cache_vol},
     timeout=600,
     secrets=[modal.Secret.from_name("huggingface-secret")],
-    min_containers=1,
+    min_containers=0,
     max_containers=3,
 )
 class Inference:
@@ -148,7 +148,7 @@ class Inference:
 
 @app.function(
     timeout=650,
-    min_containers=1,
+    min_containers=0,
     max_containers=3,
 )
 @modal.asgi_app()
