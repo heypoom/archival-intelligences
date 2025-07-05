@@ -36,6 +36,7 @@ import {getServerTimeDrift} from './get-system-time-drift'
 export class ExhibitionAutomator {
   timer: number | null = null
   driftTimer: number | null = null
+  loaded = false
 
   cues: AutomationCue[] = []
   currentCue = -1
@@ -309,8 +310,7 @@ export class ExhibitionAutomator {
     this.cues = [...transcriptCues, ...PROGRAM_CUES]
     // make sure the cues are sorted by time!
     this.cues = this.cues.sort((a, b) => compareTimecode(a.time, b.time))
-
-    ;(window as any).cues = this.cues
+    this.loaded = true
   }
 
   tick() {

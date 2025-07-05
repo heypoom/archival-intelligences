@@ -1,5 +1,5 @@
 import {createLazyFileRoute} from '@tanstack/react-router'
-import {useState, useEffect, useCallback} from 'react'
+import {useState, useEffect, useCallback, useRef} from 'react'
 import {automator} from '../utils/exhibition/exhibition-automator'
 
 export const Route = createLazyFileRoute('/image-viewer')({
@@ -15,6 +15,7 @@ function ImageViewer() {
   const [cueIndex, setCueIndex] = useState(0)
   const [variantIndex, setVariantIndex] = useState(1) // 1-10
   const [imageError, setImageError] = useState(false)
+  const [isReady, setIsReady] = useState(false)
 
   const currentCue = transcriptCues[cueIndex]
   const totalCues = transcriptCues.length
@@ -29,6 +30,24 @@ function ImageViewer() {
   const currentImagePath = currentCue
     ? generateImagePath(currentCue, variantIndex)
     : ''
+
+  // Poll until automator is ready
+  useEffect(() => {
+    let timeout: number = 0
+
+    const checkReady = () => {
+      if (automator.loaded) {
+        clearTimeout(timeout)
+        setIsReady(true)
+      } else {
+        timeout = setTimeout(checkReady, 100) // Check every 100ms
+      }
+    }
+
+    checkReady()
+
+    return () => clearTimeout(timeout)
+  }, [])
 
   // Keyboard navigation
   useEffect(() => {
@@ -67,7 +86,12 @@ function ImageViewer() {
     setImageError(false)
   }, [currentImagePath])
 
-  if (!currentCue) {
+  // If not ready, show loading state
+  if (!isReady) {
+    return <div className="min-h-screen bg-[#424242]" />
+  }
+
+  if (currentCue === undefined || currentCue === null) {
     return (
       <div className="min-h-screen bg-[#424242] flex items-center justify-center text-white">
         <div className="text-center">
