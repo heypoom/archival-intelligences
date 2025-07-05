@@ -1,7 +1,6 @@
-import _cues from './cues.json'
-import type {AutomationCue} from './types'
+import _cues from '../data/cues.json'
 
-import PQueue from 'p-queue'
+import type {AutomationCue} from '../src/types'
 
 const cues = _cues as AutomationCue[]
 
