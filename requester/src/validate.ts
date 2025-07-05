@@ -1,12 +1,18 @@
 import PQueue from 'p-queue'
 import _cues from '../data/cues.json'
 import type {AutomationCue} from './types'
+import {RedisClient} from 'bun'
 
 const cues = _cues as AutomationCue[]
 
 const CONCURRENT_REQUESTS = 10
 const MAX_VARIANT_COUNT = 10
 const PREGEN_VERSION_ID = 1
+
+const VALKEY_URL = 'redis://raya.poom.dev:6379'
+
+// Set by text_to_image.py when uploading images
+const PREGEN_UPLOAD_STATUS_KEY = `pregen/${PREGEN_VERSION_ID}/variant_upload_status`
 
 interface ValidationResult {
   url: string
@@ -17,9 +23,11 @@ interface ValidationResult {
 
 class ImageValidator {
   private queue: PQueue
+  private vk: RedisClient
 
   constructor() {
     this.queue = new PQueue({concurrency: CONCURRENT_REQUESTS})
+    this.vk = new RedisClient(VALKEY_URL)
   }
 
   async init() {
@@ -50,10 +58,22 @@ class ImageValidator {
       console.log(
         `✅ Image exists: ${url} (CUE_ID: ${cue_id}, VARIANT_ID: ${variant_id})`
       )
+
+      // Mark whether the upload was successful in Valkey
+      await this.vk.hmset(PREGEN_UPLOAD_STATUS_KEY, [
+        `${cue_id}_${variant_id}`,
+        'true',
+      ])
     } else {
       console.warn(
         `❌ Image missing: ${url} (CUE_ID: ${cue_id}, VARIANT_ID: ${variant_id})`
       )
+
+      // Mark that the upload was not successful in Valkey
+      await this.vk.hmset(PREGEN_UPLOAD_STATUS_KEY, [
+        `${cue_id}_${variant_id}`,
+        'false',
+      ])
     }
 
     return {
@@ -97,7 +117,9 @@ class ImageValidator {
           variant_id++
         ) {
           allValidations.push(
-            this.queue.add(() => this.validateImage(cue_id, variant_id))
+            this.queue.add(() =>
+              this.validateImage(cue_id, variant_id)
+            ) as Promise<ValidationResult>
           )
         }
       }
@@ -129,7 +151,11 @@ class ImageValidator {
         const cue_id = `prompt_${cueIndex}_${cue.time.replace(/[:.]/g, '_')}`
 
         // For prompt cues, assuming single variant (variant_id = 1)
-        allValidations.push(this.queue.add(() => this.validateImage(cue_id, 1)))
+        allValidations.push(
+          this.queue.add(() =>
+            this.validateImage(cue_id, 1)
+          ) as Promise<ValidationResult>
+        )
       }
     }
 
