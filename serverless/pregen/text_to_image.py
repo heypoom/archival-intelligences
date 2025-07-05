@@ -166,7 +166,7 @@ class Inference:
         height: int = DEFAULT_HEIGHT,
         guidance_scale: float = DEFAULT_GUIDANCE_SCALE,
         num_inference_steps: int = DEFAULT_NUM_INFERENCE_STEPS,
-    ) -> bytes:
+    ) -> str:
         if not self.pipe:
             raise RuntimeError("Pipeline not initialized or moved to GPU.")
         if self.pipe.device.type != "cuda":
@@ -240,7 +240,7 @@ class Inference:
         else:
             print(f"Failed to upload image to R2: {r2_key}")
 
-        return image_bytes
+        return r2_key
 
 
 @app.function(
@@ -278,7 +278,6 @@ def endpoint():
 
     @web_app.post("/generate")
     async def generate_image(request: GenerateRequest):
-        # Validate program key
         if request.program_key not in SUPPORTED_PROGRAMS:
             raise HTTPException(
                 status_code=400, 
@@ -292,8 +291,7 @@ def endpoint():
             )
 
         try:
-            # Call inference
-            image_bytes = inference.run.remote(
+            r2_key = inference.run.remote(
                 prompt=request.prompt,
                 program_key=request.program_key,
                 cue_id=request.cue_id,
@@ -304,14 +302,10 @@ def endpoint():
                 num_inference_steps=request.num_inference_steps,
             )
 
-            # Return binary image
-            return Response(
-                content=image_bytes,
-                media_type="image/png",
-                headers={
-                    "Content-Disposition": f"inline; filename=generated_{request.program_key}_{int(time.time())}.png"
-                }
-            )
+            return {
+                "status": "done",
+                "r2_key": r2_key
+            }
 
         except Exception as e:
             print(f"Error during inference: {e}")
