@@ -1,2 +1,0 @@
-- `source/` is the original asset.
-- `cropped/` is the cropped asset.

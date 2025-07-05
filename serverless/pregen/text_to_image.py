@@ -9,6 +9,9 @@ APP_NAME = "exhibition-pregen-text-to-image"
 MODEL_NAME = "stabilityai/stable-diffusion-3.5-large-turbo"
 app = modal.App(APP_NAME)
 
+SUPPORTED_PROGRAMS = ["P0", "P3", "P3B", "P4"]
+CHUAMIATEE_PROGRAMS = ["P3", "P3B"]
+
 image = (
     modal.Image.debian_slim(python_version="3.12")
     .pip_install(
@@ -98,7 +101,7 @@ class Inference:
             raise RuntimeError("Pipeline not on CUDA device.")
 
         # Determine if we should use LoRA based on program key
-        use_lora = program_key in ["P3", "P3B"]
+        use_lora = program_key in CHUAMIATEE_PROGRAMS
         
         # Ensure LORA is in the correct state
         self._ensure_lora_state(use_lora)
@@ -173,13 +176,13 @@ def endpoint():
             "status": "ok",
             "service": "exhibition-pregen-text-to-image",
             "timestamp": int(time.time()),
-            "supported_programs": ["P0", "P3", "P3B", "P4"]
+            "supported_programs": SUPPORTED_PROGRAMS,
         }
 
     @web_app.post("/generate")
     async def generate_image(request: GenerateRequest):
         # Validate program key
-        if request.program_key not in ["P0", "P3", "P3B", "P4"]:
+        if request.program_key not in SUPPORTED_PROGRAMS:
             raise HTTPException(
                 status_code=400, 
                 detail=f"Unsupported program key: {request.program_key}. Supported: P0, P3, P3B, P4"

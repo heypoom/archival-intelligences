@@ -10,8 +10,11 @@ Refer to the [README.md](../README.md) for more information on the overall archi
 
 It has two modes of operation:
 
-- Live: the generation is done live. The API uses WebSocket to communicate with the frontend and generate images in real-time.
-- Pre-randomized: the generation is done in advance and the images are stored in an object storage. The API serves the images based on the actions defined in the transcript. We should use HTTP for communication instead of WebSocket to avoid the stateful headaches of WebSockets. This uses the [preprocessor](./preprocessor) to generate the images in advance and store them in an object storage like Cloudflare R2.
+- **Pre-randomized**: the generation is done in advance and the images are stored in an object storage. The API serves the images based on the actions defined in the transcript. We should use HTTP for communication instead of WebSocket to avoid the stateful headaches of WebSockets. This uses the [preprocessor](./preprocessor) to generate the images in advance and store them in an object storage like Cloudflare R2.
+
+  - This is the primary mode of operation.
+
+- **Live**: the generation is done live. The API uses WebSocket to communicate with the frontend and generate images in real-time. This is used for the live lecture mostly.
 
 Both modes should import modules from the `common` directory to share the same logic for generating images and handling actions. Examples: pipeline configuration.
 
