@@ -149,7 +149,6 @@ class GenerationRequester {
         const program_key = 'P0'
 
         // Generate multiple variants up to MAX_VARIANT_COUNT
-
         for (
           let variant_id = 1;
           variant_id <= MAX_VARIANT_COUNT;
@@ -161,7 +160,7 @@ class GenerationRequester {
 
           if (!status || status === 'false') {
             console.log(
-              `📚 Queuing new image for cue=${cue_id}, variant=${variant_id}, prompt=${prompt}, vk_status=${status}`
+              `📚 Queuing an image: cue=${cue_id}, var=${variant_id}, prom=${prompt}, stat=${status}`
             )
 
             allRequests.push({
@@ -171,10 +170,6 @@ class GenerationRequester {
               variant_id,
             })
           } else {
-            // console.log(
-            //   `✅ Skipping already generated cue: ${cue_id}, variant: ${variant_id}.`
-            // )
-
             skippedCount++
           }
         }

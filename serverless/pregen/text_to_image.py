@@ -24,7 +24,7 @@ DEFAULT_NUM_INFERENCE_STEPS = 10
 # Example: different transcripts, model versions, or other significant changes.
 PREGEN_VERSION_ID = 1
 
-VARIANT_UPLOAD_STATUS_KEY = f"pregen/{PREGEN_VERSION_ID}/variant_upload_status"
+PREGEN_UPLOAD_STATUS_KEY = f"pregen/{PREGEN_VERSION_ID}/variant_upload_status"
 
 image = (
     modal.Image.debian_slim(python_version="3.12")
@@ -235,7 +235,7 @@ class Inference:
             print(f"Failed to upload image to R2: {r2_key}")
         
         # Mark whether the upload was successful in Valkey
-        self.vk.hset(VARIANT_UPLOAD_STATUS_KEY, f"{cue_id}_{variant_id}", str(upload_success))
+        self.vk.hset(PREGEN_UPLOAD_STATUS_KEY, f"{cue_id}_{variant_id}", str(upload_success))
 
         return r2_key
 
