@@ -42,3 +42,5 @@ await valkey.set('foo', 'bar')
 ```
 
 Let's use `hincrby "requests/cues" <cue_id> 1` to increment the number of requests made for a cue. This will help us track how many requests have been made so far for each cue.
+
+Let's also use `hset "requests/cue/prompts" <cue_id> <prompt>` to store the prompt used for each cue. This is for double-checking.

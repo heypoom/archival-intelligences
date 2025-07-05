@@ -4,7 +4,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "cue-check": "bun run cli/cue-check.ts"
+    "cue-check": "bun run cli/cue-check.ts",
+    "generate": "bun run src/generate.ts"
   },
   "devDependencies": {
     "@types/bun": "latest"
