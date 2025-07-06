@@ -1,6 +1,7 @@
 import {createLazyFileRoute} from '@tanstack/react-router'
-import {useState, useEffect, useCallback} from 'react'
+import {useState, useEffect, useCallback, useMemo} from 'react'
 import {automator} from '../utils/exhibition/exhibition-automator'
+import {AutomationCue} from '../constants/exhibition-cues'
 
 export const Route = createLazyFileRoute('/image-viewer')({
   component: ImageViewer,
@@ -10,25 +11,71 @@ const PREGEN_VERSION_ID = 1 // static pregen version ID
 const MAX_VARIANT_COUNT = 30
 
 function ImageViewer() {
-  // Filter transcript cues that have generation enabled
-  const transcriptCues = automator.cues.filter(
-    (cue) => cue.action === 'transcript' && cue.generate
-  )
-
   const [cueIndex, setCueIndex] = useState(0)
   const [variantIndex, setVariantIndex] = useState(1)
   const [imageError, setImageError] = useState(false)
   const [isReady, setIsReady] = useState(false)
 
-  const currentCue = transcriptCues[cueIndex]
-  const totalCues = transcriptCues.length
+  // Filter cues that have generation enabled - matching generate.ts logic
+  const imageGenerationCues = useMemo(() => {
+    if (!isReady) {
+      return []
+    }
+
+    return automator.cues.filter((cue) => {
+      // Transcript cues with generation enabled
+      if (cue.action === 'transcript' && cue.generate) {
+        return true
+      }
+
+      // Prompt cues with generation enabled - matching generate.ts filtering logic
+      if (cue.action === 'prompt') {
+        // Skip if no prompt or commit is false
+        if (!cue.prompt || cue.commit === false) {
+          return false
+        }
+
+        // Skip P2/P2B programs (Malaya image-to-image)
+        if (cue.program.startsWith('P2')) {
+          return false
+        }
+
+        // Skip P3/P3B programs (LoRA compatibility)
+        if (cue.program.startsWith('P3')) {
+          return false
+        }
+
+        return true
+      }
+
+      return false
+    })
+  }, [isReady])
+
+  const currentCue = imageGenerationCues[cueIndex]
+  const totalCues = imageGenerationCues.length
 
   // Generate image path based on generate.ts logic
-  const generateImagePath = useCallback((cue: any, variant: number) => {
-    const allCueIndex = automator.cues.indexOf(cue)
-    const cueId = `transcript_${allCueIndex}_${cue.time.replace(/[:.]/g, '_')}`
-    return `https://images.poom.dev/foigoi/${PREGEN_VERSION_ID}/cues/${cueId}/${variant}/final.png`
-  }, [])
+  const generateImagePath = useCallback(
+    (cue: AutomationCue, variant: number) => {
+      const allCueIndex = automator.cues.indexOf(cue)
+      const cueSuffix = `${allCueIndex}_${cue.time.replace(/[:.]/g, '_')}`
+
+      let cueId: string
+
+      if (cue.action === 'transcript') {
+        cueId = `transcript_${cueSuffix}`
+      } else if (cue.action === 'prompt') {
+        cueId = `prompt_${cueSuffix}`
+      } else {
+        // unsupported action type.
+        return ''
+      }
+
+      return `https://images.poom.dev/foigoi/${PREGEN_VERSION_ID}/cues/${cueId}/${variant}/final.png`
+    },
+    []
+  )
 
   const currentImagePath = currentCue
     ? generateImagePath(currentCue, variantIndex)
@@ -98,10 +145,11 @@ function ImageViewer() {
     return (
       <div className="min-h-screen bg-[#424242] flex items-center justify-center text-white">
         <div className="text-center">
-          <h1 className="text-2xl mb-4">
-            No transcript cues with generation found
-          </h1>
-          <p>Check exhibition-cues.ts for cues with generate: true</p>
+          <h1 className="text-2xl mb-4">No generated cues found</h1>
+          <p>
+            Check exhibition-cues.ts for transcript cues with generate: true
+          </p>
+          <p>or prompt cues that match the generation criteria</p>
         </div>
       </div>
     )
@@ -135,6 +183,9 @@ function ImageViewer() {
           <span className="text-gray-400">Cue:</span> {cueIndex + 1}/{totalCues}
         </div>
         <div className="mb-2">
+          <span className="text-gray-400">Type:</span> {currentCue.action}
+        </div>
+        <div className="mb-2">
           <span className="text-gray-400">Time:</span> {currentCue.time}
         </div>
         <div className="mb-2">
@@ -142,12 +193,17 @@ function ImageViewer() {
           {MAX_VARIANT_COUNT}
         </div>
         <div className="mb-2">
-          <span className="text-gray-400">Program:</span> P0
+          <span className="text-gray-400">Program:</span>{' '}
+          {currentCue.action === 'prompt' ? currentCue.program : 'P0'}
         </div>
         <div className="max-w-md">
           <span className="text-gray-400">Prompt:</span>{' '}
           <span className="break-words">
-            {currentCue.action === 'transcript' ? currentCue.transcript : 'N/A'}
+            {currentCue.action === 'transcript'
+              ? currentCue.transcript
+              : currentCue.action === 'prompt'
+                ? currentCue.override || currentCue.prompt
+                : 'N/A'}
           </span>
         </div>
       </div>
