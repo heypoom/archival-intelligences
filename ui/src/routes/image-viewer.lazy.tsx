@@ -13,6 +13,7 @@ const MAX_VARIANT_COUNT = 30
 function ImageViewer() {
   const [cueIndex, setCueIndex] = useState(0)
   const [variantIndex, setVariantIndex] = useState(1)
+  const [previewStep, setPreviewStep] = useState(-1) // -1 = final.png, 0-9 = preview steps
   const [imageError, setImageError] = useState(false)
   const [isReady, setIsReady] = useState(false)
 
@@ -57,7 +58,7 @@ function ImageViewer() {
 
   // Generate image path based on generate.ts logic
   const generateImagePath = useCallback(
-    (cue: AutomationCue, variant: number) => {
+    (cue: AutomationCue, variant: number, step: number = -1) => {
       const allCueIndex = automator.cues.indexOf(cue)
       const cueSuffix = `${allCueIndex}_${cue.time.replace(/[:.]/g, '_')}`
 
@@ -72,13 +73,22 @@ function ImageViewer() {
         return ''
       }
 
-      return `https://images.poom.dev/foigoi/${PREGEN_VERSION_ID}/cues/${cueId}/${variant}/final.png`
+      // For prompt cues, support preview steps (0-9.png) and final.png
+      // For transcript cues, only final.png is available
+      let fileName: string
+      if (cue.action === 'prompt' && step >= 0 && step <= 9) {
+        fileName = `${step}.png`
+      } else {
+        fileName = 'final.png'
+      }
+
+      return `https://images.poom.dev/foigoi/${PREGEN_VERSION_ID}/cues/${cueId}/${variant}/${fileName}`
     },
     []
   )
 
   const currentImagePath = currentCue
-    ? generateImagePath(currentCue, variantIndex)
+    ? generateImagePath(currentCue, variantIndex, previewStep)
     : ''
 
   // Poll until automator is ready
@@ -106,22 +116,46 @@ function ImageViewer() {
         case 'ArrowLeft':
           e.preventDefault()
           setCueIndex((prev) => (prev > 0 ? prev - 1 : totalCues - 1))
+          setPreviewStep(-1) // Reset to final image when changing cues
           setImageError(false)
           break
         case 'ArrowRight':
           e.preventDefault()
           setCueIndex((prev) => (prev < totalCues - 1 ? prev + 1 : 0))
+          setPreviewStep(-1) // Reset to final image when changing cues
           setImageError(false)
           break
         case 'ArrowUp':
           e.preventDefault()
           setVariantIndex((prev) => (prev < MAX_VARIANT_COUNT ? prev + 1 : 1))
+          setPreviewStep(-1) // Reset to final image when changing variants
           setImageError(false)
           break
         case 'ArrowDown':
           e.preventDefault()
           setVariantIndex((prev) => (prev > 1 ? prev - 1 : MAX_VARIANT_COUNT))
+          setPreviewStep(-1) // Reset to final image when changing variants
           setImageError(false)
+          break
+        case ',':
+          e.preventDefault()
+          // Only works for prompt cues (non-transcript)
+          if (currentCue && currentCue.action === 'prompt') {
+            setPreviewStep((prev) =>
+              prev > 0 ? prev - 1 : prev === -1 ? 9 : -1
+            )
+            setImageError(false)
+          }
+          break
+        case '.':
+          e.preventDefault()
+          // Only works for prompt cues (non-transcript)
+          if (currentCue && currentCue.action === 'prompt') {
+            setPreviewStep((prev) =>
+              prev < 9 ? prev + 1 : prev === -1 ? 0 : -1
+            )
+            setImageError(false)
+          }
           break
       }
     }
@@ -129,7 +163,7 @@ function ImageViewer() {
     window.addEventListener('keydown', handleKeyDown)
 
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [totalCues])
+  }, [totalCues, currentCue])
 
   // Reset image error when image changes
   useEffect(() => {
@@ -196,6 +230,12 @@ function ImageViewer() {
           <span className="text-gray-400">Program:</span>{' '}
           {currentCue.action === 'prompt' ? currentCue.program : 'P0'}
         </div>
+        {currentCue.action === 'prompt' && (
+          <div className="mb-2">
+            <span className="text-gray-400">Step:</span>{' '}
+            {previewStep === -1 ? 'final' : `${previewStep}/9`}
+          </div>
+        )}
         <div className="max-w-md">
           <span className="text-gray-400">Prompt:</span>{' '}
           <span className="break-words">
@@ -213,6 +253,9 @@ function ImageViewer() {
         <div className="text-gray-400 mb-2">Navigation:</div>
         <div>← → Change cue</div>
         <div>↑ ↓ Change variant</div>
+        {currentCue && currentCue.action === 'prompt' && (
+          <div>, . Change preview step</div>
+        )}
       </div>
     </div>
   )
