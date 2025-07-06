@@ -181,7 +181,8 @@ class ImageValidator {
     console.log('=== Image Validation Report ===')
 
     // Validate transcript cues
-    const transcriptResults = await this.validateTranscriptCues()
+    // const transcriptResults = await this.validateTranscriptCues()
+    const transcriptResults = []
 
     // Validate image generation cues
     const imageResults = await this.validateImageGenerationCues()

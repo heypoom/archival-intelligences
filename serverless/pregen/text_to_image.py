@@ -1,4 +1,5 @@
 import io
+import json
 import os
 import random
 import time
@@ -48,6 +49,7 @@ image = (
 
 with image.imports():
     import torch
+    import PIL.Image as PILImage
     from diffusers.pipelines.stable_diffusion_3.pipeline_stable_diffusion_3 import StableDiffusion3Pipeline
     from valkey import Valkey
     import boto3
@@ -62,6 +64,67 @@ LORA_WEIGHT_NAME = "flux-lora.safetensors"
 
 # R2 Configuration
 R2_BUCKET_NAME = "poom-images"
+
+def create_step_callback(program_key, cue_id, variant_id, step_timings, vae_decoder):
+    """Creates callback to capture intermediate steps"""
+    def on_step_end(pipeline, step, timestep, callback_kwargs):
+        # Only capture for P1-P4, skip P0
+        if program_key == "P0":
+            return callback_kwargs
+        
+        # Record step timing
+        current_time = time.time()
+        step_timings[str(step)] = current_time
+        
+        # Extract latents
+        latents = callback_kwargs["latents"]
+
+        # More robust approach using the VAE decoder directly
+        latents = 1 / vae_decoder.config.scaling_factor * latents
+
+        image = vae_decoder.decode(latents).sample
+        image = (image / 2 + 0.5).clamp(0, 1) # Normalize to [0, 1]
+        image = image.cpu().permute(0, 2, 3, 1).float().numpy() # Convert to (batch, H, W, C) numpy array
+        preview_image = PILImage.fromarray((image[0] * 255).astype("uint8")) # Take first image from batch
+        
+        # Save intermediate image to R2
+        with io.BytesIO() as buf:
+            preview_image.convert("RGB").save(buf, format="PNG")
+            image_bytes = buf.getvalue()
+            
+        step_key = f"foigoi/{PREGEN_VERSION_ID}/cues/{cue_id}/{variant_id}/{step}.png"
+        upload_success = upload_to_r2(image_bytes, step_key)
+        if upload_success:
+            print(f"Uploaded intermediate step {step} to R2: {step_key}")
+        else:
+            print(f"Failed to upload intermediate step {step} to R2: {step_key}")
+
+        return callback_kwargs
+            
+    return on_step_end
+
+
+def save_timing_metadata(step_timings, start_time, final_time, cue_id, variant_id):
+    """Generate and save timing.json with step durations"""
+    durations = {}
+    prev_time = start_time
+    
+    for step, timestamp in step_timings.items():
+        durations[step] = int((timestamp - prev_time) * 1000)  # Convert to ms
+        prev_time = timestamp
+        
+    # Add final processing time
+    durations["final"] = int((final_time - prev_time) * 1000)
+    
+    metadata = {"stepDurations": durations}
+    metadata_json = json.dumps(metadata)
+    
+    timing_key = f"foigoi/{PREGEN_VERSION_ID}/cues/{cue_id}/{variant_id}/timing.json"
+    upload_success = upload_to_r2(metadata_json.encode(), timing_key)
+    if upload_success:
+        print(f"Uploaded timing metadata to R2: {timing_key}")
+    else:
+        print(f"Failed to upload timing metadata to R2: {timing_key}")
 
 def upload_to_r2(file_data: bytes, key: str) -> bool:
     """
@@ -203,20 +266,38 @@ class Inference:
         generator = torch.Generator("cuda").manual_seed(seed)
 
         start_time = time.time()
+        step_timings = {}
 
-        # Run the pipeline
-        images = self.pipe(
-            prompt=modified_prompt,
-            num_images_per_prompt=1,
-            num_inference_steps=num_inference_steps,
-            guidance_scale=guidance_scale,
-            generator=generator,
-            width=width,
-            height=height,
-        ).images
+        # Run the pipeline with callback for P1-P4, without callback for P0
+        if program_key != "P0":
+            print(f"Running inference with intermediate steps for {program_key}")
+            callback_fn = create_step_callback(program_key, cue_id, variant_id, step_timings, self.pipe.vae)
+
+            images = self.pipe(
+                prompt=modified_prompt,
+                num_images_per_prompt=1,
+                num_inference_steps=num_inference_steps,
+                guidance_scale=guidance_scale,
+                generator=generator,
+                width=width,
+                height=height,
+                callback_on_step_end=callback_fn,
+            ).images
+        else:
+            print(f"Running inference without intermediate steps for {program_key}")
+            images = self.pipe(
+                prompt=modified_prompt,
+                num_images_per_prompt=1,
+                num_inference_steps=num_inference_steps,
+                guidance_scale=guidance_scale,
+                generator=generator,
+                width=width,
+                height=height,
+            ).images
         
+        final_time = time.time()
         print("inference complete!")
-        print(f"Time taken for inference: {time.time() - start_time:.2f} seconds")
+        print(f"Time taken for inference: {final_time - start_time:.2f} seconds")
 
         # Convert final image to bytes
         image = images[0]
@@ -234,6 +315,10 @@ class Inference:
             print(f"Image uploaded to R2: {r2_key}")
         else:
             print(f"Failed to upload image to R2: {r2_key}")
+        
+        # Save timing metadata for P1-P4 programs
+        if program_key != "P0" and step_timings:
+            save_timing_metadata(step_timings, start_time, final_time, cue_id, variant_id)
         
         # Mark whether the upload was successful in Valkey
         status_flag = "1" if upload_success else "0"
