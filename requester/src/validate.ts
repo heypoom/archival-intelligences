@@ -158,6 +158,88 @@ class ImageValidator {
     return results
   }
 
+  async validatePromptAndSliderCues(): Promise<ValidationResult[]> {
+    console.log(
+      'Validating prompt and move-slider cues (matching generate.ts logic)...'
+    )
+
+    const allValidations: Promise<ValidationResult>[] = []
+    let validationCount = 0
+
+    for (const cueIndex in cues) {
+      const cue = cues[cueIndex]
+
+      // Only process 'prompt' and 'move-slider' actions
+      if (!cue || (cue.action !== 'prompt' && cue.action !== 'move-slider')) {
+        continue
+      }
+
+      let cue_id: string
+
+      const CUE_SUFFIX = `${cueIndex}_${cue.time.replace(/[:.]/g, '_')}`
+
+      if (cue.action === 'prompt') {
+        // These do not require generation and is a no-op.
+        // It is just to simulate typing.
+        if (!cue.prompt || cue.commit === false) {
+          continue
+        }
+
+        // Malaya require a separate endpoint for /image-to-image operation.
+        // skip P2 and P2B programs for now.
+        if (cue.program.startsWith('P2')) {
+          continue
+        }
+
+        // I need to adapt the chua mia tee LoRA to support
+        // stable diffusion 3 large turbo first.
+        // For now, skip P3 and P3B programs.
+        if (cue.program.startsWith('P3')) {
+          continue
+        }
+
+        // We'll need to handle this next.
+        // In the live lecture, the "B" suffixes makes the generation happen
+        // continuously until the next cue, with a little delay in between.
+        if (cue.program.endsWith('B')) {
+          console.warn(
+            `⚠️ warning: ${cue.program} requires continuous generation until the next cue`
+          )
+        }
+
+        if (cue.enter?.regen === true) {
+          console.warn(
+            `⚠️ warning: ${cue.program} requires continuous generation until the next cue`
+          )
+        }
+
+        cue_id = `prompt_${CUE_SUFFIX}`
+      } else if (cue.action === 'move-slider') {
+        // COMMENTED OUT FOR NOW - P2 uses image-to-image pipeline (malaya.py)
+        // Following the same logic as generate.ts
+        continue
+      } else {
+        continue
+      }
+
+      // Check all possible variant IDs (1 to MAX_VARIANT_COUNT)
+      for (let variant_id = 1; variant_id <= MAX_VARIANT_COUNT; variant_id++) {
+        allValidations.push(
+          this.queue.add(() =>
+            this.validateImage(cue_id, variant_id)
+          ) as Promise<ValidationResult>
+        )
+        validationCount++
+      }
+    }
+
+    console.log(`Found ${validationCount} prompt/slider validations to process`)
+    console.log(`Queuing ${allValidations.length} validation requests...`)
+
+    const results = await Promise.all(allValidations)
+    return results
+  }
+
   printMissingImages(results: ValidationResult[]): void {
     const missingImages = results.filter((result) => !result.exists)
 
@@ -184,8 +266,8 @@ class ImageValidator {
     // const transcriptResults = await this.validateTranscriptCues()
     const transcriptResults = []
 
-    // Validate image generation cues
-    const imageResults = await this.validateImageGenerationCues()
+    // Validate prompt and slider cues (matching generate.ts logic)
+    const imageResults = await this.validatePromptAndSliderCues()
 
     // Combine results
     const allResults = [...transcriptResults, ...imageResults]
