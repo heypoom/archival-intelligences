@@ -121,6 +121,7 @@ def upload_to_r2(file_data: bytes, key: str) -> bool:
     secrets=[
         modal.Secret.from_name("huggingface-secret"),
         modal.Secret.from_name("r2-secret"),
+        modal.Secret.from_name("valkey-secret"),
     ],
     min_containers=0,
     max_containers=3,
@@ -139,7 +140,7 @@ class Inference:
             token=os.environ["HF_TOKEN"]
         )
 
-        self.vk = Valkey("raya.poom.dev")
+        self.vk = Valkey("raya.poom.dev", username="default", password=os.environ["VALKEY_PASSWORD"])
 
         print("pipeline initialized.")
 
