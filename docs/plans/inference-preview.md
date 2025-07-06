@@ -93,11 +93,11 @@ foigoi/{PREGEN_VERSION_ID}/cues/{cue_id}/{variant_id}/
 
 ### Detailed Implementation Tasks
 
-#### Task 1: Port Latents Conversion Logic
+#### Task 1: Latents Conversion Logic for SD3
 
-- Copy `latents_to_rgb()` from `legacy-api/utils/latents.py`
+- **IMPORTANT**: SD3 latents format is completely different from SD2
+- Use VAE decoder directly instead of manual tensor operations
 - Add required imports: `torch`, `PIL.Image as PILImage`
-- Verify tensor conversion works with SD3 pipeline latents
 
 **Implementation Details**:
 
@@ -105,46 +105,49 @@ foigoi/{PREGEN_VERSION_ID}/cues/{cue_id}/{variant_id}/
 import torch
 import PIL.Image as PILImage
 
-# Port from legacy-api/utils/latents.py
-WEIGHTS = ((60, -60, 25, -70), (60, -5, 15, -50), (60, 10, -5, -35))
+# SD3-specific latents conversion using VAE decoder
+def create_step_callback(program_key, cue_id, variant_id, step_timings, vae_decoder):
+    def on_step_end(pipeline, step, timestep, callback_kwargs):
+        # Extract latents
+        latents = callback_kwargs["latents"]
 
-def latents_to_rgb(latents):
-    """Convert diffusion latents to viewable RGB image"""
-    weights_tensor = torch.t(
-        torch.tensor(WEIGHTS, dtype=latents.dtype).to(latents.device)
-    )
-    biases_tensor = torch.tensor((150, 140, 130), dtype=latents.dtype).to(
-        latents.device
-    )
-    weights_s = torch.einsum("...lxy,lr -> ...rxy", latents, weights_tensor)
-    biases_s = biases_tensor.unsqueeze(-1).unsqueeze(-1)
-    rgb_tensor = weights_s + biases_s
-    image_array = rgb_tensor.clamp(0, 255)[0].byte().cpu().numpy()
-    image_array = image_array.transpose(1, 2, 0)
-
-    return PILImage.fromarray(image_array)
+        # Use VAE decoder directly (SD3-specific approach)
+        latents = 1 / vae_decoder.config.scaling_factor * latents
+        image = vae_decoder.decode(latents).sample
+        image = (image / 2 + 0.5).clamp(0, 1)  # Normalize to [0, 1]
+        image = image.cpu().permute(0, 2, 3, 1).float().numpy()  # Convert to (batch, H, W, C)
+        preview_image = PILImage.fromarray((image[0] * 255).astype("uint8"))  # First image from batch
+        
+        return callback_kwargs
 ```
 
-**Usage in Callback**:
-The function takes the raw latents tensor from `callback_kwargs["latents"]` and converts it directly to a PIL Image that can be saved as PNG. The latents tensor is in the diffusion model's internal representation, and this function converts it to a viewable RGB image showing the current generation state.
+**Key Changes from Legacy**:
+- **No manual WEIGHTS tensor operations** (SD2-specific, doesn't work with SD3)
+- **Use `vae_decoder.decode()`** to properly convert SD3 latents to images
+- **Pass `self.pipe.vae` as `vae_decoder`** parameter to callback
+- **Proper tensor normalization** for SD3 format
 
 #### Task 2: Create Step Callback Function
 
 ```python
-def create_step_callback(program_key, cue_id, variant_id, step_timings):
+def create_step_callback(program_key, cue_id, variant_id, step_timings, vae_decoder):
     """Creates callback to capture intermediate steps"""
-    def on_step_end(pipe, step, timestep, callback_kwargs):
+    def on_step_end(pipeline, step, timestep, callback_kwargs):
         # Only capture for P1-P4, skip P0
         if program_key == "P0":
             return callback_kwargs
-
+        
         # Record step timing
         current_time = time.time()
         step_timings[str(step)] = current_time
-
-        # Extract and convert latents
+        
+        # Extract latents and convert using VAE decoder (SD3-specific)
         latents = callback_kwargs["latents"]
-        preview_image = latents_to_rgb(latents)
+        latents = 1 / vae_decoder.config.scaling_factor * latents
+        image = vae_decoder.decode(latents).sample
+        image = (image / 2 + 0.5).clamp(0, 1)  # Normalize to [0, 1]
+        image = image.cpu().permute(0, 2, 3, 1).float().numpy()  # Convert to (batch, H, W, C)
+        preview_image = PILImage.fromarray((image[0] * 255).astype("uint8"))  # First image from batch
 
         # Save intermediate image to R2
         with io.BytesIO() as buf:
@@ -214,7 +217,7 @@ step_timings = {}
 start_time = time.time()
 
 if program_key != "P0":
-    callback_fn = create_step_callback(program_key, cue_id, variant_id, step_timings)
+    callback_fn = create_step_callback(program_key, cue_id, variant_id, step_timings, self.pipe.vae)
     images = self.pipe(
         prompt=modified_prompt,
         num_images_per_prompt=1,
@@ -289,3 +292,40 @@ else:
 - **Testing**: Full integration testing (60 minutes)
 
 **Total**: ~3.5 hours for complete implementation and testing
+
+## ✅ Implementation Status: COMPLETED
+
+### Final Implementation Notes
+
+The inference preview functionality has been successfully implemented with the following key adjustments:
+
+#### **Critical Discovery: SD3 vs SD2 Latent Format**
+- **Issue**: Initial implementation used SD2-specific `latents_to_rgb()` function with manual WEIGHTS tensor operations
+- **Root Cause**: Stable Diffusion 3 Large Turbo uses a completely different latent format than Stable Diffusion 2
+- **Solution**: Use VAE decoder directly instead of manual tensor operations
+
+#### **Correct SD3 Implementation**
+```python
+# SD3-specific latents conversion
+latents = 1 / vae_decoder.config.scaling_factor * latents
+image = vae_decoder.decode(latents).sample
+image = (image / 2 + 0.5).clamp(0, 1)  # Normalize to [0, 1]
+image = image.cpu().permute(0, 2, 3, 1).float().numpy()  # Convert to (batch, H, W, C)
+preview_image = PILImage.fromarray((image[0] * 255).astype("uint8"))  # First image from batch
+```
+
+#### **Key Changes Made**
+1. **Removed legacy `latents_to_rgb()` function** - SD2-specific, incompatible with SD3
+2. **Added `vae_decoder` parameter** to callback function - passes `self.pipe.vae`
+3. **Correct callback signature** - `(pipeline, step, timestep, callback_kwargs)` 
+4. **Proper tensor operations** for SD3 latent format conversion
+5. **VAE scaling factor handling** - uses `vae_decoder.config.scaling_factor`
+
+#### **Final Architecture**
+- **Program 0**: No intermediate steps (unchanged behavior)
+- **Programs 1-4**: Full inference preview with intermediate PNG images and timing.json
+- **Storage**: R2 bucket with structured paths as specified
+- **Timing**: Millisecond-precision metadata for realistic playback
+- **Error Handling**: Graceful degradation if uploads fail
+
+### ✅ **Status: Ready for Production**
