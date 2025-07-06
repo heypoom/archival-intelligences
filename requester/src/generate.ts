@@ -25,6 +25,7 @@ interface GenerationRequest {
   prompt: string
   program_key: string
   variant_id: number
+  guidance: number | null
 }
 
 class GenerationRequester {
@@ -56,6 +57,10 @@ class GenerationRequester {
           program_key: request.program_key,
           cue_id: request.cue_id,
           variant_id: request.variant_id,
+
+          ...(typeof request.guidance === 'number' && {
+            guidance: request.guidance,
+          }),
         }),
       })
 
@@ -82,6 +87,157 @@ class GenerationRequester {
       await this.vk.hmset(REQUESTER_ERRORS_KEY, [REQ_ID, String(error)])
 
       throw error
+    }
+  }
+
+  async processPromptAndSliderCues(): Promise<void> {
+    console.log('Processing prompt and move-slider cues...')
+
+    const allRequests: GenerationRequest[] = []
+    let skippedCount = 0
+
+    for (const cueIndex in cues) {
+      const cue = cues[cueIndex]
+
+      // Only process 'prompt' and 'move-slider' actions
+      if (!cue || (cue.action !== 'prompt' && cue.action !== 'move-slider')) {
+        continue
+      }
+
+      let prompt: string
+      let program_key: string
+      let cue_id: string
+      let guidance: number | null = null
+
+      const CUE_SUFFIX = `${cueIndex}_${cue.time.replace(/[:.]/g, '_')}`
+
+      if (cue.action === 'prompt') {
+        // These do not require generation and is a no-op.
+        // It is just to simulate typing.
+        if (!cue.prompt || cue.commit === false) {
+          continue
+        }
+
+        // Malaya require a separate endpoint for /image-to-image operation.
+        // skip P2 and P2B programs for now.
+        if (cue.program.startsWith('P2')) {
+          continue
+        }
+
+        // I need to adapt the chua mia tee LoRA to support
+        // stable diffusion 3 large turbo first.
+        // For now, skip P3 and P3B programs.
+        if (cue.program.startsWith('P3')) {
+          continue
+        }
+
+        // We'll need to handle this next.
+        // In the live lecture, the "B" suffixes makes the generation happen
+        // continuously until the next cue, with a little delay in between.
+        if (cue.program.endsWith('B')) {
+          console.warn(
+            `⚠️ warning: ${cue.program} requires continuous generation until the next cue`
+          )
+        }
+
+        if (cue.enter?.regen === true) {
+          console.warn(
+            `⚠️ warning: ${cue.program} requires continuous generation until the next cue`
+          )
+        }
+
+        prompt = cue.override || cue.prompt
+        program_key = cue.program
+        cue_id = `prompt_${CUE_SUFFIX}`
+
+        if (cue.guidance !== undefined) {
+          guidance = cue.guidance
+        }
+      } else if (cue.action === 'move-slider') {
+        // COMMENTED OUT FOR NOW - P2 is usesimage-to-image pipeline (malaya.py)
+        // // For move-slider, only P2 and P2B programs use guidance values
+        // // The guidance value becomes the prompt as a decimal (e.g., 70 -> "0.70")
+        // if (!cue.program.startsWith('P2')) {
+        //   console.log(
+        //     `⚠️ slider cue for ${cue.program} at ${cue.time} - not supported!`
+        //   )
+        //   continue
+        // }
+        // prompt = (cue.value / 100).toFixed(2) // Convert 70 to "0.70"
+        // program_key = cue.program
+        // cue_id = `slider_${CUE_SUFFIX}_val${cue.value}`
+        // guidance = cue.value
+        continue
+      } else {
+        continue
+      }
+
+      const localStart = performance.now()
+      let localComplete = 0
+
+      let requestIds = []
+
+      for (let variant_id = 1; variant_id <= MAX_VARIANT_COUNT; variant_id++) {
+        requestIds.push(`${cue_id}_${variant_id}`)
+      }
+
+      const statuses = await this.vk.hmget(PREGEN_UPLOAD_STATUS_KEY, requestIds)
+
+      if (statuses.length !== requestIds.length) {
+        console.warn(
+          `⚠️ Warning: expected ${requestIds.length} statuses for cue ${cue_id}, but got ${statuses.length}`
+        )
+
+        process.exit(1)
+      }
+
+      for (let variant_id = 1; variant_id <= requestIds.length; variant_id++) {
+        const status = statuses[variant_id - 1]
+
+        if (!status || status === '0') {
+          // This variant needs to be generated
+          allRequests.push({
+            cue_id,
+            prompt,
+            program_key,
+            variant_id,
+            guidance,
+          })
+
+          process.stdout.write('+')
+        } else {
+          process.stdout.write('.')
+
+          // This variant has already been generated
+          skippedCount++
+          localComplete++
+        }
+      }
+
+      const localDuration = (performance.now() - localStart).toFixed(2)
+      console.log(` ${cue_id} (${localComplete} ~ ${localDuration}ms)`)
+    }
+
+    console.log(`Skipping ${skippedCount} fully generated cues`)
+    console.log(`Queuing ${allRequests.length} new generation requests...`)
+
+    if (allRequests.length === 0) {
+      console.log('All prompt and slider cues have already been processed!')
+      return
+    }
+
+    // Add all requests to the queue
+    const promises = allRequests.map((request) =>
+      this.queue.add(() => this.generateImage(request))
+    )
+
+    try {
+      await Promise.all(promises)
+      console.log(
+        `✓ All ${allRequests.length} prompt and slider cues processed successfully`
+      )
+    } catch (error) {
+      console.error('✗ Some requests failed:', error)
     }
   }
 
@@ -134,6 +290,7 @@ class GenerationRequester {
             prompt,
             program_key,
             variant_id,
+            guidance: null, // no guidance for transcript cues
           })
 
           process.stdout.write('+')
@@ -178,7 +335,8 @@ class GenerationRequester {
     console.log(`Using Valkey at: ${VALKEY_URL}`)
     console.log(`Concurrent requests: ${CONCURRENT_REQUESTS}`)
 
-    await this.processTranscriptCues()
+    // await this.processTranscriptCues()
+    await this.processPromptAndSliderCues()
 
     console.log('✅ Generation requester finished')
   }
