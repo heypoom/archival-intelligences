@@ -34,7 +34,7 @@ const GENERATION_TIMEOUT_MAP: Record<ProgramId, number> = {
 }
 
 const ENDPOINT_URL_MAP = {
-  textToImage: 'wss://heypoom--exhibition-text-to-image-endpoint.modal.run/ws',
+  textToImage: 'wss://noop',
   // imageToImage: 'wss://heypoom--exhibition-text-to-image-endpoint.modal.run/ws',
 } as const satisfies Record<EndpointType, string>
 
@@ -83,21 +83,21 @@ class SocketManager {
 
   private createEndpoint(endpointType: EndpointType) {
     const url = ENDPOINT_URL_MAP[endpointType]
-    const socket = new WebSocket(url)
+    // const socket = new WebSocket(url)
 
-    const state: EndpointState = {
-      socket,
-      disconnectTimer: undefined,
-      generationStuckTimer: undefined,
-      currentInferenceMessage: undefined,
-      programs: new Set(),
-    }
+    // const state: EndpointState = {
+    //   socket,
+    //   disconnectTimer: undefined,
+    //   generationStuckTimer: undefined,
+    //   currentInferenceMessage: undefined,
+    //   programs: new Set(),
+    // }
 
-    console.log(`[ws] created endpoint "${endpointType}" using url "${url}"`)
+    // console.log(`[ws] created endpoint "${endpointType}" using url "${url}"`)
 
-    this.endpoints.set(endpointType, state)
-    this.addListeners(endpointType)
-    this.startDisconnectionTimer(endpointType)
+    // this.endpoints.set(endpointType, state)
+    // this.addListeners(endpointType)
+    // this.startDisconnectionTimer(endpointType)
   }
 
   private getEndpointState(

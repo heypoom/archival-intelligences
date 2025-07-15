@@ -5,6 +5,9 @@ export const PROGRAM_ZERO_START_TIME = '00:06:47'
 export const PROGRAM_ZERO_END_TIME = '00:34:25'
 export const SCREENING_END_TIME = '01:14:00'
 
+export const FADE_IN_TIME = '00:06:45'
+export const FADE_OUT_TIME = '01:12:09'
+
 export type AutomationAction =
   | {action: 'start'} // start the program
   | {action: 'next'} // go to the next program
@@ -43,7 +46,7 @@ export const PROGRAM_CUES: AutomationCue[] = [
   {time: '00:06:43', action: 'reconnect'},
 
   // fade in program zero
-  {time: '00:06:45', action: 'navigate', route: '/zero'},
+  {time: FADE_IN_TIME, action: 'navigate', route: '/zero'},
   {time: PROGRAM_ZERO_START_TIME, action: 'set-fade-status', fade: false},
 
   // fade to black, prepare to go to program 1
@@ -153,7 +156,7 @@ export const PROGRAM_CUES: AutomationCue[] = [
 
   // fade to black
   {
-    time: '01:12:09',
+    time: FADE_OUT_TIME,
     action: 'set-fade-status',
     fade: true,
   },

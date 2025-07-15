@@ -5,6 +5,8 @@ import {
   PROGRAM_CUES,
   PROGRAM_ZERO_END_TIME,
   PROGRAM_ZERO_START_TIME,
+  FADE_IN_TIME,
+  FADE_OUT_TIME,
 } from '../../constants/exhibition-cues'
 import {loadTranscriptCue} from './cue-from-transcript'
 import {getCurrentCue} from './get-current-cue'
@@ -15,6 +17,7 @@ import {
 } from './run-automation-action'
 
 import {secOf, hhmmOf, hhmmssOf, timecodeOf} from './timecode'
+import {$fadeStatus} from '../../store/fader'
 
 import {
   // $disconnected,
@@ -432,9 +435,9 @@ export class ExhibitionAutomator {
         .with('wait', () => {})
         .with('closed', () => {})
         .with('active', () => {
-          // if (!this.isVideo) {
-          //   // this.restoreRouteFromCue()
-          // }
+          if (!this.isVideo) {
+            this.restoreRouteFromCue()
+          }
         })
         .exhaustive()
     }, 50)
@@ -473,6 +476,25 @@ export class ExhibitionAutomator {
 
   restoreRouteFromCue() {
     if (this.isVideo) return
+
+    // Set fade status based on current time
+    const currentTimeCode = timecodeOf(this.elapsed)
+    const fadeInSeconds = secOf(FADE_IN_TIME)
+    const fadeOutSeconds = secOf(FADE_OUT_TIME)
+    const currentSeconds = this.elapsed
+
+    // If time is between FADE_IN_TIME and FADE_OUT_TIME, fade should be false (visible)
+    // Otherwise fade should be true (black)
+    const shouldShowContent =
+      currentSeconds >= fadeInSeconds && currentSeconds <= fadeOutSeconds
+
+    $fadeStatus.set(!shouldShowContent)
+
+    console.log(
+      `[restoreRouteFromCue] time: ${currentTimeCode}, fade: ${!shouldShowContent}`
+    )
+
+    // TODO: Restore route based on current cue
     // const route = routeFromCue(this.currentCue, this.cues)
     // this.actionContext.navigate(route)
   }

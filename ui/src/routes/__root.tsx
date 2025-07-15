@@ -12,12 +12,14 @@ import {ProgramErrorBoundary} from '../components/ErrorBoundary'
 import {WaitingRoomScreen} from '../components/WaitingScreen'
 import {ClosedScreen} from '../components/ClosedScreen'
 import {ProgramTimeBadge} from '../components/CurrentTimeBadge'
+import {DebugTimeSlider} from '../components/DebugTimeSlider'
 
 export const Route = createRootRoute({
   component: () => (
     <ProgramErrorBoundary>
       <div className="fixed flex left-3 bottom-3 z-[1000000] gap-x-1">
         <SettingsButton />
+        <DebugTimeSlider />
         <CurrentProgramBadge />
         <ProgressBadge />
         <ProgramTimeBadge />
