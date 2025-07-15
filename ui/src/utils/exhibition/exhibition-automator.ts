@@ -38,6 +38,7 @@ import {$programTimestamp} from '../../store/timestamps'
 import {getServerTimeDrift} from './get-system-time-drift'
 import {runOfflineAutomationAction} from './run-offline-automation-action'
 import {shouldHandleOfflineGeneration} from './offline-automation-replay'
+import {routeFromCue} from './route-from-cue'
 
 export class ExhibitionAutomator {
   timer: number | null = null
@@ -478,7 +479,6 @@ export class ExhibitionAutomator {
     if (this.isVideo) return
 
     // Set fade status based on current time
-    const currentTimeCode = timecodeOf(this.elapsed)
     const fadeInSeconds = secOf(FADE_IN_TIME)
     const fadeOutSeconds = secOf(FADE_OUT_TIME)
     const currentSeconds = this.elapsed
@@ -490,13 +490,14 @@ export class ExhibitionAutomator {
 
     $fadeStatus.set(!shouldShowContent)
 
+    // Restore route based on current cue
+    const route = routeFromCue(this.currentCue, this.cues)
+
     console.log(
-      `[restoreRouteFromCue] time: ${currentTimeCode}, fade: ${!shouldShowContent}`
+      `[restoreRouteFromCue] cue: ${this.currentCue}, route: ${route}`
     )
 
-    // TODO: Restore route based on current cue
-    // const route = routeFromCue(this.currentCue, this.cues)
-    // this.actionContext.navigate(route)
+    this.actionContext.navigate(route)
   }
 
   playProgramVideo = async () => {
