@@ -81,10 +81,10 @@ class SocketManager {
     })
   }
 
-  private createEndpoint(endpointType: EndpointType) {
-    const url = ENDPOINT_URL_MAP[endpointType]
+  private createEndpoint(_endpointType: EndpointType) {
+    _endpointType
+    // const url = ENDPOINT_URL_MAP[endpointType]
     // const socket = new WebSocket(url)
-
     // const state: EndpointState = {
     //   socket,
     //   disconnectTimer: undefined,
@@ -92,9 +92,7 @@ class SocketManager {
     //   currentInferenceMessage: undefined,
     //   programs: new Set(),
     // }
-
     // console.log(`[ws] created endpoint "${endpointType}" using url "${url}"`)
-
     // this.endpoints.set(endpointType, state)
     // this.addListeners(endpointType)
     // this.startDisconnectionTimer(endpointType)

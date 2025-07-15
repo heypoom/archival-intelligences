@@ -13,9 +13,8 @@ import {resetProgress} from '../../store/progress'
 import {$videoMode} from '../../store/exhibition'
 import {AutomatorContext, runScreeningStartTask} from './run-automation-action'
 import {
-  generateOfflineImagePath,
   shouldHandleOfflineGeneration,
-  loadOfflineImage,
+  simulateStepByStepInference,
 } from './offline-automation-replay'
 
 // Used to control transcription's word-by-word typing speed
@@ -85,26 +84,26 @@ export async function runOfflineAutomationAction(
         } else if (!commit) {
           // do nothing
         } else if (shouldHandleOfflineGeneration(action)) {
-          // Load pre-generated image instead of starting inference
+          // Simulate step-by-step inference instead of starting real inference
           console.log(
-            `[offline] Loading pre-generated image for prompt: ${action.prompt}`
+            `[offline] Starting step-by-step inference simulation for prompt: ${action.prompt}`
           )
 
           $generating.set(true)
 
           try {
-            const imagePath = generateOfflineImagePath(action)
-            const loadedImageUrl = await loadOfflineImage(imagePath)
-
-            // Simulate some loading time for realism
-            await delay(500 + Math.random() * 1000)
-
-            $inferencePreview.set(loadedImageUrl)
-            $generating.set(false)
-
-            console.log(`[offline] Loaded image: ${loadedImageUrl}`)
+            await simulateStepByStepInference(action, (imageUrl, step, isComplete) => {
+              $inferencePreview.set(imageUrl)
+              
+              if (isComplete) {
+                $generating.set(false)
+                console.log(`[offline] Completed inference simulation for prompt: ${action.prompt}`)
+              } else {
+                console.log(`[offline] Step ${step}: ${imageUrl}`)
+              }
+            })
           } catch (error) {
-            console.error('[offline] Failed to load image:', error)
+            console.error('[offline] Failed to simulate inference:', error)
             $generating.set(false)
           }
         }
@@ -120,26 +119,24 @@ export async function runOfflineAutomationAction(
     })
     .with({action: 'transcript'}, async (action) => {
       if (action.generate && shouldHandleOfflineGeneration(action)) {
-        // Load pre-generated image for transcript
+        // Simulate inference for transcript (only shows final image)
         console.log(
-          `[offline] Loading pre-generated image for transcript: ${action.transcript}`
+          `[offline] Starting inference simulation for transcript: ${action.transcript}`
         )
 
         $generating.set(true)
 
         try {
-          const imagePath = generateOfflineImagePath(action)
-          const loadedImageUrl = await loadOfflineImage(imagePath)
-
-          // Simulate some loading time for realism
-          await delay(300 + Math.random() * 700)
-
-          $inferencePreview.set(loadedImageUrl)
-          $generating.set(false)
-
-          console.log(`[offline] Loaded transcript image: ${loadedImageUrl}`)
+          await simulateStepByStepInference(action, (imageUrl, step, isComplete) => {
+            $inferencePreview.set(imageUrl)
+            
+            if (isComplete) {
+              $generating.set(false)
+              console.log(`[offline] Completed inference simulation for transcript: ${action.transcript}`)
+            }
+          })
         } catch (error) {
-          console.error('[offline] Failed to load transcript image:', error)
+          console.error('[offline] Failed to simulate transcript inference:', error)
           $generating.set(false)
         }
       }

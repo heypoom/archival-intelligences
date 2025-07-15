@@ -4,7 +4,7 @@ import {HeadlessController} from '../components/HeadlessController'
 import {StatusIndicator} from '../dictation'
 import {CurrentProgramBadge} from '../components/CurrentProgramBadge'
 import FadeToBlack from '../components/FadeToBlack'
-import {ProgressBadge} from '../components/ProgressBadge'
+// import {ProgressBadge} from '../components/ProgressBadge'
 import {AnimatedNoise} from '../components/AnimatedNoise'
 // import {ExhibitionProgramVideo} from '../components/ExhibitionFallbackVideo'
 import {SettingsButton} from '../components/SettingsButton'
@@ -21,7 +21,7 @@ export const Route = createRootRoute({
         <SettingsButton />
         <DebugTimeSlider />
         <CurrentProgramBadge />
-        <ProgressBadge />
+        {/* <ProgressBadge /> */}
         <ProgramTimeBadge />
       </div>
 

@@ -38,7 +38,7 @@ export function DebugTimeSlider() {
 
   const startSeconds = 0 // Start at 0 seconds from exhibition start
   const endSeconds = screeningDurationSeconds // End at screening duration
-  const [sliderValue, setSliderValue] = useState(Math.floor(endSeconds / 2)) // Default to middle
+  const [sliderValue, setSliderValue] = useState(0)
 
   function setFakeExhibitionOpenTime(time: string) {
     console.log(`setting fake time to ${time}`)
