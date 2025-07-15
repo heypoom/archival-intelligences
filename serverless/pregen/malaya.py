@@ -49,7 +49,7 @@ image = (
 with image.imports():
     import torch
     import PIL.Image as PILImage
-    from diffusers.pipelines.stable_diffusion_3.pipeline_stable_diffusion_3 import StableDiffusion3Img2ImgPipeline
+    from diffusers import AutoPipelineForImage2Image
     from valkey import Valkey
     import boto3
 
@@ -200,7 +200,7 @@ class Inference:
     @modal.enter()
     def initialize(self):
         print("initializing pipeline...")
-        self.pipe = StableDiffusion3Img2ImgPipeline.from_pretrained(
+        self.pipe = AutoPipelineForImage2Image.from_pretrained(
             SD3_TURBO_MODEL_NAME,
             cache_dir=SD3_TURBO_CACHE_DIR,
             torch_dtype=torch.bfloat16,
