@@ -15,6 +15,9 @@ import {AutomatorContext, runScreeningStartTask} from './run-automation-action'
 import {
   shouldHandleOfflineGeneration,
   simulateStepByStepInference,
+  shouldStartRegeneration,
+  startOfflineRegeneration,
+  abortOfflineRegeneration,
 } from './offline-automation-replay'
 
 // Used to control transcription's word-by-word typing speed
@@ -30,6 +33,9 @@ export async function runOfflineAutomationAction(
   const currentCue = context.cue()
 
   if (!action || !action.action) return
+
+  // Abort any ongoing regeneration when starting a new action
+  abortOfflineRegeneration()
 
   await match(action)
     .with({action: 'start'}, () => {
@@ -84,34 +90,64 @@ export async function runOfflineAutomationAction(
         } else if (!commit) {
           // do nothing
         } else if (shouldHandleOfflineGeneration(action)) {
-          // Simulate step-by-step inference instead of starting real inference
-          console.log(
-            `[offline] Starting step-by-step inference simulation for prompt: ${action.prompt}`
-          )
-
           $generating.set(true)
 
-          try {
-            await simulateStepByStepInference(
-              action,
-              (imageUrl, step, isComplete) => {
-                if (imageUrl) {
-                  $inferencePreview.set(imageUrl)
-                }
-
-                if (isComplete) {
-                  $generating.set(false)
-                  console.log(
-                    `[offline] Completed inference simulation for prompt: ${action.prompt}`
-                  )
-                } else {
-                  console.log(`[offline] Step ${step}: ${imageUrl}`)
-                }
-              }
+          // Check if this should start continuous regeneration
+          if (shouldStartRegeneration(action)) {
+            console.log(
+              `[offline] Starting continuous regeneration for prompt: ${action.prompt}`
             )
-          } catch (error) {
-            console.error('[offline] Failed to simulate inference:', error)
-            $generating.set(false)
+
+            try {
+              await startOfflineRegeneration(
+                action,
+                (imageUrl, step, isComplete) => {
+                  if (imageUrl) {
+                    $inferencePreview.set(imageUrl)
+                  }
+
+                  if (isComplete) {
+                    $generating.set(false)
+                    console.log(
+                      `[offline] Completed regeneration cycle for prompt: ${action.prompt}`
+                    )
+                  } else {
+                    console.log(`[offline] Step ${step}: ${imageUrl}`)
+                  }
+                }
+              )
+            } catch (error) {
+              console.error('[offline] Failed to start regeneration:', error)
+              $generating.set(false)
+            }
+          } else {
+            // Single inference simulation for non-regenerating prompts
+            console.log(
+              `[offline] Starting step-by-step inference simulation for prompt: ${action.prompt}`
+            )
+
+            try {
+              await simulateStepByStepInference(
+                action,
+                (imageUrl, step, isComplete) => {
+                  if (imageUrl) {
+                    $inferencePreview.set(imageUrl)
+                  }
+
+                  if (isComplete) {
+                    $generating.set(false)
+                    console.log(
+                      `[offline] Completed inference simulation for prompt: ${action.prompt}`
+                    )
+                  } else {
+                    console.log(`[offline] Step ${step}: ${imageUrl}`)
+                  }
+                }
+              )
+            } catch (error) {
+              console.error('[offline] Failed to simulate inference:', error)
+              $generating.set(false)
+            }
           }
         }
       }

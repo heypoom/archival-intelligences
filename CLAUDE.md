@@ -119,6 +119,30 @@ Cues are stored in `ui/src/constants/exhibition-cues.ts` and drive automated act
 
 To update cues from transcript, follow process in README.md section "How to get the latest cue for the preprocessor".
 
+## Offline Mode System
+
+### Automation Replay Mode
+
+- **Implementation**: `ui/src/utils/exhibition/offline-automation-replay.ts`
+- **Purpose**: Runs exhibition timeline using pre-generated images instead of live AI generation
+- **Features**: Debug time slider, step-by-step inference simulation, fade status management
+- **Image Paths**: `https://images.poom.dev/foigoi/{version}/cues/{cueId}/{variant}/{fileName}`
+
+### Continuous Regeneration (Program B)
+
+- **Target Programs**: P2B, P3B, P4B with `enter: {regen: true}` property
+- **Behavior**: Continuous image regeneration until next cue (mimics live system)
+- **Implementation**: Functions in `ui/src/utils/exhibition/offline-automation-replay.ts`
+- **State Management**: Reuses existing `$regenCount`, `$regenActive`, `$regenEnabled` atoms
+- **Delay Logic**: 30s base + (count-6)\*30s incremental after 6th generation
+
+### Key Files for Offline Mode
+
+- `ui/src/utils/exhibition/offline-automation-replay.ts` - Core offline replay system with regeneration
+- `ui/src/utils/exhibition/run-offline-automation-action.ts` - Offline action handlers
+- `ui/src/utils/exhibition/route-from-cue.ts` - Route restoration from timeline position
+- `ui/src/components/DebugTimeSlider.tsx` - Debug time seeking controls
+
 ## Planning Process
 
 - **Plan Files**: Create planning documents in `docs/plans/` directory before starting implementation

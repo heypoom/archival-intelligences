@@ -1,6 +1,7 @@
 import {AutomationCue} from '../../constants/exhibition-cues'
 import {automator} from './exhibition-automator'
 import {$timestep, $startTimestep} from '../../store/progress'
+import {$regenCount, $regenActive, $regenEnabled} from '../../store/regen'
 
 const PROJ_ID = 'foigoi'
 const PREGEN_VERSION_ID = 1
@@ -8,6 +9,15 @@ const MAX_VARIANT_COUNT = 30
 const TOTAL_INFERENCE_STEPS = 10 // 0.png through 9.png
 const MIN_DELAY = 2000 // 2 seconds
 const MAX_DELAY = 2000 // Additional 2 seconds (total range 2-4s)
+
+// Regeneration timing constants (from regen.ts)
+const BASE_DELAY = 30 * 1000 // 30 seconds
+const INCREMENTAL_DELAY = BASE_DELAY // 30 seconds
+const BASE_GENERATION = 6
+
+// Track active regeneration
+let regenerationTimer: number | null = null
+let currentRegenerationCue: AutomationCue | null = null
 
 function getRandomVariant(): number {
   return 1 + Math.floor(Math.random() * MAX_VARIANT_COUNT)
@@ -150,4 +160,123 @@ export async function simulateStepByStepInference(
     const finalImageUrl = await loadOfflineImage(finalImagePath)
     onStepUpdate(finalImageUrl, -1, true)
   }
+}
+
+/**
+ * Calculate regeneration delay based on current regen count
+ * Matches the delay logic from ui/src/store/regen.ts
+ */
+function calculateRegenerationDelay(): number {
+  const gen = $regenCount.get()
+  let delay = BASE_DELAY
+
+  if (gen > BASE_GENERATION) {
+    delay += (gen - BASE_GENERATION) * INCREMENTAL_DELAY
+  }
+
+  return delay
+}
+
+/**
+ * Check if regeneration should continue by monitoring current cue changes
+ */
+function shouldContinueRegeneration(originalCue: AutomationCue): boolean {
+  return currentRegenerationCue === originalCue && $regenActive.get()
+}
+
+/**
+ * Start offline continuous regeneration for Program B cues
+ */
+export async function startOfflineRegeneration(
+  cue: AutomationCue,
+  onStepUpdate: (
+    imageUrl: string | null,
+    step: number,
+    isComplete: boolean
+  ) => void
+): Promise<void> {
+  // Stop any existing regeneration
+  abortOfflineRegeneration()
+
+  // Set up regeneration state
+  currentRegenerationCue = cue
+  $regenEnabled.set(true)
+  $regenActive.set(true)
+  $regenCount.set(0)
+
+  console.log(
+    `[offline-regen] Starting continuous regeneration for: ${cue.action}`
+  )
+
+  // Start the regeneration cycle
+  await performRegenerationCycle(cue, onStepUpdate)
+}
+
+/**
+ * Perform a single regeneration cycle and schedule the next one
+ */
+async function performRegenerationCycle(
+  cue: AutomationCue,
+  onStepUpdate: (
+    imageUrl: string | null,
+    step: number,
+    isComplete: boolean
+  ) => void
+): Promise<void> {
+  if (!shouldContinueRegeneration(cue)) {
+    return
+  }
+
+  // Perform the inference simulation
+  await simulateStepByStepInference(cue, onStepUpdate)
+
+  if (!shouldContinueRegeneration(cue)) {
+    return
+  }
+
+  // Increment regen count
+  const currentCount = $regenCount.get()
+  $regenCount.set(currentCount + 1)
+
+  // Calculate delay for next regeneration
+  const delay = calculateRegenerationDelay()
+
+  console.log(
+    `[offline-regen] Next regeneration in ${delay}ms (count: ${currentCount + 1})`
+  )
+
+  // Schedule next regeneration
+  regenerationTimer = window.setTimeout(async () => {
+    if (shouldContinueRegeneration(cue)) {
+      await performRegenerationCycle(cue, onStepUpdate)
+    }
+  }, delay)
+}
+
+/**
+ * Abort ongoing offline regeneration
+ */
+export function abortOfflineRegeneration(): void {
+  if (regenerationTimer !== null) {
+    clearTimeout(regenerationTimer)
+    regenerationTimer = null
+  }
+
+  if (currentRegenerationCue !== null) {
+    console.log(
+      `[offline-regen] Aborting regeneration for: ${currentRegenerationCue.action}`
+    )
+
+    currentRegenerationCue = null
+  }
+
+  $regenCount.set(0)
+  $regenActive.set(false)
+}
+
+/**
+ * Check if a cue should trigger continuous regeneration
+ */
+export function shouldStartRegeneration(cue: AutomationCue): boolean {
+  return cue.action === 'prompt' && cue.enter?.regen === true
 }

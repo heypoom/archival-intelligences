@@ -2,6 +2,7 @@ import {atom} from 'nanostores'
 import {ProgramId, socket} from '../manager/socket'
 import {$generating} from './prompt'
 import {$progress} from './progress'
+import {$offlineMode} from './exhibition'
 
 let regenerateTimer = 0
 
@@ -40,8 +41,13 @@ export function regen(command: ProgramId, prompt: string, origin = true) {
         `[gen] progress at ${progress}% is not complete yet, we wait.`
       )
     } else {
-      socket.generate(command, prompt)
-      $generating.set(true)
+      // Skip socket generation in offline mode
+      if (!$offlineMode.get()) {
+        socket.generate(command, prompt)
+        $generating.set(true)
+      } else {
+        console.log(`[gen] offline mode - skipping socket.generate()`)
+      }
 
       const gen = $regenCount.get()
       console.log(`[gen] regen "${prompt}" now! (i=${gen}, delay=${delay}ms)`)
@@ -64,7 +70,12 @@ export function disableRegen(reason?: string) {
   $regenActive.set(false)
   clearTimeout(regenerateTimer)
 
-  socket.forceReconnectAll(reason)
+  // Skip socket reconnect in offline mode
+  if (!$offlineMode.get()) {
+    socket.forceReconnectAll(reason)
+  } else {
+    console.log(`[gen] offline mode - skipping socket.forceReconnectAll()`)
+  }
 
   return true
 }

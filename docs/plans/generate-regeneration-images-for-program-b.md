@@ -30,3 +30,96 @@ In this implementation, we can leverage the variant system to simply use the sam
 The tricky part is that we need to be able to abort the in-process generation, if the time for the next cue has come. e.g. if we are still generating 'big tech ceo' but the next cue is 'stable diffusion', we need to stop the current generation and proceed to the next one.
 
 Reminder that no network requests should be made in this offline mode.
+
+## Implementation Plan (Updated)
+
+### Overview
+
+Implement offline continuous re-generation for Program B routes (P2B, P3B, P4B) that mimics the live system's behavior where images keep regenerating until the next cue is reached.
+
+### Analysis of Current System
+
+#### Current Regeneration Logic
+
+- **Base delay**: 30 seconds initial wait
+- **Incremental delay**: +30 seconds for each generation after the 6th
+- **Triggers**: Cues with `enter: {regen: true}` property
+- **Affected programs**: P3B (`chua mia tee painting`), P4 (`big tech ceo`, `stable diffusion`)
+
+#### Image Path Structure
+
+Already implemented: `https://images.poom.dev/foigoi/${PREGEN_VERSION_ID}/cues/${cueId}/${variant}/${fileName}`
+
+- Re-randomize `variant` for each regeneration cycle
+- Use same `cueId` for consistent prompt/cue mapping
+
+### Implementation Tasks
+
+#### 1. Create Offline Regeneration Functions
+
+**File**: `ui/src/utils/exhibition/offline-automation-replay.ts` (extend existing file)
+
+- `startOfflineRegeneration()` function to handle continuous regeneration
+- `abortOfflineRegeneration()` function to stop ongoing regeneration
+- Track active regeneration with simple timer variable
+- Generate new variant IDs for each cycle
+
+#### 2. Extend Offline Action Handler
+
+**File**: `ui/src/utils/exhibition/run-offline-automation-action.ts`
+
+- Detect `enter: {regen: true}` in prompt actions
+- Start offline regeneration instead of single inference
+- Stop previous regeneration when new cue starts
+
+#### 3. Update Regeneration Store for Offline Mode
+
+**File**: `ui/src/store/regen.ts`
+
+- Add offline mode detection
+- Bypass socket.generate() calls in offline mode
+- Maintain $regenCount state for UI consistency
+
+#### 4. Enhance Image Path Generation
+
+**File**: `ui/src/utils/exhibition/offline-automation-replay.ts`
+
+- Add regeneration-specific image path generation
+- Support explicit variant override for regeneration cycles
+
+### Technical Details
+
+#### Regeneration Cycle Logic
+
+1. **Initial Generation**: Standard step-by-step inference with random variant
+2. **Delay Calculation**: 30s base + (count-6)\*30s incremental after 6th generation
+3. **Next Cycle**: New random variant, repeat step-by-step inference
+4. **Abort Condition**: Stop when `automator.currentCue` changes or next action arrives
+
+#### State Management
+
+- Reuse existing `$regenCount`, `$regenActive`, `$regenEnabled` atoms
+- Add `$offlineRegeneration` atom for offline-specific state
+- Integrate with existing `$generating` and `$inferencePreview` states
+
+#### Cue Detection
+
+Target cues with `enter: {regen: true}`:
+
+- P3B: `chua mia tee painting` (00:46:06)
+- P4: `big tech ceo` (00:55:46)
+- P4: `stable diffusion` (01:10:15)
+
+#### Abort Mechanism
+
+- Monitor `automator.currentCue` changes
+- Clear regeneration timers when new cue starts
+- Graceful cleanup of ongoing inference simulation
+
+### Benefits
+
+- ✅ **Authentic Experience**: Matches live system's continuous regeneration behavior
+- ✅ **Performance**: No network requests, uses pre-generated variants
+- ✅ **Flexibility**: Works with debug time slider and seeking
+- ✅ **Maintainability**: Reuses existing regeneration state management
+- ✅ **Robustness**: Proper cleanup and abort handling for timeline navigation
