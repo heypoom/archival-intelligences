@@ -17,8 +17,7 @@ SUPPORTED_PROGRAMS = ["P2", "P2B"]
 # Default generation parameters
 DEFAULT_WIDTH = 960
 DEFAULT_HEIGHT = 800
-DEFAULT_GUIDANCE_SCALE = 7.5
-DEFAULT_NUM_INFERENCE_STEPS = 50
+DEFAULT_NUM_INFERENCE_STEPS = 10
 
 # Static pregen version ID. Use in case of future changes to the generation.
 # Example: different transcripts, model versions, or other significant changes.
@@ -207,7 +206,7 @@ class Inference:
             torch_dtype=torch.bfloat16,
             token=os.environ["HF_TOKEN"]
         )
-        
+
         self.vk = Valkey("raya.poom.dev", username="default", password=os.environ["VALKEY_PASSWORD"])
         
         print("pipeline initialized.")
@@ -240,7 +239,7 @@ class Inference:
         variant_id: int,
         seed: Optional[int] = None,
         strength: float = 0.75,
-        guidance: float = DEFAULT_GUIDANCE_SCALE,
+        guidance: Optional[float] = None,
         width: int = DEFAULT_WIDTH,
         height: int = DEFAULT_HEIGHT,
         num_inference_steps: int = DEFAULT_NUM_INFERENCE_STEPS,
@@ -252,19 +251,21 @@ class Inference:
         if not self.malaya_image:
             raise RuntimeError("Malaya image not loaded.")
 
-        # Process prompt and guidance based on program key
+        # Process prompt and guidance based on program key to match p2.py exactly
         if program_key == "P2":
-            processed_prompt = PROMPT_2 if not prompt.strip() else prompt
+            # P2 uses PROMPT_2 directly
+            processed_prompt = PROMPT_2
+            final_guidance_scale = guidance  # Use provided guidance or None (pipeline default)
         elif program_key == "P2B":
-            if prompt.strip():
-                processed_prompt = f"{prompt}, {PROMPT_2B}"
-            else:
-                processed_prompt = PROMPT_2B
+            # P2B uses PROMPT_2B with guidance_scale=8.5
+            processed_prompt = PROMPT_2B
+            final_guidance_scale = GUIDANCE_SCALE_2B  # Always use 8.5 for P2B
         else:
             processed_prompt = prompt
+            final_guidance_scale = guidance
 
         seed = seed if seed is not None else random.randint(0, 2**32 - 1)
-        print(f"running inference for program {program_key}: '{processed_prompt}' with seed {seed}, guidance: {guidance}")
+        print(f"running inference for program {program_key}: '{processed_prompt}' with seed {seed}, final_guidance: {final_guidance_scale}")
         generator = torch.Generator("cuda").manual_seed(seed)
 
         start_time = time.time()
@@ -274,17 +275,21 @@ class Inference:
         print(f"Running img2img inference with intermediate steps for {program_key}")
         callback_fn = create_step_callback(program_key, cue_id, variant_id, step_timings, self.pipe.vae)
 
-        images = self.pipe(
-            prompt=processed_prompt,
-            image=self.malaya_image,
-            strength=strength,
-            guidance_scale=guidance,
-            num_inference_steps=num_inference_steps,
-            generator=generator,
-            width=width,
-            height=height,
-            callback_on_step_end=callback_fn,
-        ).images
+        # Build pipeline arguments
+        pipeline_args = {
+            "prompt": processed_prompt,
+            "image": self.malaya_image,
+            "strength": strength,
+            "num_inference_steps": num_inference_steps,
+            "generator": generator,
+            "callback_on_step_end": callback_fn,
+        }
+        
+        # Only add guidance_scale if we have a value (SD3 has default)
+        if final_guidance_scale is not None:
+            pipeline_args["guidance_scale"] = final_guidance_scale
+
+        images = self.pipe(**pipeline_args).images
         
         final_time = time.time()
         print("inference complete!")
@@ -338,7 +343,7 @@ def endpoint():
         variant_id: int
         seed: Optional[int] = None
         strength: float = 0.75
-        guidance: float = DEFAULT_GUIDANCE_SCALE
+        guidance: Optional[float] = None
         width: int = DEFAULT_WIDTH
         height: int = DEFAULT_HEIGHT
         num_inference_steps: int = DEFAULT_NUM_INFERENCE_STEPS

@@ -141,7 +141,7 @@ class GenerationRequester {
         cue_id = `prompt_${CUE_SUFFIX}`
 
         if (cue.guidance !== undefined) {
-          guidance = cue.guidance
+          guidance = 100 / cue.guidance
         }
       } else if (cue.action === 'move-slider') {
         // For move-slider, only P2 and P2B programs use guidance values
