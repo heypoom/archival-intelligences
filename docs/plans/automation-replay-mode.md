@@ -55,8 +55,8 @@ Reuse patterns from `image-viewer.lazy.tsx`:
 
 - Generate image URLs using the same logic: `https://images.poom.dev/foigoi/{version}/cues/{cueId}/{variant}/final.png`
 - Handle both prompt and transcript cue types
-- Support variant selection (defaulting to variant 1)
-- Graceful fallback for missing images
+- Fully randomize the variant number in each cue/action. No two run should have the same variant number.
+- If an image is missing, show a black background image instead.
 
 #### 5. State Management Integration
 
@@ -98,14 +98,12 @@ Only handle actions that require real-time generation:
 
 - `ExhibitionAutomator.go()` - Check `$offlineMode` before calling `runAutomationAction`
 - `runAutomationAction()` - Route to offline handler when in offline mode
-- Image stores - Populate with loaded image URLs instead of generated content
+- Image stores - Populate with loaded image URLs instead of live-generated content
 
 ### Benefits
 
 1. **No Backend Dependency**: Runs completely offline using pre-generated images
 2. **Identical Timing**: Maintains exact same cue timing and sequencing
-3. **Graceful Degradation**: Falls back to placeholder when images missing
-4. **Easy Toggle**: Simple `$offlineMode` atom controls behavior
-5. **Reusable Logic**: Leverages existing image-viewer file handling patterns
+3. **Easy Toggle**: Simple `$offlineMode` atom controls behavior
 
 This implementation will allow the exhibition to run without the Python backend while maintaining all visual and timing characteristics of the live system.
