@@ -213,7 +213,7 @@ class Inference:
 
         # Load and resize the Malaya image
         print("loading Malaya image...")
-        malaya_path = Path("/r2/malaya.png")
+        malaya_path = Path("/r2/foigoi/malaya.png")
         if not malaya_path.exists():
             raise FileNotFoundError("malaya.png not found in r2 mount")
         self.malaya_image = (
