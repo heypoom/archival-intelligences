@@ -92,16 +92,23 @@ export async function runOfflineAutomationAction(
           $generating.set(true)
 
           try {
-            await simulateStepByStepInference(action, (imageUrl, step, isComplete) => {
-              $inferencePreview.set(imageUrl)
-              
-              if (isComplete) {
-                $generating.set(false)
-                console.log(`[offline] Completed inference simulation for prompt: ${action.prompt}`)
-              } else {
-                console.log(`[offline] Step ${step}: ${imageUrl}`)
+            await simulateStepByStepInference(
+              action,
+              (imageUrl, step, isComplete) => {
+                if (imageUrl) {
+                  $inferencePreview.set(imageUrl)
+                }
+
+                if (isComplete) {
+                  $generating.set(false)
+                  console.log(
+                    `[offline] Completed inference simulation for prompt: ${action.prompt}`
+                  )
+                } else {
+                  console.log(`[offline] Step ${step}: ${imageUrl}`)
+                }
               }
-            })
+            )
           } catch (error) {
             console.error('[offline] Failed to simulate inference:', error)
             $generating.set(false)
@@ -119,24 +126,31 @@ export async function runOfflineAutomationAction(
     })
     .with({action: 'transcript'}, async (action) => {
       if (action.generate && shouldHandleOfflineGeneration(action)) {
-        // Simulate inference for transcript (only shows final image)
+        // For transcript, show final image directly without step-by-step preview
         console.log(
-          `[offline] Starting inference simulation for transcript: ${action.transcript}`
+          `[offline] Loading final image for transcript: ${action.transcript}`
         )
 
         $generating.set(true)
 
         try {
-          await simulateStepByStepInference(action, (imageUrl, step, isComplete) => {
-            $inferencePreview.set(imageUrl)
-            
-            if (isComplete) {
-              $generating.set(false)
-              console.log(`[offline] Completed inference simulation for transcript: ${action.transcript}`)
+          await simulateStepByStepInference(
+            action,
+            (imageUrl, step, isComplete) => {
+              if (imageUrl) {
+                $inferencePreview.set(imageUrl)
+              }
+
+              if (isComplete) {
+                $generating.set(false)
+                console.log(
+                  `[offline] Loaded final image for transcript: ${action.transcript}`
+                )
+              }
             }
-          })
+          )
         } catch (error) {
-          console.error('[offline] Failed to simulate transcript inference:', error)
+          console.error('[offline] Failed to load transcript image:', error)
           $generating.set(false)
         }
       }

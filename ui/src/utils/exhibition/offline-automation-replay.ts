@@ -85,7 +85,9 @@ export function createBlackBackgroundDataUrl(): string {
   return canvas.toDataURL()
 }
 
-export async function loadOfflineImage(imagePath: string): Promise<string> {
+export async function loadOfflineImage(
+  imagePath: string
+): Promise<string | null> {
   return new Promise((resolve) => {
     const img = new Image()
 
@@ -94,8 +96,7 @@ export async function loadOfflineImage(imagePath: string): Promise<string> {
     }
 
     img.onerror = () => {
-      console.warn(`[offline-replay] Image not found: ${imagePath}`)
-      resolve(createBlackBackgroundDataUrl())
+      resolve(null)
     }
 
     img.src = imagePath
@@ -104,12 +105,17 @@ export async function loadOfflineImage(imagePath: string): Promise<string> {
 
 export async function simulateStepByStepInference(
   cue: AutomationCue,
-  onStepUpdate: (imageUrl: string, step: number, isComplete: boolean) => void
+  onStepUpdate: (
+    imageUrl: string | null,
+    step: number,
+    isComplete: boolean
+  ) => void
 ): Promise<void> {
   // For transcript cues, only show final image directly
   if (cue.action === 'transcript') {
     const finalImagePath = generateOfflineImagePath(cue, -1)
     const loadedImageUrl = await loadOfflineImage(finalImagePath)
+
     onStepUpdate(loadedImageUrl, -1, true)
     return
   }
