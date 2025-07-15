@@ -23,6 +23,7 @@ import {
   $canPlay,
   $videoMode,
   $muted,
+  $offlineMode,
 } from '../../store/exhibition'
 import {getExhibitionStatus} from './get-exhibition-status'
 import {match} from 'ts-pattern'
@@ -32,6 +33,8 @@ import {compareTimecode} from './compare-timecode'
 import {transcriptWithinTimeRange} from './exclude-transcription-before'
 import {$programTimestamp} from '../../store/timestamps'
 import {getServerTimeDrift} from './get-system-time-drift'
+import {runOfflineAutomationAction} from './run-offline-automation-action'
+import {shouldHandleOfflineGeneration} from './offline-automation-replay'
 
 export class ExhibitionAutomator {
   timer: number | null = null
@@ -327,7 +330,18 @@ export class ExhibitionAutomator {
     if (action.action === 'start') {
       this.sendIpcAction({type: 'play', elapsed: this.elapsed})
     }
-    runAutomationAction(action, this.actionContext)
+
+    // Check if we're in offline mode and this action should be handled offline
+    const isOfflineMode = $offlineMode.get()
+    const shouldHandleOffline =
+      isOfflineMode && shouldHandleOfflineGeneration(action)
+
+    if (shouldHandleOffline) {
+      console.log(`[offline] Handling action offline: ${action.action}`)
+      runOfflineAutomationAction(action, this.actionContext)
+    } else {
+      runAutomationAction(action, this.actionContext)
+    }
   }
 
   canGo(): boolean {

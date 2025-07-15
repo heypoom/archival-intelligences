@@ -4,13 +4,14 @@ import {useMatchRoute} from '@tanstack/react-router'
 
 import {$dictationState} from '../store/dictation'
 import {$apiReady, $generating, $booting} from '../store/prompt'
-import {$exhibitionMode} from '../store/exhibition'
+import {$exhibitionMode, $offlineMode} from '../store/exhibition'
 import {useIsVideo} from '../hooks/useIsVideo'
 
 export const StatusIndicator = () => {
   const mr = useMatchRoute()
   const isSpeechRoute = mr({to: '/zero'})
   const isExhibition = useStore($exhibitionMode)
+  const isOffline = useStore($offlineMode)
 
   const status = useStore($dictationState)
   const apiReady = useStore($apiReady)
@@ -19,6 +20,8 @@ export const StatusIndicator = () => {
 
   const isVideo = useIsVideo() || mr({to: '/program-video'})
   if (isVideo) return null
+
+  if (isOffline) return null
 
   const shouldHideFromRoute = mr({to: '/image-viewer'})
   if (shouldHideFromRoute) return null

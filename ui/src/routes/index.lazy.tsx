@@ -1,5 +1,10 @@
 import {createLazyFileRoute, useNavigate} from '@tanstack/react-router'
-import {$exhibitionMode, $canPlay, $videoMode} from '../store/exhibition'
+import {
+  $exhibitionMode,
+  $canPlay,
+  $videoMode,
+  $offlineMode,
+} from '../store/exhibition'
 import {automator} from '../utils/exhibition/exhibition-automator'
 import {useEffect} from 'react'
 import {resetAll} from '../utils/exhibition/reset'
@@ -21,6 +26,7 @@ export function SettingsRoute() {
 
   // exhibition mode - program
   function startExhibitionProgramReal() {
+    $offlineMode.set(true)
     $exhibitionMode.set(true)
 
     socket.forceReconnectAll('program change - exhibition')
@@ -45,7 +51,6 @@ export function SettingsRoute() {
     automator.sync({force: true})
     fullscreen()
   }
-
 
   // performance lecture mode
   function startLiveLecture() {

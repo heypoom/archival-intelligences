@@ -14,7 +14,7 @@ export const $exhibitionMode = persistentAtom<boolean>(
 
 export const $exhibitionStatus = atom<ExhibitionStatus>({type: 'loading'})
 export const $videoMode = atom(false)
-export const $offlineMode = atom(false)
+export const $offlineMode = atom(true)
 
 // assume autoplay policy is enabled by default
 export const $canPlay = atom(true)
