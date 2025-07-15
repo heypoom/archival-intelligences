@@ -8,7 +8,12 @@ export const Route = createLazyFileRoute('/image-viewer')({
 })
 
 const PREGEN_VERSION_ID = 1 // static pregen version ID
-const MAX_VARIANT_COUNT = 30
+const TRANSCRIPT_MAX_VARIANT_COUNT = 30 // Program 0 transcript cues
+const PROMPT_MAX_VARIANT_COUNT = 60 // Other programs (prompt actions)
+
+function getMaxVariantCount(cue: AutomationCue): number {
+  return cue.action === 'transcript' ? TRANSCRIPT_MAX_VARIANT_COUNT : PROMPT_MAX_VARIANT_COUNT
+}
 
 function ImageViewer() {
   const [cueIndex, setCueIndex] = useState(0)
@@ -55,6 +60,7 @@ function ImageViewer() {
 
   const currentCue = imageGenerationCues[cueIndex]
   const totalCues = imageGenerationCues.length
+  const maxVariantCount = currentCue ? getMaxVariantCount(currentCue) : PROMPT_MAX_VARIANT_COUNT
 
   // Generate image path based on generate.ts logic
   const generateImagePath = useCallback(
@@ -127,13 +133,13 @@ function ImageViewer() {
           break
         case 'ArrowUp':
           e.preventDefault()
-          setVariantIndex((prev) => (prev < MAX_VARIANT_COUNT ? prev + 1 : 1))
+          setVariantIndex((prev) => (prev < maxVariantCount ? prev + 1 : 1))
           setPreviewStep(-1) // Reset to final image when changing variants
           setImageError(false)
           break
         case 'ArrowDown':
           e.preventDefault()
-          setVariantIndex((prev) => (prev > 1 ? prev - 1 : MAX_VARIANT_COUNT))
+          setVariantIndex((prev) => (prev > 1 ? prev - 1 : maxVariantCount))
           setPreviewStep(-1) // Reset to final image when changing variants
           setImageError(false)
           break
@@ -163,7 +169,7 @@ function ImageViewer() {
     window.addEventListener('keydown', handleKeyDown)
 
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [totalCues, currentCue])
+  }, [totalCues, currentCue, maxVariantCount])
 
   // Reset image error when image changes
   useEffect(() => {
@@ -224,7 +230,7 @@ function ImageViewer() {
         </div>
         <div className="mb-2">
           <span className="text-gray-400">Variant:</span> {variantIndex}/
-          {MAX_VARIANT_COUNT}
+          {maxVariantCount}
         </div>
         <div className="mb-2">
           <span className="text-gray-400">Program:</span>{' '}

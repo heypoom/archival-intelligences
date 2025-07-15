@@ -3,7 +3,8 @@ import PQueue from 'p-queue'
 import _cues from '../data/cues.json'
 import type {AutomationCue} from './types'
 import {
-  MAX_VARIANT_COUNT,
+  TRANSCRIPT_MAX_VARIANT_COUNT,
+  PROMPT_MAX_VARIANT_COUNT,
   PREGEN_VERSION_ID,
   VALKEY_URL,
   PREGEN_UPLOAD_STATUS_KEY,
@@ -154,7 +155,7 @@ class GenerationRequester {
           guidance = cue.guidance
         }
       } else if (cue.action === 'move-slider') {
-        // COMMENTED OUT FOR NOW - P2 is usesimage-to-image pipeline (malaya.py)
+        // COMMENTED OUT FOR NOW - P2 uses an image-to-image pipeline (malaya.py)
         // // For move-slider, only P2 and P2B programs use guidance values
         // // The guidance value becomes the prompt as a decimal (e.g., 70 -> "0.70")
         // if (!cue.program.startsWith('P2')) {
@@ -177,7 +178,11 @@ class GenerationRequester {
 
       let requestIds = []
 
-      for (let variant_id = 1; variant_id <= MAX_VARIANT_COUNT; variant_id++) {
+      for (
+        let variant_id = 1;
+        variant_id <= PROMPT_MAX_VARIANT_COUNT;
+        variant_id++
+      ) {
         requestIds.push(`${cue_id}_${variant_id}`)
       }
 
@@ -266,7 +271,11 @@ class GenerationRequester {
 
       let requestIds = []
 
-      for (let variant_id = 1; variant_id <= MAX_VARIANT_COUNT; variant_id++) {
+      for (
+        let variant_id = 1;
+        variant_id <= TRANSCRIPT_MAX_VARIANT_COUNT;
+        variant_id++
+      ) {
         requestIds.push(`${cue_id}_${variant_id}`)
       }
 

@@ -5,7 +5,8 @@ import {$regenCount, $regenActive, $regenEnabled} from '../../store/regen'
 
 const PROJ_ID = 'foigoi'
 const PREGEN_VERSION_ID = 1
-const MAX_VARIANT_COUNT = 30
+const TRANSCRIPT_MAX_VARIANT_COUNT = 30 // Program 0 transcript cues
+const PROMPT_MAX_VARIANT_COUNT = 60 // Other programs (prompt and move-slider actions)
 const TOTAL_INFERENCE_STEPS = 10 // 0.png through 9.png
 const MIN_DELAY = 2000 // 2 seconds
 const MAX_DELAY = 2000 // Additional 2 seconds (total range 2-4s)
@@ -19,8 +20,11 @@ const BASE_GENERATION = 6
 let regenerationTimer: number | null = null
 let currentRegenerationCue: AutomationCue | null = null
 
-function getRandomVariant(): number {
-  return 1 + Math.floor(Math.random() * MAX_VARIANT_COUNT)
+function getRandomVariant(actionType: 'transcript' | 'prompt'): number {
+  const maxCount = actionType === 'transcript' 
+    ? TRANSCRIPT_MAX_VARIANT_COUNT 
+    : PROMPT_MAX_VARIANT_COUNT
+  return 1 + Math.floor(Math.random() * maxCount)
 }
 
 export function generateOfflineImagePath(
@@ -120,7 +124,7 @@ export async function simulateStepByStepInference(
     isComplete: boolean
   ) => void
 ): Promise<void> {
-  const variantId = getRandomVariant()
+  const variantId = getRandomVariant(cue.action === 'transcript' ? 'transcript' : 'prompt')
 
   // For transcript cues, only show final image directly
   if (cue.action === 'transcript') {
