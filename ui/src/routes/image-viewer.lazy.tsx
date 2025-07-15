@@ -9,10 +9,12 @@ export const Route = createLazyFileRoute('/image-viewer')({
 
 const PREGEN_VERSION_ID = 1 // static pregen version ID
 const TRANSCRIPT_MAX_VARIANT_COUNT = 30 // Program 0 transcript cues
-const PROMPT_MAX_VARIANT_COUNT = 60 // Other programs (prompt actions)
+const PROMPT_MAX_VARIANT_COUNT = 50 // Other programs (prompt actions)
 
 function getMaxVariantCount(cue: AutomationCue): number {
-  return cue.action === 'transcript' ? TRANSCRIPT_MAX_VARIANT_COUNT : PROMPT_MAX_VARIANT_COUNT
+  return cue.action === 'transcript'
+    ? TRANSCRIPT_MAX_VARIANT_COUNT
+    : PROMPT_MAX_VARIANT_COUNT
 }
 
 function ImageViewer() {
@@ -60,7 +62,9 @@ function ImageViewer() {
 
   const currentCue = imageGenerationCues[cueIndex]
   const totalCues = imageGenerationCues.length
-  const maxVariantCount = currentCue ? getMaxVariantCount(currentCue) : PROMPT_MAX_VARIANT_COUNT
+  const maxVariantCount = currentCue
+    ? getMaxVariantCount(currentCue)
+    : PROMPT_MAX_VARIANT_COUNT
 
   // Generate image path based on generate.ts logic
   const generateImagePath = useCallback(
