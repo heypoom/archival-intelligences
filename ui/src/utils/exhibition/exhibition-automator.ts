@@ -409,6 +409,11 @@ export class ExhibitionAutomator {
   sync(options: {force?: boolean} = {}) {
     const {force = false} = options
 
+    // don't sync if we are in /image-viewer
+    if (window.location.href.includes('image-viewer')) {
+      return
+    }
+
     // only activate when in exhibition mode
     const isExhibition = $exhibitionMode.get()
     if (!isExhibition) return
