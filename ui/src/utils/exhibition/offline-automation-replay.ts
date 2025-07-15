@@ -15,7 +15,8 @@ function getRandomVariant(): number {
 
 export function generateOfflineImagePath(
   cue: AutomationCue,
-  step: number = -1
+  variantId: number,
+  step: number
 ): string {
   const allCueIndex = automator.cues.indexOf(cue)
   const cueSuffix = `${allCueIndex}_${cue.time.replace(/[:.]/g, '_')}`
@@ -28,8 +29,6 @@ export function generateOfflineImagePath(
   } else {
     return ''
   }
-
-  const variantId = getRandomVariant()
 
   // For prompt cues, support preview steps (0-9.png) and final.png
   // For transcript cues, only final.png is available
@@ -111,9 +110,11 @@ export async function simulateStepByStepInference(
     isComplete: boolean
   ) => void
 ): Promise<void> {
+  const variantId = getRandomVariant()
+
   // For transcript cues, only show final image directly
   if (cue.action === 'transcript') {
-    const finalImagePath = generateOfflineImagePath(cue, -1)
+    const finalImagePath = generateOfflineImagePath(cue, variantId, -1)
     const loadedImageUrl = await loadOfflineImage(finalImagePath)
 
     onStepUpdate(loadedImageUrl, -1, true)
@@ -131,7 +132,7 @@ export async function simulateStepByStepInference(
       $timestep.set(step)
 
       // Generate image path for this step
-      const stepImagePath = generateOfflineImagePath(cue, step)
+      const stepImagePath = generateOfflineImagePath(cue, variantId, step)
       const loadedImageUrl = await loadOfflineImage(stepImagePath)
 
       // Update the image
@@ -145,7 +146,7 @@ export async function simulateStepByStepInference(
     }
 
     // Show final image
-    const finalImagePath = generateOfflineImagePath(cue, -1)
+    const finalImagePath = generateOfflineImagePath(cue, variantId, -1)
     const finalImageUrl = await loadOfflineImage(finalImagePath)
     onStepUpdate(finalImageUrl, -1, true)
   }
