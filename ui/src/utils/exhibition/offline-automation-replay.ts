@@ -10,7 +10,7 @@ const MIN_DELAY = 2000 // 2 seconds
 const MAX_DELAY = 2000 // Additional 2 seconds (total range 2-4s)
 
 function getRandomVariant(): number {
-  return Math.floor(Math.random() * MAX_VARIANT_COUNT)
+  return 1 + Math.floor(Math.random() * MAX_VARIANT_COUNT)
 }
 
 export function generateOfflineImagePath(
