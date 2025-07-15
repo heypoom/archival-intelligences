@@ -15,6 +15,9 @@ const cues = _cues as AutomationCue[]
 const MODAL_ENDPOINT =
   'https://heypoom--exhibition-pregen-text-to-image-endpoint.modal.run/generate'
 
+const MALAYA_ENDPOINT =
+  'https://heypoom--exhibition-pregen-malaya-endpoint.modal.run/generate'
+
 const CONCURRENT_REQUESTS = 3
 
 const REQUESTER_DURATIONS_KEY = `requester/${PREGEN_VERSION_ID}/durations`
@@ -48,7 +51,12 @@ class GenerationRequester {
 
       const start = performance.now()
 
-      const response = await fetch(MODAL_ENDPOINT, {
+      // Route P2/P2B to malaya endpoint, others to text-to-image endpoint
+      const endpoint = request.program_key.startsWith('P2')
+        ? MALAYA_ENDPOINT
+        : MODAL_ENDPOINT
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -119,32 +127,13 @@ class GenerationRequester {
           continue
         }
 
-        // Malaya require a separate endpoint for /image-to-image operation.
-        // skip P2 and P2B programs for now.
-        if (cue.program.startsWith('P2')) {
-          continue
-        }
+        // P2 and P2B programs now use the malaya endpoint
 
         // I need to adapt the chua mia tee LoRA to support
         // stable diffusion 3 large turbo first.
         // For now, skip P3 and P3B programs.
         if (cue.program.startsWith('P3')) {
           continue
-        }
-
-        // We'll need to handle this next.
-        // In the live lecture, the "B" suffixes makes the generation happen
-        // continuously until the next cue, with a little delay in between.
-        if (cue.program.endsWith('B')) {
-          console.warn(
-            `⚠️ warning: ${cue.program} requires continuous generation until the next cue`
-          )
-        }
-
-        if (cue.enter?.regen === true) {
-          console.warn(
-            `⚠️ warning: ${cue.program} requires continuous generation until the next cue`
-          )
         }
 
         prompt = cue.override || cue.prompt
@@ -155,20 +144,19 @@ class GenerationRequester {
           guidance = cue.guidance
         }
       } else if (cue.action === 'move-slider') {
-        // COMMENTED OUT FOR NOW - P2 uses an image-to-image pipeline (malaya.py)
-        // // For move-slider, only P2 and P2B programs use guidance values
-        // // The guidance value becomes the prompt as a decimal (e.g., 70 -> "0.70")
-        // if (!cue.program.startsWith('P2')) {
-        //   console.log(
-        //     `⚠️ slider cue for ${cue.program} at ${cue.time} - not supported!`
-        //   )
-        //   continue
-        // }
-        // prompt = (cue.value / 100).toFixed(2) // Convert 70 to "0.70"
-        // program_key = cue.program
-        // cue_id = `slider_${CUE_SUFFIX}_val${cue.value}`
-        // guidance = cue.value
-        continue
+        // For move-slider, only P2 and P2B programs use guidance values
+        if (!cue.program.startsWith('P2')) {
+          console.log(
+            `⚠️ slider cue for ${cue.program} at ${cue.time} - not supported!`
+          )
+          continue
+        }
+
+        // For P2 slider cues, use the base P2 prompt with the guidance value
+        prompt = 'painting like epic poem of malaya'
+        program_key = cue.program
+        cue_id = `slider_${CUE_SUFFIX}_val${cue.value}`
+        guidance = cue.value
       } else {
         continue
       }
@@ -341,6 +329,7 @@ class GenerationRequester {
 
   async run(): Promise<void> {
     console.log(`Using Modal endpoint: ${MODAL_ENDPOINT}`)
+    console.log(`Using Malaya endpoint: ${MALAYA_ENDPOINT}`)
     console.log(`Using Valkey at: ${VALKEY_URL}`)
     console.log(`Concurrent requests: ${CONCURRENT_REQUESTS}`)
 
