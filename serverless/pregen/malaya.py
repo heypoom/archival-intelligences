@@ -9,7 +9,7 @@ from typing import Optional
 import modal
 
 APP_NAME = "exhibition-pregen-malaya"
-SD3_TURBO_MODEL_NAME = "stabilityai/stable-diffusion-3.5-large-turbo"
+SD15_MODEL_NAME = "runwayml/stable-diffusion-v1-5"
 app = modal.App(APP_NAME)
 
 SUPPORTED_PROGRAMS = ["P2", "P2B"]
@@ -17,11 +17,11 @@ SUPPORTED_PROGRAMS = ["P2", "P2B"]
 # Default generation parameters
 DEFAULT_WIDTH = 960
 DEFAULT_HEIGHT = 800
-DEFAULT_NUM_INFERENCE_STEPS = 10
+DEFAULT_NUM_INFERENCE_STEPS = 50
 
 # Static pregen version ID. Use in case of future changes to the generation.
 # Example: different transcripts, model versions, or other significant changes.
-PREGEN_VERSION_ID = 1
+PREGEN_VERSION_ID = 2
 
 PREGEN_UPLOAD_STATUS_KEY = f"pregen/{PREGEN_VERSION_ID}/variant_upload_status"
 
@@ -48,15 +48,34 @@ image = (
 with image.imports():
     import torch
     import PIL.Image as PILImage
-    from diffusers.pipelines.stable_diffusion_3.pipeline_stable_diffusion_3_img2img import StableDiffusion3Img2ImgPipeline
+    from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img import StableDiffusionImg2ImgPipeline
     from valkey import Valkey
     import boto3
 
-SD3_TURBO_CACHE_DIR = "/cache/sd3-turbo"
+SD15_CACHE_DIR = "/cache/sd15"
 cache_vol = modal.Volume.from_name("hf-hub-cache", create_if_missing=True)
 
 # R2 Configuration
 R2_BUCKET_NAME = "poom-images"
+
+# https://huggingface.co/docs/diffusers/en/using-diffusers/callback#display-image-after-each-generation-step
+# https://huggingface.co/blog/TimothyAlexisVass/explaining-the-sdxl-latent-space
+WEIGHTS = ((60, -60, 25, -70), (60, -5, 15, -50), (60, 10, -5, -35))
+
+def latents_to_rgb(latents):
+    weights_tensor = torch.t(
+        torch.tensor(WEIGHTS, dtype=latents.dtype).to(latents.device)
+    )
+    biases_tensor = torch.tensor((150, 140, 130), dtype=latents.dtype).to(
+        latents.device
+    )
+    weights_s = torch.einsum("...lxy,lr -> ...rxy", latents, weights_tensor)
+    biases_s = biases_tensor.unsqueeze(-1).unsqueeze(-1)
+    rgb_tensor = weights_s + biases_s
+    image_array = rgb_tensor.clamp(0, 255)[0].byte().cpu().numpy()
+    image_array = image_array.transpose(1, 2, 0)
+
+    return PILImage.fromarray(image_array)
 
 def upload_to_r2(file_data: bytes, key: str) -> bool:
     """
@@ -107,7 +126,7 @@ def upload_to_r2(file_data: bytes, key: str) -> bool:
         print(f"Upload failed: {e}")
         return False
 
-def create_step_callback(program_key, cue_id, variant_id, step_timings, vae_decoder):
+def create_step_callback(program_key, cue_id, variant_id, step_timings):
     """Creates callback to capture intermediate steps for img2img pipeline"""
     def on_step_end(pipeline, step, timestep, callback_kwargs):
         # Record step timing
@@ -117,13 +136,8 @@ def create_step_callback(program_key, cue_id, variant_id, step_timings, vae_deco
         # Extract latents
         latents = callback_kwargs["latents"]
 
-        # More robust approach using the VAE decoder directly
-        latents = 1 / vae_decoder.config.scaling_factor * latents
-
-        image = vae_decoder.decode(latents).sample
-        image = (image / 2 + 0.5).clamp(0, 1) # Normalize to [0, 1]
-        image = image.cpu().permute(0, 2, 3, 1).float().numpy() # Convert to (batch, H, W, C) numpy array
-        preview_image = PILImage.fromarray((image[0] * 255).astype("uint8")) # Take first image from batch
+        # Use latents_to_rgb for SD1.5 latent decoding (matches legacy system)
+        preview_image = latents_to_rgb(latents)
         
         # Save intermediate image to R2
         with io.BytesIO() as buf:
@@ -175,7 +189,7 @@ GUIDANCE_SCALE_2B = 8.5
     image=image,
     gpu="H100",
     volumes={
-        SD3_TURBO_CACHE_DIR: cache_vol,
+        SD15_CACHE_DIR: cache_vol,
         "/r2": modal.CloudBucketMount(
             bucket_name=R2_BUCKET_NAME,
             bucket_endpoint_url="https://160d4d33acd4258d2d67c59d7123a282.r2.cloudflarestorage.com",
@@ -200,13 +214,13 @@ class Inference:
     def initialize(self):
         print("initializing pipeline...")
 
-        self.pipe = StableDiffusion3Img2ImgPipeline.from_pretrained(
-            SD3_TURBO_MODEL_NAME,
-            cache_dir=SD3_TURBO_CACHE_DIR,
-            torch_dtype=torch.bfloat16,
+        self.pipe = StableDiffusionImg2ImgPipeline.from_pretrained(
+            SD15_MODEL_NAME,
+            cache_dir=SD15_CACHE_DIR,
+            torch_dtype=torch.float16,
             token=os.environ["HF_TOKEN"]
         )
-
+        
         self.vk = Valkey("raya.poom.dev", username="default", password=os.environ["VALKEY_PASSWORD"])
         
         print("pipeline initialized.")
@@ -273,7 +287,7 @@ class Inference:
 
         # Run the pipeline with step callback
         print(f"Running img2img inference with intermediate steps for {program_key}")
-        callback_fn = create_step_callback(program_key, cue_id, variant_id, step_timings, self.pipe.vae)
+        callback_fn = create_step_callback(program_key, cue_id, variant_id, step_timings)
 
         # Build pipeline arguments
         pipeline_args = {
@@ -354,7 +368,7 @@ def endpoint():
             "status": "ok",
             "service": "exhibition-pregen-malaya",
             "pregenVersion": PREGEN_VERSION_ID,
-            "model": SD3_TURBO_MODEL_NAME,
+            "model": SD15_MODEL_NAME,
             "timestamp": int(time.time()),
             "supportedPrograms": SUPPORTED_PROGRAMS,
             "baseImage": "Epic Poem of Malaya"

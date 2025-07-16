@@ -18,7 +18,7 @@ CHUAMIATEE_PROGRAMS = ["P3", "P3B"]
 # Default generation parameters
 DEFAULT_WIDTH = 1360
 DEFAULT_HEIGHT = 768
-DEFAULT_GUIDANCE_SCALE = 0.0
+DEFAULT_GUIDANCE_SCALE = 4.5
 DEFAULT_NUM_INFERENCE_STEPS = 10
 
 # Static pregen version ID. Use in case of future changes to the generation.
@@ -60,7 +60,7 @@ cache_vol = modal.Volume.from_name("hf-hub-cache", create_if_missing=True)
 
 # Constants for LORA
 LORA_WEIGHTS = "heypoom/chuamiatee-sd3"
-LORA_WEIGHT_NAME = "v3-replicate.safetensors"
+LORA_WEIGHT_NAME = "v2-replicate.safetensors"
 
 # R2 Configuration
 R2_BUCKET_NAME = "poom-images"
