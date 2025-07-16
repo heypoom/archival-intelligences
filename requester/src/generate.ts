@@ -67,8 +67,9 @@ class GenerationRequester {
           cue_id: request.cue_id,
           variant_id: request.variant_id,
 
+          // we actually use guidance as strength in the backend
           ...(typeof request.guidance === 'number' && {
-            guidance: request.guidance,
+            strength: request.guidance,
           }),
         }),
       })
@@ -333,7 +334,7 @@ class GenerationRequester {
     console.log(`Using Valkey at: ${VALKEY_URL}`)
     console.log(`Concurrent requests: ${CONCURRENT_REQUESTS}`)
 
-    // await this.processTranscriptCues()
+    await this.processTranscriptCues()
     await this.processPromptAndSliderCues()
 
     console.log('✅ Generation requester finished')

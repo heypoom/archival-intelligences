@@ -17,7 +17,7 @@ SUPPORTED_PROGRAMS = ["P2", "P2B"]
 # Default generation parameters
 DEFAULT_WIDTH = 960
 DEFAULT_HEIGHT = 800
-DEFAULT_NUM_INFERENCE_STEPS = 50
+DEFAULT_NUM_INFERENCE_STEPS = 40
 
 # Static pregen version ID. Use in case of future changes to the generation.
 # Example: different transcripts, model versions, or other significant changes.
@@ -297,6 +297,8 @@ class Inference:
             "num_inference_steps": num_inference_steps,
             "generator": generator,
             "callback_on_step_end": callback_fn,
+            "width": width,
+            "height": height,
         }
         
         # Only add guidance_scale if we have a value (SD3 has default)

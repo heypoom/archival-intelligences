@@ -4,10 +4,22 @@ import {$timestep, $startTimestep} from '../../store/progress'
 import {$regenCount, $regenActive, $regenEnabled} from '../../store/regen'
 
 const PROJ_ID = 'foigoi'
-const PREGEN_VERSION_ID = 1
+const PREGEN_VERSION_ID = 2
 const TRANSCRIPT_MAX_VARIANT_COUNT = 30 // Program 0 transcript cues
 const PROMPT_MAX_VARIANT_COUNT = 50 // Other programs (prompt and move-slider actions)
-const TOTAL_INFERENCE_STEPS = 10 // 0.png through 9.png
+
+const DEFAULT_PREVIEW_STEPS = 40
+
+// Program-specific inference steps for preview images (0.png through N.png)
+// P2: 50 steps, P3/P4: 40 steps, P0: 40 steps (but no preview shown)
+const PROGRAM_PREVIEW_STEPS: Record<string, number> = {
+  P2: 50, // malaya.py P2 uses 50 steps
+  P2B: 50, // malaya.py P2B uses 50 steps
+  P3: DEFAULT_PREVIEW_STEPS, // text_to_image.py P3 uses 40 steps
+  P3B: DEFAULT_PREVIEW_STEPS, // text_to_image.py P3B uses 40 steps
+  P4: DEFAULT_PREVIEW_STEPS, // text_to_image.py P4 uses 40 steps
+}
+
 const MIN_DELAY = 2000 // 2 seconds
 const MAX_DELAY = 2000 // Additional 2 seconds (total range 2-4s)
 
@@ -28,6 +40,14 @@ function getRandomVariant(actionType: 'transcript' | 'prompt'): number {
   return 1 + Math.floor(Math.random() * maxCount)
 }
 
+function getPreviewStepsForCue(cue: AutomationCue): number {
+  if (cue.action === 'prompt' && cue.program) {
+    return PROGRAM_PREVIEW_STEPS[cue.program] ?? DEFAULT_PREVIEW_STEPS
+  }
+
+  return DEFAULT_PREVIEW_STEPS
+}
+
 export function generateOfflineImagePath(
   cue: AutomationCue,
   variantId: number,
@@ -45,11 +65,17 @@ export function generateOfflineImagePath(
     return ''
   }
 
-  // For prompt cues, support preview steps (0-9.png) and final.png
+  // For prompt cues, support preview steps (0-N.png) and final.png
   // For transcript cues, only final.png is available
   let fileName: string
-  if (cue.action === 'prompt' && step >= 0 && step <= 9) {
-    fileName = `${step}.png`
+  if (cue.action === 'prompt' && step >= 0) {
+    const maxStep = getPreviewStepsForCue(cue) - 1
+
+    if (step <= maxStep) {
+      fileName = `${step}.png`
+    } else {
+      fileName = 'final.png'
+    }
   } else {
     fileName = 'final.png'
   }
@@ -138,13 +164,15 @@ export async function simulateStepByStepInference(
     return
   }
 
-  // For prompt cues, show step-by-step inference (0.png through 9.png)
+  // For prompt cues, show step-by-step inference (0.png through N.png)
   if (cue.action === 'prompt') {
+    const totalSteps = getPreviewStepsForCue(cue)
+
     // Set initial timestep
     $startTimestep.set(0)
     $timestep.set(0)
 
-    for (let step = 0; step < TOTAL_INFERENCE_STEPS; step++) {
+    for (let step = 0; step < totalSteps; step++) {
       // Update timestep
       $timestep.set(step)
 
@@ -156,7 +184,7 @@ export async function simulateStepByStepInference(
       onStepUpdate(loadedImageUrl, step, false)
 
       // Random delay between 2-4 seconds for next step
-      if (step < TOTAL_INFERENCE_STEPS - 1) {
+      if (step < totalSteps - 1) {
         const delay = MIN_DELAY + Math.random() * MAX_DELAY // 2s to 4s
         await new Promise((resolve) => setTimeout(resolve, delay))
       }

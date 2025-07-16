@@ -8,8 +8,7 @@ from typing import Optional
 import modal
 
 APP_NAME = "exhibition-pregen-text-to-image"
-FLUX_MODEL_NAME = "black-forest-labs/FLUX.1-dev"
-SD3_TURBO_MODEL_NAME = "stabilityai/stable-diffusion-3.5-large-turbo"
+SDXL_MODEL_NAME = "stabilityai/stable-diffusion-xl-base-1.0"
 app = modal.App(APP_NAME)
 
 SUPPORTED_PROGRAMS = ["P0", "P3", "P3B", "P4"]
@@ -18,12 +17,12 @@ CHUAMIATEE_PROGRAMS = ["P3", "P3B"]
 # Default generation parameters
 DEFAULT_WIDTH = 1360
 DEFAULT_HEIGHT = 768
-DEFAULT_GUIDANCE_SCALE = 4.5
-DEFAULT_NUM_INFERENCE_STEPS = 10
+DEFAULT_GUIDANCE_SCALE = 7.5
+DEFAULT_NUM_INFERENCE_STEPS = 40
 
 # Static pregen version ID. Use in case of future changes to the generation.
 # Example: different transcripts, model versions, or other significant changes.
-PREGEN_VERSION_ID = 1
+PREGEN_VERSION_ID = 2
 
 PREGEN_UPLOAD_STATUS_KEY = f"pregen/{PREGEN_VERSION_ID}/variant_upload_status"
 
@@ -50,22 +49,40 @@ image = (
 with image.imports():
     import torch
     import PIL.Image as PILImage
-    from diffusers.pipelines.stable_diffusion_3.pipeline_stable_diffusion_3 import StableDiffusion3Pipeline
+    from diffusers import AutoPipelineForText2Image
     from valkey import Valkey
     import boto3
 
-FLUX_CACHE_DIR = "/cache/flux-dev"
-SD3_TURBO_CACHE_DIR = "/cache/sd3-turbo"
+SDXL_CACHE_DIR = "/cache/sdxl"
 cache_vol = modal.Volume.from_name("hf-hub-cache", create_if_missing=True)
 
-# Constants for LORA
-LORA_WEIGHTS = "heypoom/chuamiatee-sd3"
-LORA_WEIGHT_NAME = "v2-replicate.safetensors"
+# Constants for LORA (SDXL-compatible)
+LORA_WEIGHTS = "heypoom/chuamiatee-1"
+LORA_WEIGHT_NAME = "pytorch_lora_weights.safetensors"
 
 # R2 Configuration
 R2_BUCKET_NAME = "poom-images"
 
-def create_step_callback(program_key, cue_id, variant_id, step_timings, vae_decoder):
+# https://huggingface.co/docs/diffusers/en/using-diffusers/callback#display-image-after-each-generation-step
+# https://huggingface.co/blog/TimothyAlexisVass/explaining-the-sdxl-latent-space
+WEIGHTS = ((60, -60, 25, -70), (60, -5, 15, -50), (60, 10, -5, -35))
+
+def latents_to_rgb(latents):
+    weights_tensor = torch.t(
+        torch.tensor(WEIGHTS, dtype=latents.dtype).to(latents.device)
+    )
+    biases_tensor = torch.tensor((150, 140, 130), dtype=latents.dtype).to(
+        latents.device
+    )
+    weights_s = torch.einsum("...lxy,lr -> ...rxy", latents, weights_tensor)
+    biases_s = biases_tensor.unsqueeze(-1).unsqueeze(-1)
+    rgb_tensor = weights_s + biases_s
+    image_array = rgb_tensor.clamp(0, 255)[0].byte().cpu().numpy()
+    image_array = image_array.transpose(1, 2, 0)
+
+    return PILImage.fromarray(image_array)
+
+def create_step_callback(program_key, cue_id, variant_id, step_timings):
     """Creates callback to capture intermediate steps"""
     def on_step_end(pipeline, step, timestep, callback_kwargs):
         # Only capture for P1-P4, skip P0
@@ -79,13 +96,8 @@ def create_step_callback(program_key, cue_id, variant_id, step_timings, vae_deco
         # Extract latents
         latents = callback_kwargs["latents"]
 
-        # More robust approach using the VAE decoder directly
-        latents = 1 / vae_decoder.config.scaling_factor * latents
-
-        image = vae_decoder.decode(latents).sample
-        image = (image / 2 + 0.5).clamp(0, 1) # Normalize to [0, 1]
-        image = image.cpu().permute(0, 2, 3, 1).float().numpy() # Convert to (batch, H, W, C) numpy array
-        preview_image = PILImage.fromarray((image[0] * 255).astype("uint8")) # Take first image from batch
+        # Use latents_to_rgb for SDXL latent decoding (matches legacy system)
+        preview_image = latents_to_rgb(latents)
         
         # Save intermediate image to R2
         with io.BytesIO() as buf:
@@ -179,7 +191,7 @@ def upload_to_r2(file_data: bytes, key: str) -> bool:
 @app.cls(
     image=image,
     gpu="H100",
-    volumes={FLUX_CACHE_DIR: cache_vol},
+    volumes={SDXL_CACHE_DIR: cache_vol},
     timeout=600,
     secrets=[
         modal.Secret.from_name("huggingface-secret"),
@@ -196,10 +208,10 @@ class Inference:
     def initialize(self):
         print("initializing pipeline...")
 
-        self.pipe = StableDiffusion3Pipeline.from_pretrained(
-            SD3_TURBO_MODEL_NAME,
-            cache_dir=SD3_TURBO_CACHE_DIR,
-            torch_dtype=torch.bfloat16,
+        self.pipe = AutoPipelineForText2Image.from_pretrained(
+            SDXL_MODEL_NAME,
+            cache_dir=SDXL_CACHE_DIR,
+            torch_dtype=torch.float16,
             token=os.environ["HF_TOKEN"]
         )
 
@@ -250,8 +262,10 @@ class Inference:
         # Ensure LORA is in the correct state
         self._ensure_lora_state(use_lora)
 
-        # Modify prompt based on program key
-        if program_key == "P3B":
+        # Modify prompt based on program key to match legacy system
+        if program_key == "P0":
+            modified_prompt = f"{prompt}, photorealistic"
+        elif program_key == "P3B":
             modified_prompt = f"{prompt}, photorealistic"
         elif program_key == "P4":
             if prompt.strip() in ["data researcher", "crowdworker", "big tech ceo"]:
@@ -271,7 +285,7 @@ class Inference:
         # Run the pipeline with callback for P1-P4, without callback for P0
         if program_key != "P0":
             print(f"Running inference with intermediate steps for {program_key}")
-            callback_fn = create_step_callback(program_key, cue_id, variant_id, step_timings, self.pipe.vae)
+            callback_fn = create_step_callback(program_key, cue_id, variant_id, step_timings)
 
             images = self.pipe(
                 prompt=modified_prompt,
@@ -358,7 +372,7 @@ def endpoint():
             "status": "ok",
             "service": "exhibition-pregen-text-to-image",
             "pregenVersion": PREGEN_VERSION_ID,
-            "model": SD3_TURBO_MODEL_NAME,
+            "model": SDXL_MODEL_NAME,
             "timestamp": int(time.time()),
             "supportedPrograms": SUPPORTED_PROGRAMS,
         }

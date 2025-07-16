@@ -246,8 +246,7 @@ class ImageValidator {
     console.log('=== Image Validation Report ===')
 
     // Validate transcript cues
-    // const transcriptResults = await this.validateTranscriptCues()
-    const transcriptResults = []
+    const transcriptResults = await this.validateTranscriptCues()
 
     // Validate prompt and slider cues (matching generate.ts logic)
     const imageResults = await this.validatePromptAndSliderCues()
