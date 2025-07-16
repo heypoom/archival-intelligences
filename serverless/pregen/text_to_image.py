@@ -59,8 +59,8 @@ SD3_TURBO_CACHE_DIR = "/cache/sd3-turbo"
 cache_vol = modal.Volume.from_name("hf-hub-cache", create_if_missing=True)
 
 # Constants for LORA
-LORA_WEIGHTS = "heypoom/chuamiatee-flux-lora"
-LORA_WEIGHT_NAME = "flux-lora.safetensors"
+LORA_WEIGHTS = "heypoom/chuamiatee-sd3"
+LORA_WEIGHT_NAME = "v3-replicate.safetensors"
 
 # R2 Configuration
 R2_BUCKET_NAME = "poom-images"
