@@ -124,7 +124,7 @@ class GenerationRequester {
       let cue_id: string
       let guidance: number | null = null
 
-      const CUE_SUFFIX = `${cueIndex}_${cue.time.replace(/[:.]/g, '_')}`
+      const cueSuffix = `${cueIndex}_${cue.time.replace(/[:.]/g, '_')}`
 
       if (cue.action === 'prompt') {
         // These do not require generation and is a no-op.
@@ -135,7 +135,7 @@ class GenerationRequester {
 
         prompt = cue.override || cue.prompt
         program_key = cue.program
-        cue_id = `prompt_${CUE_SUFFIX}`
+        cue_id = `prompt_${cueSuffix}`
 
         if (cue.guidance !== undefined) {
           guidance = cue.guidance
@@ -152,7 +152,7 @@ class GenerationRequester {
         // For P2 slider cues, use the base P2 prompt with the guidance value
         prompt = 'painting like epic poem of malaya'
         program_key = cue.program
-        cue_id = `slider_${CUE_SUFFIX}_val${cue.value}`
+        cue_id = `slider_${cueSuffix}_val${cue.value}`
         guidance = cue.value
       } else {
         continue

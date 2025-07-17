@@ -178,7 +178,7 @@ class ImageValidator {
 
       let cue_id: string
 
-      const CUE_SUFFIX = `${cueIndex}_${cue.time.replace(/[:.]/g, '_')}`
+      const cueSuffix = `${cueIndex}_${cue.time.replace(/[:.]/g, '_')}`
 
       if (cue.action === 'prompt') {
         // These do not require generation and is a no-op.
@@ -187,9 +187,9 @@ class ImageValidator {
           continue
         }
 
-        cue_id = `prompt_${CUE_SUFFIX}`
+        cue_id = `prompt_${cueSuffix}`
       } else if (cue.action === 'move-slider') {
-        cue_id = `slider_${CUE_SUFFIX}_val${cue.value}`
+        cue_id = `slider_${cueSuffix}_val${cue.value}`
       } else {
         continue
       }
