@@ -13,6 +13,7 @@ import {WaitingRoomScreen} from '../components/WaitingScreen'
 import {ClosedScreen} from '../components/ClosedScreen'
 import {ProgramTimeBadge} from '../components/CurrentTimeBadge'
 import {DebugTimeSlider} from '../components/DebugTimeSlider'
+import {ProgressBadge} from '../components/ProgressBadge'
 
 export const Route = createRootRoute({
   component: () => (
@@ -21,7 +22,7 @@ export const Route = createRootRoute({
         <SettingsButton />
         <DebugTimeSlider />
         <CurrentProgramBadge />
-        {/* <ProgressBadge /> */}
+        <ProgressBadge />
         <ProgramTimeBadge />
       </div>
 
