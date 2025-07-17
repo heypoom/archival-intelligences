@@ -27,8 +27,9 @@ function ImageViewer() {
   const [previewStep, setPreviewStep] = useState(-1) // -1 = final.png, 0-9 = preview steps
   const [imageError, setImageError] = useState(false)
   const [isReady, setIsReady] = useState(false)
-  const [pregenVersionId, setPregenVersionId] = useState(DEFAULT_PREGEN_VERSION_ID)
-  const [sliderValue, setSliderValue] = useState(70) // Default to 70, can toggle between 0 and 70
+  const [pregenVersionId, setPregenVersionId] = useState(
+    DEFAULT_PREGEN_VERSION_ID
+  )
 
   // Filter cues that have generation enabled - matching generate.ts logic
   const imageGenerationCues = useMemo(() => {
@@ -90,7 +91,7 @@ function ImageViewer() {
       } else if (cue.action === 'prompt') {
         cueId = `prompt_${cueSuffix}`
       } else if (cue.action === 'move-slider') {
-        cueId = `slider_${cueSuffix}_val${sliderValue}`
+        cueId = `slider_${cueSuffix}_val${cue.value}`
       } else {
         // unsupported action type.
         return ''
@@ -107,7 +108,7 @@ function ImageViewer() {
 
       return `https://images.poom.dev/foigoi/${pregenVersionId}/cues/${cueId}/${variant}/${fileName}`
     },
-    [pregenVersionId, sliderValue]
+    [pregenVersionId]
   )
 
   const currentImagePath = currentCue
@@ -182,16 +183,8 @@ function ImageViewer() {
           break
         case 'v':
           e.preventDefault()
-          setPregenVersionId((prev) => prev === 1 ? 2 : 1)
+          setPregenVersionId((prev) => (prev === 1 ? 2 : 1))
           setImageError(false)
-          break
-        case 's':
-          e.preventDefault()
-          // Only works for slider cues
-          if (currentCue && currentCue.action === 'move-slider') {
-            setSliderValue((prev) => prev === 0 ? 70 : 0)
-            setImageError(false)
-          }
           break
       }
     }
@@ -264,8 +257,8 @@ function ImageViewer() {
         </div>
         <div className="mb-2">
           <span className="text-gray-400">Program:</span>{' '}
-          {currentCue.action === 'prompt' 
-            ? currentCue.program 
+          {currentCue.action === 'prompt'
+            ? currentCue.program
             : currentCue.action === 'move-slider'
               ? currentCue.program
               : 'P0'}
@@ -275,7 +268,8 @@ function ImageViewer() {
         </div>
         {currentCue.action === 'move-slider' && (
           <div className="mb-2">
-            <span className="text-gray-400">Slider Value:</span> {sliderValue}
+            <span className="text-gray-400">Slider Value:</span>{' '}
+            {currentCue.value}
           </div>
         )}
         {currentCue.action === 'prompt' && (
@@ -306,9 +300,6 @@ function ImageViewer() {
         <div>v Toggle version (1/2)</div>
         {currentCue && currentCue.action === 'prompt' && (
           <div>, . Change preview step</div>
-        )}
-        {currentCue && currentCue.action === 'move-slider' && (
-          <div>s Toggle slider value (0/70)</div>
         )}
       </div>
     </div>
