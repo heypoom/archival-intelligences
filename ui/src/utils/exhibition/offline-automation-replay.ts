@@ -10,16 +10,6 @@ const PROMPT_MAX_VARIANT_COUNT = 50 // Other programs (prompt and move-slider ac
 
 const DEFAULT_PREVIEW_STEPS = 40
 
-// Program-specific inference steps for preview images (0.png through N.png)
-// P2: 29 steps, P3/P4: 40 steps, P0: 40 steps (but no preview shown)
-const PROGRAM_PREVIEW_STEPS: Record<string, number> = {
-  P2: 29, // malaya.py P2 uses 50 steps
-  P2B: 29, // malaya.py P2B uses 50 steps
-  P3: DEFAULT_PREVIEW_STEPS, // text_to_image.py P3 uses 40 steps
-  P3B: DEFAULT_PREVIEW_STEPS, // text_to_image.py P3B uses 40 steps
-  P4: DEFAULT_PREVIEW_STEPS, // text_to_image.py P4 uses 40 steps
-}
-
 const MIN_DELAY = 2000 // 2 seconds
 const MAX_DELAY = 2000 // Additional 2 seconds (total range 2-4s)
 
@@ -43,6 +33,7 @@ function getRandomVariant(
 }
 
 export function getPreviewStepsForCue(cue: AutomationCue): number {
+  // override inference step if defined in the cue
   if (
     (cue.action === 'prompt' || cue.action === 'move-slider') &&
     cue.program
@@ -50,8 +41,6 @@ export function getPreviewStepsForCue(cue: AutomationCue): number {
     if (cue.inferenceStep !== undefined) {
       return cue.inferenceStep
     }
-
-    return PROGRAM_PREVIEW_STEPS[cue.program] ?? DEFAULT_PREVIEW_STEPS
   }
 
   return DEFAULT_PREVIEW_STEPS

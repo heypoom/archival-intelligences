@@ -85,7 +85,13 @@ export const PROGRAM_CUES: AutomationCue[] = [
   },
 
   // slide to 70%
-  {time: '00:45:23', action: 'move-slider', value: 70, program: 'P2'},
+  {
+    time: '00:45:23',
+    action: 'move-slider',
+    value: 70,
+    program: 'P2',
+    inferenceStep: 29,
+  },
 
   // start program 2B
   // {time: '00:43:30', action: 'navigate', route: '/two-b'},
@@ -97,6 +103,7 @@ export const PROGRAM_CUES: AutomationCue[] = [
   //   program: 'P2B',
   //   prompt: 'painting like epic poem of malaya but with more people',
   //   guidance: 60,
+  //   inferenceStep: 29,
   // },
 
   // start program 3B
