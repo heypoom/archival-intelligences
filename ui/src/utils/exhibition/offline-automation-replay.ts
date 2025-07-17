@@ -3,16 +3,24 @@ import {automator} from './exhibition-automator'
 import {$timestep, $startTimestep} from '../../store/progress'
 import {$regenCount, $regenActive, $regenEnabled} from '../../store/regen'
 
+// Project ID for image path
 const PROJ_ID = 'foigoi'
+
+// Which version of pre-generated images to use
 const PREGEN_VERSION_ID = 2
-const TRANSCRIPT_MAX_VARIANT_COUNT = 30 // Program 0 transcript cues
-const PROMPT_MAX_VARIANT_COUNT = 50 // Other programs (prompt and move-slider actions)
+
+// Program 0 transcript cues
+const TRANSCRIPT_MAX_VARIANT_COUNT = 30
+
+// Other programs (prompt and move-slider actions)
+const PROMPT_MAX_VARIANT_COUNT = 50
 
 const V1_DEFAULT_PREVIEW_STEPS = 10
 const V2_DEFAULT_PREVIEW_STEPS = 40
 
-const MIN_DELAY = 2000 // 2 seconds
-const MAX_DELAY = 2000 // Additional 2 seconds (total range 2-4s)
+// Minimum and maximum delay for each step
+const MIN_DELAY = 750
+const MAX_DELAY = 1800
 
 // Regeneration timing constants (from regen.ts)
 const BASE_DELAY = 30 * 1000 // 30 seconds
@@ -162,10 +170,17 @@ export async function simulateStepByStepInference(
         : 'prompt'
   )
 
+  const isZeroStrengthImage = cue.action === 'move-slider' && cue.value === 0
+
   // For transcript and slider cues, only show final image directly
   if (cue.action === 'transcript' || cue.action === 'move-slider') {
     const finalImagePath = generateOfflineImagePath(cue, variantId, -1)
     const loadedImageUrl = await loadOfflineImage(finalImagePath)
+
+    // For strength=0, show immediately since it's the same image
+    if (!isZeroStrengthImage) {
+      await new Promise((resolve) => setTimeout(resolve, 500))
+    }
 
     onStepUpdate(loadedImageUrl, -1, true)
     return
@@ -183,16 +198,16 @@ export async function simulateStepByStepInference(
       // Update timestep
       $timestep.set(step)
 
-      // Generate image path for this step
       const stepImagePath = generateOfflineImagePath(cue, variantId, step)
+
       const loadedImageUrl = await loadOfflineImage(stepImagePath)
 
       // Update the image
       onStepUpdate(loadedImageUrl, step, false)
 
-      // Random delay between 2-4 seconds for next step
       if (step < totalSteps - 1) {
-        const delay = MIN_DELAY + Math.random() * MAX_DELAY // 2s to 4s
+        const delay = MIN_DELAY + Math.random() * (MAX_DELAY - MIN_DELAY)
+
         await new Promise((resolve) => setTimeout(resolve, delay))
       }
     }

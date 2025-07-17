@@ -83,7 +83,10 @@ export async function runOfflineAutomationAction(
                 }
               )
             } catch (error) {
-              console.error('[offline] Failed to simulate slider inference:', error)
+              console.error(
+                '[offline] Failed to simulate slider inference:',
+                error
+              )
               $generating.set(false)
             }
           }
