@@ -2,6 +2,7 @@ import {createLazyFileRoute} from '@tanstack/react-router'
 import {useState, useEffect, useCallback, useMemo} from 'react'
 import {automator} from '../utils/exhibition/exhibition-automator'
 import {AutomationCue} from '../constants/exhibition-cues'
+import {getPreviewStepsForCue} from '../utils/exhibition/offline-automation-replay'
 
 export const Route = createLazyFileRoute('/image-viewer')({
   component: ImageViewer,
@@ -24,7 +25,7 @@ function getMaxVariantCount(cue: AutomationCue): number {
 function ImageViewer() {
   const [cueIndex, setCueIndex] = useState(0)
   const [variantIndex, setVariantIndex] = useState(1)
-  const [previewStep, setPreviewStep] = useState(-1) // -1 = final.png, 0-9 = preview steps
+  const [previewStep, setPreviewStep] = useState(-1) // -1 = final.png, 0-N = preview steps
   const [imageError, setImageError] = useState(false)
   const [isReady, setIsReady] = useState(false)
   const [pregenVersionId, setPregenVersionId] = useState(
@@ -78,6 +79,11 @@ function ImageViewer() {
     ? getMaxVariantCount(currentCue)
     : PROMPT_MAX_VARIANT_COUNT
 
+  // Get the max preview steps for the current cue
+  const maxPreviewSteps = currentCue
+    ? getPreviewStepsForCue(currentCue) - 1
+    : 39 // -1 because steps are 0-indexed
+
   // Generate image path based on generate.ts logic
   const generateImagePath = useCallback(
     (cue: AutomationCue, variant: number, step: number = -1) => {
@@ -97,10 +103,15 @@ function ImageViewer() {
         return ''
       }
 
-      // For prompt cues, support preview steps (0-9.png) and final.png
+      // For prompt cues, support preview steps (0-N.png) and final.png
       // For transcript and slider cues, only final.png is available
       let fileName: string
-      if (cue.action === 'prompt' && step >= 0 && step <= 9) {
+      const maxSteps = getPreviewStepsForCue(cue) - 1 // -1 because steps are 0-indexed
+      if (
+        (cue.action === 'prompt' || cue.action === 'move-slider') &&
+        step >= 0 &&
+        step <= maxSteps
+      ) {
         fileName = `${step}.png`
       } else {
         fileName = 'final.png'
@@ -163,10 +174,13 @@ function ImageViewer() {
           break
         case ',':
           e.preventDefault()
-          // Only works for prompt cues (non-transcript)
-          if (currentCue && currentCue.action === 'prompt') {
+          if (
+            currentCue &&
+            (currentCue.action === 'prompt' ||
+              currentCue.action === 'move-slider')
+          ) {
             setPreviewStep((prev) =>
-              prev > 0 ? prev - 1 : prev === -1 ? 9 : -1
+              prev > 0 ? prev - 1 : prev === -1 ? maxPreviewSteps : -1
             )
             setImageError(false)
           }
@@ -174,9 +188,13 @@ function ImageViewer() {
         case '.':
           e.preventDefault()
           // Only works for prompt cues (non-transcript)
-          if (currentCue && currentCue.action === 'prompt') {
+          if (
+            currentCue &&
+            (currentCue.action === 'prompt' ||
+              currentCue.action === 'move-slider')
+          ) {
             setPreviewStep((prev) =>
-              prev < 9 ? prev + 1 : prev === -1 ? 0 : -1
+              prev < maxPreviewSteps ? prev + 1 : prev === -1 ? 0 : -1
             )
             setImageError(false)
           }
@@ -192,7 +210,7 @@ function ImageViewer() {
     window.addEventListener('keydown', handleKeyDown)
 
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [totalCues, currentCue, maxVariantCount])
+  }, [totalCues, currentCue, maxVariantCount, maxPreviewSteps])
 
   // Reset image error when image changes
   useEffect(() => {
@@ -272,10 +290,11 @@ function ImageViewer() {
             {currentCue.value}
           </div>
         )}
-        {currentCue.action === 'prompt' && (
+        {(currentCue.action === 'prompt' ||
+          currentCue.action === 'move-slider') && (
           <div className="mb-2">
             <span className="text-gray-400">Step:</span>{' '}
-            {previewStep === -1 ? 'final' : `${previewStep}/9`}
+            {previewStep === -1 ? 'final' : `${previewStep}/${maxPreviewSteps}`}
           </div>
         )}
         <div className="max-w-md">
@@ -298,9 +317,11 @@ function ImageViewer() {
         <div>← → Change cue</div>
         <div>↑ ↓ Change variant</div>
         <div>v Toggle version (1/2)</div>
-        {currentCue && currentCue.action === 'prompt' && (
-          <div>, . Change preview step</div>
-        )}
+        {currentCue &&
+          (currentCue.action === 'prompt' ||
+            currentCue.action === 'move-slider') && (
+            <div>, . Change preview step</div>
+          )}
       </div>
     </div>
   )

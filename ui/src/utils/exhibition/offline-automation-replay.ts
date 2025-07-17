@@ -11,10 +11,10 @@ const PROMPT_MAX_VARIANT_COUNT = 50 // Other programs (prompt and move-slider ac
 const DEFAULT_PREVIEW_STEPS = 40
 
 // Program-specific inference steps for preview images (0.png through N.png)
-// P2: 50 steps, P3/P4: 40 steps, P0: 40 steps (but no preview shown)
+// P2: 29 steps, P3/P4: 40 steps, P0: 40 steps (but no preview shown)
 const PROGRAM_PREVIEW_STEPS: Record<string, number> = {
-  P2: 50, // malaya.py P2 uses 50 steps
-  P2B: 50, // malaya.py P2B uses 50 steps
+  P2: 29, // malaya.py P2 uses 50 steps
+  P2B: 29, // malaya.py P2B uses 50 steps
   P3: DEFAULT_PREVIEW_STEPS, // text_to_image.py P3 uses 40 steps
   P3B: DEFAULT_PREVIEW_STEPS, // text_to_image.py P3B uses 40 steps
   P4: DEFAULT_PREVIEW_STEPS, // text_to_image.py P4 uses 40 steps
@@ -32,7 +32,9 @@ const BASE_GENERATION = 6
 let regenerationTimer: number | null = null
 let currentRegenerationCue: AutomationCue | null = null
 
-function getRandomVariant(actionType: 'transcript' | 'prompt'): number {
+function getRandomVariant(
+  actionType: 'transcript' | 'prompt' | 'move-slider'
+): number {
   const maxCount =
     actionType === 'transcript'
       ? TRANSCRIPT_MAX_VARIANT_COUNT
@@ -40,8 +42,17 @@ function getRandomVariant(actionType: 'transcript' | 'prompt'): number {
   return 1 + Math.floor(Math.random() * maxCount)
 }
 
-function getPreviewStepsForCue(cue: AutomationCue): number {
+export function getPreviewStepsForCue(cue: AutomationCue): number {
   if (cue.action === 'prompt' && cue.program) {
+    return PROGRAM_PREVIEW_STEPS[cue.program] ?? DEFAULT_PREVIEW_STEPS
+  }
+
+  if (cue.action === 'move-slider' && cue.program) {
+    // if the strength is 0, it only use 1 step as there is no change needed.
+    if (cue.value === 0) {
+      return 1
+    }
+
     return PROGRAM_PREVIEW_STEPS[cue.program] ?? DEFAULT_PREVIEW_STEPS
   }
 
@@ -61,12 +72,14 @@ export function generateOfflineImagePath(
     cueId = `transcript_${cueSuffix}`
   } else if (cue.action === 'prompt') {
     cueId = `prompt_${cueSuffix}`
+  } else if (cue.action === 'move-slider') {
+    cueId = `slider_${cueSuffix}_val${cue.value}`
   } else {
     return ''
   }
 
   // For prompt cues, support preview steps (0-N.png) and final.png
-  // For transcript cues, only final.png is available
+  // For transcript and slider cues, only final.png is available
   let fileName: string
   if (cue.action === 'prompt' && step >= 0) {
     const maxStep = getPreviewStepsForCue(cue) - 1
@@ -106,6 +119,11 @@ export function shouldHandleOfflineGeneration(cue: AutomationCue): boolean {
       return false
     }
 
+    return true
+  }
+
+  // Handle slider cues with generation enabled
+  if (cue.action === 'move-slider') {
     return true
   }
 
@@ -152,11 +170,15 @@ export async function simulateStepByStepInference(
   ) => void
 ): Promise<void> {
   const variantId = getRandomVariant(
-    cue.action === 'transcript' ? 'transcript' : 'prompt'
+    cue.action === 'transcript'
+      ? 'transcript'
+      : cue.action === 'move-slider'
+        ? 'move-slider'
+        : 'prompt'
   )
 
-  // For transcript cues, only show final image directly
-  if (cue.action === 'transcript') {
+  // For transcript and slider cues, only show final image directly
+  if (cue.action === 'transcript' || cue.action === 'move-slider') {
     const finalImagePath = generateOfflineImagePath(cue, variantId, -1)
     const loadedImageUrl = await loadOfflineImage(finalImagePath)
 
