@@ -51,16 +51,6 @@ function ImageViewer() {
           return false
         }
 
-        // Skip P2/P2B programs (Malaya image-to-image)
-        if (cue.program.startsWith('P2')) {
-          return false
-        }
-
-        // Skip P3/P3B programs (LoRA compatibility)
-        if (cue.program.startsWith('P3')) {
-          return false
-        }
-
         return true
       }
 
