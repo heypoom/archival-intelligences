@@ -7,7 +7,7 @@ import {AutomationCue} from '../../constants/exhibition-cues'
 export function routeFromCue(
   currentCueIndex: number,
   cues: AutomationCue[]
-): string {
+): string | null {
   // Default to index page if no cue or invalid index
   if (currentCueIndex < 0 || !cues.length) {
     return '/'
@@ -22,6 +22,5 @@ export function routeFromCue(
     }
   }
 
-  // If no navigation found, default to index
-  return '/'
+  return null
 }

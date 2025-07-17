@@ -498,11 +498,13 @@ export class ExhibitionAutomator {
     // Restore route based on current cue
     const route = routeFromCue(this.currentCue, this.cues)
 
-    console.log(
-      `[restoreRouteFromCue] cue: ${this.currentCue}, route: ${route}`
-    )
+    if (route) {
+      this.actionContext.navigate(route)
 
-    this.actionContext.navigate(route)
+      console.log(
+        `[restoreRouteFromCue] cue: ${this.currentCue}, route: ${route}`
+      )
+    }
   }
 
   playProgramVideo = async () => {
