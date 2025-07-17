@@ -30,8 +30,14 @@ export type AutomationAction =
       enter?: {regen: boolean}
       commit?: boolean
       guidance?: number
+      inferenceStep?: number
     } // clear, type, and enter prompt
-  | {action: 'move-slider'; program: string; value: number} // slowly move the guidance slider
+  | {
+      action: 'move-slider'
+      program: string
+      value: number
+      inferenceStep?: number
+    } // slowly move the guidance slider
   | {action: 'reconnect'} // disable regen and reconnect
   | {action: 'end'} // end the showing
 
@@ -66,10 +72,17 @@ export const PROGRAM_CUES: AutomationCue[] = [
     prompt: 'painting like epic poem of malaya',
     commit: true,
     guidance: 40,
+    inferenceStep: 17,
   },
 
   // slide to 0%
-  {time: '00:44:51', action: 'move-slider', value: 0, program: 'P2'},
+  {
+    time: '00:44:51',
+    action: 'move-slider',
+    value: 0,
+    program: 'P2',
+    inferenceStep: 1,
+  },
 
   // slide to 70%
   {time: '00:45:23', action: 'move-slider', value: 70, program: 'P2'},

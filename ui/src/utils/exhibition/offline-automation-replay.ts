@@ -43,19 +43,12 @@ function getRandomVariant(
 }
 
 export function getPreviewStepsForCue(cue: AutomationCue): number {
-  if (cue.action === 'prompt' && cue.program) {
-    // for 00:44:22
-    if (cue.program === 'P2' && cue.guidance === 40) {
-      return 17
-    }
-
-    return PROGRAM_PREVIEW_STEPS[cue.program] ?? DEFAULT_PREVIEW_STEPS
-  }
-
-  if (cue.action === 'move-slider' && cue.program) {
-    // if the strength is 0, it only use 1 step as there is no change needed.
-    if (cue.value === 0) {
-      return 1
+  if (
+    (cue.action === 'prompt' || cue.action === 'move-slider') &&
+    cue.program
+  ) {
+    if (cue.inferenceStep !== undefined) {
+      return cue.inferenceStep
     }
 
     return PROGRAM_PREVIEW_STEPS[cue.program] ?? DEFAULT_PREVIEW_STEPS
