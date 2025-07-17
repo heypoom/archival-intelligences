@@ -7,8 +7,19 @@ export const Route = createLazyFileRoute('/image-viewer')({
   component: ImageViewer,
 })
 
-const PREGEN_VERSION_ID = 1 // static pregen version ID
-const MAX_VARIANT_COUNT = 30
+const DEFAULT_PREGEN_VERSION_ID = 2 // default pregen version ID
+const TRANSCRIPT_MAX_VARIANT_COUNT = 30 // Program 0 transcript cues
+const PROMPT_MAX_VARIANT_COUNT = 50 // Other programs (prompt actions)
+
+function getMaxVariantCount(cue: AutomationCue): number {
+  if (cue.action === 'transcript') {
+    return TRANSCRIPT_MAX_VARIANT_COUNT
+  } else if (cue.action === 'move-slider') {
+    return PROMPT_MAX_VARIANT_COUNT // Slider cues use the same variant count as prompts
+  } else {
+    return PROMPT_MAX_VARIANT_COUNT
+  }
+}
 
 function ImageViewer() {
   const [cueIndex, setCueIndex] = useState(0)
@@ -16,6 +27,8 @@ function ImageViewer() {
   const [previewStep, setPreviewStep] = useState(-1) // -1 = final.png, 0-9 = preview steps
   const [imageError, setImageError] = useState(false)
   const [isReady, setIsReady] = useState(false)
+  const [pregenVersionId, setPregenVersionId] = useState(DEFAULT_PREGEN_VERSION_ID)
+  const [sliderValue, setSliderValue] = useState(70) // Default to 70, can toggle between 0 and 70
 
   // Filter cues that have generation enabled - matching generate.ts logic
   const imageGenerationCues = useMemo(() => {
@@ -49,12 +62,20 @@ function ImageViewer() {
         return true
       }
 
+      // Slider cues with generation enabled
+      if (cue.action === 'move-slider') {
+        return true
+      }
+
       return false
     })
   }, [isReady])
 
   const currentCue = imageGenerationCues[cueIndex]
   const totalCues = imageGenerationCues.length
+  const maxVariantCount = currentCue
+    ? getMaxVariantCount(currentCue)
+    : PROMPT_MAX_VARIANT_COUNT
 
   // Generate image path based on generate.ts logic
   const generateImagePath = useCallback(
@@ -68,13 +89,15 @@ function ImageViewer() {
         cueId = `transcript_${cueSuffix}`
       } else if (cue.action === 'prompt') {
         cueId = `prompt_${cueSuffix}`
+      } else if (cue.action === 'move-slider') {
+        cueId = `slider_${cueSuffix}_val${sliderValue}`
       } else {
         // unsupported action type.
         return ''
       }
 
       // For prompt cues, support preview steps (0-9.png) and final.png
-      // For transcript cues, only final.png is available
+      // For transcript and slider cues, only final.png is available
       let fileName: string
       if (cue.action === 'prompt' && step >= 0 && step <= 9) {
         fileName = `${step}.png`
@@ -82,9 +105,9 @@ function ImageViewer() {
         fileName = 'final.png'
       }
 
-      return `https://images.poom.dev/foigoi/${PREGEN_VERSION_ID}/cues/${cueId}/${variant}/${fileName}`
+      return `https://images.poom.dev/foigoi/${pregenVersionId}/cues/${cueId}/${variant}/${fileName}`
     },
-    []
+    [pregenVersionId, sliderValue]
   )
 
   const currentImagePath = currentCue
@@ -127,13 +150,13 @@ function ImageViewer() {
           break
         case 'ArrowUp':
           e.preventDefault()
-          setVariantIndex((prev) => (prev < MAX_VARIANT_COUNT ? prev + 1 : 1))
+          setVariantIndex((prev) => (prev < maxVariantCount ? prev + 1 : 1))
           setPreviewStep(-1) // Reset to final image when changing variants
           setImageError(false)
           break
         case 'ArrowDown':
           e.preventDefault()
-          setVariantIndex((prev) => (prev > 1 ? prev - 1 : MAX_VARIANT_COUNT))
+          setVariantIndex((prev) => (prev > 1 ? prev - 1 : maxVariantCount))
           setPreviewStep(-1) // Reset to final image when changing variants
           setImageError(false)
           break
@@ -157,13 +180,26 @@ function ImageViewer() {
             setImageError(false)
           }
           break
+        case 'v':
+          e.preventDefault()
+          setPregenVersionId((prev) => prev === 1 ? 2 : 1)
+          setImageError(false)
+          break
+        case 's':
+          e.preventDefault()
+          // Only works for slider cues
+          if (currentCue && currentCue.action === 'move-slider') {
+            setSliderValue((prev) => prev === 0 ? 70 : 0)
+            setImageError(false)
+          }
+          break
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
 
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [totalCues, currentCue])
+  }, [totalCues, currentCue, maxVariantCount])
 
   // Reset image error when image changes
   useEffect(() => {
@@ -224,12 +260,24 @@ function ImageViewer() {
         </div>
         <div className="mb-2">
           <span className="text-gray-400">Variant:</span> {variantIndex}/
-          {MAX_VARIANT_COUNT}
+          {maxVariantCount}
         </div>
         <div className="mb-2">
           <span className="text-gray-400">Program:</span>{' '}
-          {currentCue.action === 'prompt' ? currentCue.program : 'P0'}
+          {currentCue.action === 'prompt' 
+            ? currentCue.program 
+            : currentCue.action === 'move-slider'
+              ? currentCue.program
+              : 'P0'}
         </div>
+        <div className="mb-2">
+          <span className="text-gray-400">Version:</span> {pregenVersionId}
+        </div>
+        {currentCue.action === 'move-slider' && (
+          <div className="mb-2">
+            <span className="text-gray-400">Slider Value:</span> {sliderValue}
+          </div>
+        )}
         {currentCue.action === 'prompt' && (
           <div className="mb-2">
             <span className="text-gray-400">Step:</span>{' '}
@@ -243,7 +291,9 @@ function ImageViewer() {
               ? currentCue.transcript
               : currentCue.action === 'prompt'
                 ? currentCue.override || currentCue.prompt
-                : 'N/A'}
+                : currentCue.action === 'move-slider'
+                  ? `Slider action: ${currentCue.program} → ${currentCue.value}`
+                  : 'N/A'}
           </span>
         </div>
       </div>
@@ -253,8 +303,12 @@ function ImageViewer() {
         <div className="text-gray-400 mb-2">Navigation:</div>
         <div>← → Change cue</div>
         <div>↑ ↓ Change variant</div>
+        <div>v Toggle version (1/2)</div>
         {currentCue && currentCue.action === 'prompt' && (
           <div>, . Change preview step</div>
+        )}
+        {currentCue && currentCue.action === 'move-slider' && (
+          <div>s Toggle slider value (0/70)</div>
         )}
       </div>
     </div>

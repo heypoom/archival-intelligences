@@ -172,7 +172,7 @@ export async function runOfflineAutomationAction(
         try {
           await simulateStepByStepInference(
             action,
-            (imageUrl, step, isComplete) => {
+            (imageUrl, _step, isComplete) => {
               if (imageUrl) {
                 $inferencePreview.set(imageUrl)
               }

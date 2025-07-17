@@ -3,7 +3,8 @@ import _cues from '../data/cues.json'
 import type {AutomationCue} from './types'
 import {RedisClient} from 'bun'
 import {
-  MAX_VARIANT_COUNT,
+  TRANSCRIPT_MAX_VARIANT_COUNT,
+  PROMPT_MAX_VARIANT_COUNT,
   PREGEN_UPLOAD_STATUS_KEY,
   PREGEN_VERSION_ID,
   VALKEY_URL,
@@ -32,7 +33,8 @@ class ImageValidator {
   async init() {
     console.log('Initializing Image Validator...')
     console.log(`Concurrent requests: ${CONCURRENT_REQUESTS}`)
-    console.log(`Max variant count: ${MAX_VARIANT_COUNT}`)
+    console.log(`Transcript max variant count: ${TRANSCRIPT_MAX_VARIANT_COUNT}`)
+    console.log(`Prompt max variant count: ${PROMPT_MAX_VARIANT_COUNT}`)
     console.log(`Pregen version ID: ${PREGEN_VERSION_ID}`)
   }
 
@@ -103,10 +105,10 @@ class ImageValidator {
           '_'
         )}`
 
-        // Check all possible variant IDs (1 to MAX_VARIANT_COUNT)
+        // Check all possible variant IDs (1 to TRANSCRIPT_MAX_VARIANT_COUNT)
         for (
           let variant_id = 1;
-          variant_id <= MAX_VARIANT_COUNT;
+          variant_id <= TRANSCRIPT_MAX_VARIANT_COUNT;
           variant_id++
         ) {
           allValidations.push(
@@ -185,12 +187,6 @@ class ImageValidator {
           continue
         }
 
-        // Malaya require a separate endpoint for /image-to-image operation.
-        // skip P2 and P2B programs for now.
-        if (cue.program.startsWith('P2')) {
-          continue
-        }
-
         // I need to adapt the chua mia tee LoRA to support
         // stable diffusion 3 large turbo first.
         // For now, skip P3 and P3B programs.
@@ -198,32 +194,19 @@ class ImageValidator {
           continue
         }
 
-        // We'll need to handle this next.
-        // In the live lecture, the "B" suffixes makes the generation happen
-        // continuously until the next cue, with a little delay in between.
-        if (cue.program.endsWith('B')) {
-          console.warn(
-            `⚠️ warning: ${cue.program} requires continuous generation until the next cue`
-          )
-        }
-
-        if (cue.enter?.regen === true) {
-          console.warn(
-            `⚠️ warning: ${cue.program} requires continuous generation until the next cue`
-          )
-        }
-
         cue_id = `prompt_${CUE_SUFFIX}`
       } else if (cue.action === 'move-slider') {
-        // COMMENTED OUT FOR NOW - P2 uses image-to-image pipeline (malaya.py)
-        // Following the same logic as generate.ts
-        continue
+        cue_id = `slider_${CUE_SUFFIX}_val${cue.value}`
       } else {
         continue
       }
 
-      // Check all possible variant IDs (1 to MAX_VARIANT_COUNT)
-      for (let variant_id = 1; variant_id <= MAX_VARIANT_COUNT; variant_id++) {
+      // Check all possible variant IDs (1 to PROMPT_MAX_VARIANT_COUNT)
+      for (
+        let variant_id = 1;
+        variant_id <= PROMPT_MAX_VARIANT_COUNT;
+        variant_id++
+      ) {
         allValidations.push(
           this.queue.add(() =>
             this.validateImage(cue_id, variant_id)
@@ -263,8 +246,7 @@ class ImageValidator {
     console.log('=== Image Validation Report ===')
 
     // Validate transcript cues
-    // const transcriptResults = await this.validateTranscriptCues()
-    const transcriptResults = []
+    const transcriptResults = await this.validateTranscriptCues()
 
     // Validate prompt and slider cues (matching generate.ts logic)
     const imageResults = await this.validatePromptAndSliderCues()
