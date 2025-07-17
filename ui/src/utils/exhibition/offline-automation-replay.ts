@@ -206,7 +206,14 @@ export async function simulateStepByStepInference(
       onStepUpdate(loadedImageUrl, step, false)
 
       if (step < totalSteps - 1) {
-        const delay = MIN_DELAY + Math.random() * (MAX_DELAY - MIN_DELAY)
+        let delay = MIN_DELAY + Math.random() * (MAX_DELAY - MIN_DELAY)
+
+        // override the delay to show the first image for
+        // "epic poem of malaya"
+        if (cue.program === 'P2' && cue.guidance === 40) {
+          // 17 steps * 100 ms = 1700ms (1.7 seconds)
+          delay = 80
+        }
 
         await new Promise((resolve) => setTimeout(resolve, delay))
       }
