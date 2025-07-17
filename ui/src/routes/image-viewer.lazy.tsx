@@ -71,7 +71,7 @@ function ImageViewer() {
 
   // Get the max preview steps for the current cue
   const maxPreviewSteps = currentCue
-    ? getPreviewStepsForCue(currentCue) - 1
+    ? getPreviewStepsForCue(currentCue, pregenVersionId) - 1
     : 39 // -1 because steps are 0-indexed
 
   // Generate image path based on generate.ts logic
@@ -96,7 +96,7 @@ function ImageViewer() {
       // For prompt cues, support preview steps (0-N.png) and final.png
       // For transcript and slider cues, only final.png is available
       let fileName: string
-      const maxSteps = getPreviewStepsForCue(cue) - 1 // -1 because steps are 0-indexed
+      const maxSteps = getPreviewStepsForCue(cue, pregenVersionId) - 1 // -1 because steps are 0-indexed
       if (
         (cue.action === 'prompt' || cue.action === 'move-slider') &&
         step >= 0 &&

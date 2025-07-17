@@ -133,15 +133,6 @@ class GenerationRequester {
           continue
         }
 
-        // P2 and P2B programs now use the malaya endpoint
-
-        // I need to adapt the chua mia tee LoRA to support
-        // stable diffusion 3 large turbo first.
-        // For now, skip P3 and P3B programs.
-        if (cue.program.startsWith('P3')) {
-          continue
-        }
-
         prompt = cue.override || cue.prompt
         program_key = cue.program
         cue_id = `prompt_${CUE_SUFFIX}`

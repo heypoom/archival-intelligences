@@ -187,13 +187,6 @@ class ImageValidator {
           continue
         }
 
-        // I need to adapt the chua mia tee LoRA to support
-        // stable diffusion 3 large turbo first.
-        // For now, skip P3 and P3B programs.
-        if (cue.program.startsWith('P3')) {
-          continue
-        }
-
         cue_id = `prompt_${CUE_SUFFIX}`
       } else if (cue.action === 'move-slider') {
         cue_id = `slider_${CUE_SUFFIX}_val${cue.value}`

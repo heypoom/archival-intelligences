@@ -8,7 +8,8 @@ const PREGEN_VERSION_ID = 2
 const TRANSCRIPT_MAX_VARIANT_COUNT = 30 // Program 0 transcript cues
 const PROMPT_MAX_VARIANT_COUNT = 50 // Other programs (prompt and move-slider actions)
 
-const DEFAULT_PREVIEW_STEPS = 40
+const V1_DEFAULT_PREVIEW_STEPS = 10
+const V2_DEFAULT_PREVIEW_STEPS = 40
 
 const MIN_DELAY = 2000 // 2 seconds
 const MAX_DELAY = 2000 // Additional 2 seconds (total range 2-4s)
@@ -32,7 +33,10 @@ function getRandomVariant(
   return 1 + Math.floor(Math.random() * maxCount)
 }
 
-export function getPreviewStepsForCue(cue: AutomationCue): number {
+export function getPreviewStepsForCue(
+  cue: AutomationCue,
+  pregenVersionId = PREGEN_VERSION_ID
+): number {
   // override inference step if defined in the cue
   if (
     (cue.action === 'prompt' || cue.action === 'move-slider') &&
@@ -43,7 +47,11 @@ export function getPreviewStepsForCue(cue: AutomationCue): number {
     }
   }
 
-  return DEFAULT_PREVIEW_STEPS
+  if (pregenVersionId === 1) {
+    return V1_DEFAULT_PREVIEW_STEPS
+  }
+
+  return V2_DEFAULT_PREVIEW_STEPS
 }
 
 export function generateOfflineImagePath(
