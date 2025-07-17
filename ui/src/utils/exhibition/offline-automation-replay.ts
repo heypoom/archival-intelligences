@@ -18,7 +18,10 @@ const PROMPT_MAX_VARIANT_COUNT = 50
 const V1_DEFAULT_PREVIEW_STEPS = 10
 const V2_DEFAULT_PREVIEW_STEPS = 40
 
-// Minimum and maximum delay for each step
+// Wait a fixed 500ms delay before showing the next transcript cues
+const TRANSCRIPT_DELAY_MS = 500
+
+// Minimum and maximum delay for prompt cues
 const MIN_DELAY = 750
 const MAX_DELAY = 1800
 
@@ -81,10 +84,10 @@ export function generateOfflineImagePath(
     return ''
   }
 
-  // For prompt cues, support preview steps (0-N.png) and final.png
-  // For transcript and slider cues, only final.png is available
+  // For prompt and move-slider cues, support preview steps (0-N.png) and final.png
+  // For transcript cues, only final.png is available
   let fileName: string
-  if (cue.action === 'prompt' && step >= 0) {
+  if ((cue.action === 'prompt' || cue.action === 'move-slider') && step >= 0) {
     const maxStep = getPreviewStepsForCue(cue) - 1
 
     if (step <= maxStep) {
@@ -170,25 +173,23 @@ export async function simulateStepByStepInference(
         : 'prompt'
   )
 
-  const isZeroStrengthImage = cue.action === 'move-slider' && cue.value === 0
-
-  // For transcript and slider cues, only show final image directly
-  if (cue.action === 'transcript' || cue.action === 'move-slider') {
+  // For transcript cues, only show final image directly
+  // For move-slider with value=0 (strength=0), show final image immediately
+  if (cue.action === 'transcript') {
     const finalImagePath = generateOfflineImagePath(cue, variantId, -1)
     const loadedImageUrl = await loadOfflineImage(finalImagePath)
 
-    // For strength=0, show immediately since it's the same image
-    if (!isZeroStrengthImage) {
-      await new Promise((resolve) => setTimeout(resolve, 500))
-    }
+    // wait for 0.5 seconds.
+    await new Promise((resolve) => setTimeout(resolve, TRANSCRIPT_DELAY_MS))
 
     onStepUpdate(loadedImageUrl, -1, true)
     return
   }
 
-  // For prompt cues, show step-by-step inference (0.png through N.png)
-  if (cue.action === 'prompt') {
+  // For prompt cues and move-slider cues (non-zero value), show step-by-step inference
+  if (cue.action === 'prompt' || cue.action === 'move-slider') {
     const totalSteps = getPreviewStepsForCue(cue)
+    console.log(`steps for ${cue.action}#${cue.program} is ${totalSteps}`)
 
     // Set initial timestep
     $startTimestep.set(0)
@@ -208,11 +209,9 @@ export async function simulateStepByStepInference(
       if (step < totalSteps - 1) {
         let delay = MIN_DELAY + Math.random() * (MAX_DELAY - MIN_DELAY)
 
-        // override the delay to show the first image for
-        // "epic poem of malaya"
-        if (cue.program === 'P2' && cue.guidance === 40) {
-          // 17 steps * 100 ms = 1700ms (1.7 seconds)
-          delay = 80
+        // override delay if specified in the cue
+        if (cue.fixedDelayPerStep) {
+          delay = cue.fixedDelayPerStep
         }
 
         await new Promise((resolve) => setTimeout(resolve, delay))

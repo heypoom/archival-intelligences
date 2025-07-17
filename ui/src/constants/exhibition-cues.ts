@@ -31,12 +31,14 @@ export type AutomationAction =
       commit?: boolean
       guidance?: number
       inferenceStep?: number
+      fixedDelayPerStep?: number
     } // clear, type, and enter prompt
   | {
       action: 'move-slider'
       program: string
       value: number
       inferenceStep?: number
+      fixedDelayPerStep?: number
     } // slowly move the guidance slider
   | {action: 'reconnect'} // disable regen and reconnect
   | {action: 'end'} // end the showing
@@ -73,6 +75,7 @@ export const PROGRAM_CUES: AutomationCue[] = [
     commit: true,
     guidance: 40,
     inferenceStep: 17,
+    fixedDelayPerStep: 750, // 17 steps * 750 ms = 12.75 seconds
   },
 
   // slide to 0%
@@ -82,6 +85,7 @@ export const PROGRAM_CUES: AutomationCue[] = [
     value: 0,
     program: 'P2',
     inferenceStep: 1,
+    fixedDelayPerStep: 500, // 1 step * 500ms = 0.5 seconds
   },
 
   // slide to 70%
@@ -91,6 +95,7 @@ export const PROGRAM_CUES: AutomationCue[] = [
     value: 70,
     program: 'P2',
     inferenceStep: 29,
+    fixedDelayPerStep: 500, // 29 steps * 500ms = 14.5 seconds
   },
 
   // start program 2B

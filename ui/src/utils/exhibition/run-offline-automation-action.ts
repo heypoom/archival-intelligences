@@ -57,38 +57,36 @@ export async function runOfflineAutomationAction(
           )
 
           // Handle offline generation for slider cues
-          if (shouldHandleOfflineGeneration(action)) {
-            $generating.set(true)
+          $generating.set(true)
 
-            console.log(
-              `[offline] Starting step-by-step inference simulation for slider: ${action.program} → ${action.value}`
-            )
+          console.log(
+            `[offline] Starting step-by-step inference simulation for slider: ${action.program} → ${action.value}`
+          )
 
-            try {
-              await simulateStepByStepInference(
-                action,
-                (imageUrl, step, isComplete) => {
-                  if (imageUrl) {
-                    $inferencePreview.set(imageUrl)
-                  }
-
-                  if (isComplete) {
-                    $generating.set(false)
-                    console.log(
-                      `[offline] Completed inference simulation for slider: ${action.program} → ${action.value}`
-                    )
-                  } else {
-                    console.log(`[offline] Step ${step}: ${imageUrl}`)
-                  }
+          try {
+            await simulateStepByStepInference(
+              action,
+              (imageUrl, step, isComplete) => {
+                if (imageUrl) {
+                  $inferencePreview.set(imageUrl)
                 }
-              )
-            } catch (error) {
-              console.error(
-                '[offline] Failed to simulate slider inference:',
-                error
-              )
-              $generating.set(false)
-            }
+
+                if (isComplete) {
+                  $generating.set(false)
+                  console.log(
+                    `[offline] Completed inference simulation for slider: ${action.program} → ${action.value}`
+                  )
+                } else {
+                  console.log(`[offline] Step ${step}: ${imageUrl}`)
+                }
+              }
+            )
+          } catch (error) {
+            console.error(
+              '[offline] Failed to simulate slider inference:',
+              error
+            )
+            $generating.set(false)
           }
         })
         .start()
