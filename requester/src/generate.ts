@@ -56,26 +56,31 @@ class GenerationRequester {
         ? MALAYA_ENDPOINT
         : MODAL_ENDPOINT
 
+      const body = {
+        prompt: request.prompt,
+        program_key: request.program_key,
+        cue_id: request.cue_id,
+        variant_id: request.variant_id,
+
+        // we actually use guidance as strength in the backend
+        ...(typeof request.guidance === 'number' && {
+          strength: request.guidance / 100,
+        }),
+      }
+
+      console.log(`🔗 Sending request:`, body)
+
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          prompt: request.prompt,
-          program_key: request.program_key,
-          cue_id: request.cue_id,
-          variant_id: request.variant_id,
-
-          // we actually use guidance as strength in the backend
-          ...(typeof request.guidance === 'number' && {
-            strength: request.guidance,
-          }),
-        }),
+        body: JSON.stringify(body),
       })
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        console.log(`HTTP error!:`, response.status, await response.text())
+        throw new Error(response.statusText)
       }
 
       const output = (await response.json()) as {status: string; r2_key: string}
@@ -142,7 +147,7 @@ class GenerationRequester {
         cue_id = `prompt_${CUE_SUFFIX}`
 
         if (cue.guidance !== undefined) {
-          guidance = 100 / cue.guidance
+          guidance = cue.guidance
         }
       } else if (cue.action === 'move-slider') {
         // For move-slider, only P2 and P2B programs use guidance values
@@ -334,7 +339,7 @@ class GenerationRequester {
     console.log(`Using Valkey at: ${VALKEY_URL}`)
     console.log(`Concurrent requests: ${CONCURRENT_REQUESTS}`)
 
-    await this.processTranscriptCues()
+    // await this.processTranscriptCues()
     await this.processPromptAndSliderCues()
 
     console.log('✅ Generation requester finished')
