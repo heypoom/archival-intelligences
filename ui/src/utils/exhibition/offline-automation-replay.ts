@@ -46,7 +46,7 @@ function getRandomVariant(
 
 export function getPreviewStepsForCue(
   cue: AutomationCue,
-  pregenVersionId = PREGEN_VERSION_ID
+  pregenVersionId?: number
 ): number {
   // override inference step if defined in the cue
   if (
@@ -58,11 +58,24 @@ export function getPreviewStepsForCue(
     }
   }
 
-  if (pregenVersionId === 1) {
+  // Use the dynamic version if not specified
+  const version = pregenVersionId ?? getPregenVersionForCue(cue)
+
+  if (version === 1) {
     return V1_DEFAULT_PREVIEW_STEPS
   }
 
   return V2_DEFAULT_PREVIEW_STEPS
+}
+
+function getPregenVersionForCue(cue: AutomationCue): number {
+  // Use version 1 for Program 4
+  if (cue.action === 'prompt' && cue.program === 'P4') {
+    return 1
+  }
+
+  // Use version 2 for everything else
+  return PREGEN_VERSION_ID
 }
 
 export function generateOfflineImagePath(
@@ -99,7 +112,9 @@ export function generateOfflineImagePath(
     fileName = 'final.png'
   }
 
-  return `https://images.poom.dev/${PROJ_ID}/${PREGEN_VERSION_ID}/cues/${cueId}/${variantId}/${fileName}`
+  const version = getPregenVersionForCue(cue)
+
+  return `https://images.poom.dev/${PROJ_ID}/${version}/cues/${cueId}/${variantId}/${fileName}`
 }
 
 export function shouldHandleOfflineGeneration(cue: AutomationCue): boolean {
