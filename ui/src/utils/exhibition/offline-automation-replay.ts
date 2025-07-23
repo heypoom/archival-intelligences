@@ -323,6 +323,12 @@ async function performRegenerationCycle(
     `[offline-regen] Next regeneration in ${delay}ms (count: ${currentCount + 1})`
   )
 
+  // Clear any existing timer
+  if (regenerationTimer !== null) {
+    clearTimeout(regenerationTimer)
+    regenerationTimer = null
+  }
+
   // Schedule next regeneration
   regenerationTimer = window.setTimeout(async () => {
     if (shouldContinueRegeneration(cue)) {
