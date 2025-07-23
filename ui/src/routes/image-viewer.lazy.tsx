@@ -107,7 +107,7 @@ function ImageViewer() {
         fileName = 'final.png'
       }
 
-      return `https://images.poom.dev/foigoi/${pregenVersionId}/cues/${cueId}/${variant}/${fileName}`
+      return `./foigoi/${pregenVersionId}/cues/${cueId}/${variant}/${fileName}`
     },
     [pregenVersionId]
   )

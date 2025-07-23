@@ -114,7 +114,7 @@ export function generateOfflineImagePath(
 
   const version = getPregenVersionForCue(cue)
 
-  return `https://images.poom.dev/${PROJ_ID}/${version}/cues/${cueId}/${variantId}/${fileName}`
+  return `./${PROJ_ID}/${version}/cues/${cueId}/${variantId}/${fileName}`
 }
 
 export function shouldHandleOfflineGeneration(cue: AutomationCue): boolean {
