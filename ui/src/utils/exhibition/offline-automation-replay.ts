@@ -34,6 +34,9 @@ const BASE_GENERATION = 6
 let regenerationTimer: number | null = null
 let currentRegenerationCue: AutomationCue | null = null
 
+// Track any ongoing inference (to prevent race conditions)
+let ongoingInferenceCue: AutomationCue | null = null
+
 function getRandomVariant(
   actionType: 'transcript' | 'prompt' | 'move-slider'
 ): number {
@@ -180,6 +183,8 @@ export async function simulateStepByStepInference(
     isComplete: boolean
   ) => void
 ): Promise<void> {
+  // Set this as the ongoing inference
+  ongoingInferenceCue = cue
   const variantId = getRandomVariant(
     cue.action === 'transcript'
       ? 'transcript'
@@ -197,7 +202,15 @@ export async function simulateStepByStepInference(
     // wait for 0.5 seconds.
     await new Promise((resolve) => setTimeout(resolve, TRANSCRIPT_DELAY_MS))
 
+    // Check if we should still continue before updating
+    if (!shouldContinueInference(cue)) {
+      console.log('[offline-inference] Aborted transcript inference during delay')
+      ongoingInferenceCue = null
+      return
+    }
+
     onStepUpdate(loadedImageUrl, -1, true)
+    ongoingInferenceCue = null // Clear ongoing inference when complete
     return
   }
 
@@ -211,12 +224,26 @@ export async function simulateStepByStepInference(
     $timestep.set(0)
 
     for (let step = 0; step < totalSteps; step++) {
+      // Check if we should abort before each step
+      if (!shouldContinueInference(cue)) {
+        console.log(`[offline-inference] Aborted inference at step ${step}`)
+        ongoingInferenceCue = null
+        return
+      }
+
       // Update timestep
       $timestep.set(step)
 
       const stepImagePath = generateOfflineImagePath(cue, variantId, step)
 
       const loadedImageUrl = await loadOfflineImage(stepImagePath)
+
+      // Check again after loading image
+      if (!shouldContinueInference(cue)) {
+        console.log(`[offline-inference] Aborted inference after loading step ${step}`)
+        ongoingInferenceCue = null
+        return
+      }
 
       // Update the image
       onStepUpdate(loadedImageUrl, step, false)
@@ -230,13 +257,28 @@ export async function simulateStepByStepInference(
         }
 
         await new Promise((resolve) => setTimeout(resolve, delay))
+
+        // Check again after delay
+        if (!shouldContinueInference(cue)) {
+          console.log(`[offline-inference] Aborted inference after delay at step ${step}`)
+          ongoingInferenceCue = null
+          return
+        }
       }
+    }
+
+    // Final check before showing final image
+    if (!shouldContinueInference(cue)) {
+      console.log('[offline-inference] Aborted inference before final image')
+      ongoingInferenceCue = null
+      return
     }
 
     // Show final image
     const finalImagePath = generateOfflineImagePath(cue, variantId, -1)
     const finalImageUrl = await loadOfflineImage(finalImagePath)
     onStepUpdate(finalImageUrl, -1, true)
+    ongoingInferenceCue = null // Clear ongoing inference when complete
   }
 }
 
@@ -260,6 +302,13 @@ function calculateRegenerationDelay(): number {
  */
 function shouldContinueRegeneration(originalCue: AutomationCue): boolean {
   return currentRegenerationCue === originalCue && $regenActive.get()
+}
+
+/**
+ * Check if any inference should continue (for both regeneration and single inference)
+ */
+function shouldContinueInference(originalCue: AutomationCue): boolean {
+  return ongoingInferenceCue === originalCue
 }
 
 /**
@@ -346,6 +395,15 @@ export function abortOfflineRegeneration(): void {
     )
 
     currentRegenerationCue = null
+  }
+
+  // Also abort any ongoing inference to prevent race conditions
+  if (ongoingInferenceCue !== null) {
+    console.log(
+      `[offline-inference] Aborting ongoing inference for: ${ongoingInferenceCue.action}`
+    )
+
+    ongoingInferenceCue = null
   }
 
   $regenCount.set(0)
