@@ -1,6 +1,10 @@
 import '@fontsource/inter'
 
-import {RouterProvider, createRouter} from '@tanstack/react-router'
+import {
+  RouterProvider,
+  createHashHistory,
+  createRouter,
+} from '@tanstack/react-router'
 import {StrictMode} from 'react'
 import ReactDOM from 'react-dom/client'
 
@@ -12,7 +16,8 @@ import 'animate.css'
 
 import './index.css'
 
-const router = createRouter({routeTree})
+const history = createHashHistory()
+const router = createRouter({routeTree, history})
 
 declare module '@tanstack/react-router' {
   interface Register {

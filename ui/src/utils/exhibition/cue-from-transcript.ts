@@ -3,6 +3,8 @@ import {timecodeOf} from './timecode'
 import {AutomationCue} from '../../constants/exhibition-cues'
 import {GladiaTranscript} from '../../types/gladia-transcript'
 
+import _transcript from '../../transcription.json'
+
 /** Exclude short sentences from image generation. */
 const SHORT_SENTENCE_WORDS = 6
 
@@ -10,8 +12,7 @@ const SHORT_SENTENCE_WORDS = 6
 const GENERATION_CUE_WAIT_SECONDS = 10
 
 export async function loadTranscriptCue(): Promise<AutomationCue[]> {
-  const body = await fetch('/transcription.json')
-  const transcript: GladiaTranscript = await body.json()
+  const transcript: GladiaTranscript = _transcript
 
   return getCueFromTranscript(transcript)
 }
