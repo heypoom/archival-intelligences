@@ -108,7 +108,7 @@ Target cues with `enter: {regen: true}`:
 
 - P3B: `chua mia tee painting` (00:46:06)
 - P4: `big tech ceo` (00:55:46)
-- P4: `stable diffusion` (01:10:15)
+- P4: `stable diffusion` (01:10:20)
 
 #### Abort Mechanism
 

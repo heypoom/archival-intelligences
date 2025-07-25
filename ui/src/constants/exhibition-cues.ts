@@ -6,7 +6,7 @@ export const PROGRAM_ZERO_END_TIME = '00:34:25'
 export const SCREENING_END_TIME = '01:14:00'
 
 export const FADE_IN_TIME = '00:06:45'
-export const FADE_OUT_TIME = '01:12:09'
+export const FADE_OUT_TIME = '01:12:15'
 
 export type AutomationAction =
   | {action: 'start'} // start the program
@@ -172,7 +172,7 @@ export const PROGRAM_CUES: AutomationCue[] = [
 
   // type prompt
   {
-    time: '01:10:15',
+    time: '01:10:20',
     action: 'prompt',
     program: 'P4',
     prompt: 'stable diffusion',
