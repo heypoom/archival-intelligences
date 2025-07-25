@@ -90,7 +90,7 @@ export class ExhibitionAutomator {
   }
 
   async setup() {
-    this.computeDrift()
+    // this.computeDrift()
 
     this.ipc.addEventListener('message', this.onIpcMessage)
 
