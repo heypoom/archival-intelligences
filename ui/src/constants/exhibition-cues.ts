@@ -2,11 +2,11 @@ import {ProgramId} from '../manager/socket'
 import {GladiaWord} from '../types/gladia-transcript'
 
 export const PROGRAM_ZERO_START_TIME = '00:06:47'
-export const PROGRAM_ZERO_END_TIME = '00:34:25'
-export const SCREENING_END_TIME = '01:14:00'
+export const PROGRAM_ZERO_END_TIME = '00:34:24'
+export const SCREENING_END_TIME = '01:13:00'
 
 export const FADE_IN_TIME = '00:06:45'
-export const FADE_OUT_TIME = '01:12:09'
+export const FADE_OUT_TIME = '01:12:14'
 
 export type AutomationAction =
   | {action: 'start'} // start the program
@@ -64,11 +64,11 @@ export const PROGRAM_CUES: AutomationCue[] = [
   {time: '00:36:05', action: 'next'},
 
   // start program 2
-  {time: '00:44:12', action: 'navigate', route: '/two'},
+  {time: '00:44:14', action: 'navigate', route: '/two'},
 
   // type prompt
   {
-    time: '00:44:22',
+    time: '00:44:24',
     action: 'prompt',
     program: 'P2',
     prompt: 'painting like epic poem of malaya',
@@ -80,7 +80,7 @@ export const PROGRAM_CUES: AutomationCue[] = [
 
   // slide to 0%
   {
-    time: '00:44:51',
+    time: '00:44:53',
     action: 'move-slider',
     value: 0,
     program: 'P2',
@@ -90,12 +90,14 @@ export const PROGRAM_CUES: AutomationCue[] = [
 
   // slide to 70%
   {
-    time: '00:45:23',
+    time: '00:45:25',
     action: 'move-slider',
     value: 70,
     program: 'P2',
     inferenceStep: 29,
-    fixedDelayPerStep: 500, // 29 steps * 500ms = 14.5 seconds
+
+    // cue goes from 00:45:25 to 00:46:00 = 35 seconds
+    fixedDelayPerStep: 1100, // 29 steps * 1100ms = 31.9 seconds
   },
 
   // start program 2B
@@ -126,7 +128,7 @@ export const PROGRAM_CUES: AutomationCue[] = [
 
   // type prompt
   {
-    time: '00:46:06',
+    time: '00:46:08',
     action: 'prompt',
     program: 'P3B',
     prompt: 'chua mia tee painting',
@@ -138,7 +140,7 @@ export const PROGRAM_CUES: AutomationCue[] = [
 
   // type prompt
   {
-    time: '00:54:28',
+    time: '00:54:30',
     action: 'prompt',
     program: 'P4',
     prompt: 'data researcher',
@@ -148,7 +150,7 @@ export const PROGRAM_CUES: AutomationCue[] = [
 
   // type prompt
   {
-    time: '00:54:57',
+    time: '00:54:59',
     action: 'prompt',
     program: 'P4',
     prompt: 'crowdworker',
@@ -172,7 +174,7 @@ export const PROGRAM_CUES: AutomationCue[] = [
 
   // type prompt
   {
-    time: '01:10:15',
+    time: '01:10:19',
     action: 'prompt',
     program: 'P4',
     prompt: 'stable diffusion',

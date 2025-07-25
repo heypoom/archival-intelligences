@@ -15,13 +15,13 @@ app = modal.App(APP_NAME)
 SUPPORTED_PROGRAMS = ["P2", "P2B"]
 
 # Default generation parameters
-DEFAULT_WIDTH = 960
-DEFAULT_HEIGHT = 800
+DEFAULT_WIDTH = 1920
+DEFAULT_HEIGHT = 1080
 DEFAULT_NUM_INFERENCE_STEPS = 40
 
 # Static pregen version ID. Use in case of future changes to the generation.
 # Example: different transcripts, model versions, or other significant changes.
-PREGEN_VERSION_ID = 2
+PREGEN_VERSION_ID = 3
 
 PREGEN_UPLOAD_STATUS_KEY = f"pregen/{PREGEN_VERSION_ID}/variant_upload_status"
 

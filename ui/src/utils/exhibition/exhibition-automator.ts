@@ -318,6 +318,9 @@ export class ExhibitionAutomator {
     // make sure the cues are sorted by time!
     this.cues = this.cues.sort((a, b) => compareTimecode(a.time, b.time))
     this.loaded = true
+
+    // @ts-expect-error - make it available for debugging
+    window.cues = this.cues // for debugging
   }
 
   tick() {
