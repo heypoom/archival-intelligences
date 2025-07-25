@@ -282,6 +282,9 @@ class Inference:
         start_time = time.time()
         step_timings = {}
 
+        # Define negative prompt to filter out sexual content
+        negative_prompt = "nude, naked, sexual, explicit, adult content, breasts, genitals, pornography, erotic, nsfw, sex, lewd, hentai, boob, nipple, nipples"
+
         # Run the pipeline with callback for P1-P4, without callback for P0
         if program_key != "P0":
             print(f"Running inference with intermediate steps for {program_key}")
@@ -289,6 +292,7 @@ class Inference:
 
             images = self.pipe(
                 prompt=modified_prompt,
+                negative_prompt=negative_prompt,
                 num_images_per_prompt=1,
                 num_inference_steps=num_inference_steps,
                 guidance_scale=guidance_scale,
@@ -301,6 +305,7 @@ class Inference:
             print(f"Running inference without intermediate steps for {program_key}")
             images = self.pipe(
                 prompt=modified_prompt,
+                negative_prompt=negative_prompt,
                 num_images_per_prompt=1,
                 num_inference_steps=num_inference_steps,
                 guidance_scale=guidance_scale,
