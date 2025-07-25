@@ -7,7 +7,7 @@ import {$regenCount, $regenActive, $regenEnabled} from '../../store/regen'
 const PROJ_ID = 'foigoi'
 
 // Which version of pre-generated images to use
-const PREGEN_VERSION_ID = 2
+const PREGEN_VERSION_ID = 3
 
 // Program 0 transcript cues
 const TRANSCRIPT_MAX_VARIANT_COUNT = 30
@@ -204,7 +204,9 @@ export async function simulateStepByStepInference(
 
     // Check if we should still continue before updating
     if (!shouldContinueInference(cue)) {
-      console.log('[offline-inference] Aborted transcript inference during delay')
+      console.log(
+        '[offline-inference] Aborted transcript inference during delay'
+      )
       ongoingInferenceCue = null
       return
     }
@@ -240,7 +242,9 @@ export async function simulateStepByStepInference(
 
       // Check again after loading image
       if (!shouldContinueInference(cue)) {
-        console.log(`[offline-inference] Aborted inference after loading step ${step}`)
+        console.log(
+          `[offline-inference] Aborted inference after loading step ${step}`
+        )
         ongoingInferenceCue = null
         return
       }
@@ -260,7 +264,9 @@ export async function simulateStepByStepInference(
 
         // Check again after delay
         if (!shouldContinueInference(cue)) {
-          console.log(`[offline-inference] Aborted inference after delay at step ${step}`)
+          console.log(
+            `[offline-inference] Aborted inference after delay at step ${step}`
+          )
           ongoingInferenceCue = null
           return
         }

@@ -15,14 +15,14 @@ SUPPORTED_PROGRAMS = ["P0", "P3", "P3B", "P4"]
 CHUAMIATEE_PROGRAMS = ["P3", "P3B"]
 
 # Default generation parameters
-DEFAULT_WIDTH = 1360
-DEFAULT_HEIGHT = 768
+DEFAULT_WIDTH = 1920
+DEFAULT_HEIGHT = 1080
 DEFAULT_GUIDANCE_SCALE = 7.5
 DEFAULT_NUM_INFERENCE_STEPS = 40
 
 # Static pregen version ID. Use in case of future changes to the generation.
 # Example: different transcripts, model versions, or other significant changes.
-PREGEN_VERSION_ID = 2
+PREGEN_VERSION_ID = 3
 
 PREGEN_UPLOAD_STATUS_KEY = f"pregen/{PREGEN_VERSION_ID}/variant_upload_status"
 
