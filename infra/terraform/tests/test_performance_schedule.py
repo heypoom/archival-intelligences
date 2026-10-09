@@ -40,7 +40,7 @@ def fixture_source(case):
     source = source.replace("max_delay: 60", "max_delay: 0.1")
 
     if case == "exhausted_stop":
-        # No waiting: all four sessions are eligible, and every stop fails.
+        # No waiting: all three windows are eligible, and every stop fails.
         source = source.replace("2026-10-", "2099-10-")
         source = source.replace("call: sys.sleep_until", "call: fake_sleep_until")
         start_steps = "    - started:\n        return: true\n"
@@ -107,10 +107,10 @@ def main():
             if case == "exhausted_stop":
                 assert result["status"] == "completed_with_errors", result
                 failures = result["failed_windows"]
-                assert len(failures) == 4, result
+                assert len(failures) == 3, result
                 assert [item["start"] for item in failures] == [
                     "2099-10-08T08:00:00Z", "2099-10-09T02:00:00Z",
-                    "2099-10-10T05:00:00Z", "2099-10-11T05:00:00Z",
+                    "2099-10-10T05:00:00Z",
                 ], result
                 assert all(
                     item["error"]["message"] == "simulated exhausted stop"

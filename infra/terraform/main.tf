@@ -80,7 +80,7 @@ resource "google_workflows_workflow" "performance_schedule" {
 
   name                = "foigoi-performance-october-2026"
   region              = var.region
-  description         = "One-off Foigoi GPU schedule for 8-11 October 2026."
+  description         = "Foigoi October 2026 schedule; keep running October 10-11 until October 12 at 00:14 JST."
   service_account     = google_service_account.performance_scheduler.id
   call_log_level      = "LOG_ERRORS_ONLY"
   deletion_protection = false
